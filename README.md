@@ -405,11 +405,22 @@ It takes about a minute. **Read the text between the cells** — it explains why
 and several explanations will save you time later. The notebook ends by validating everything and
 telling you plainly whether anything is wrong.
 
-**If the notebook won't run**, there's a headless fallback in Cloud Shell:
+**If the notebook won't run**, there's a headless fallback. From the root of your cloned repo
+in Cloud Shell:
 
 ```bash
-./scripts/load.sh dallas          # --list shows every available city
+bash scripts/load.sh dallas
 ```
+
+```bash
+bash scripts/load.sh --list       # every city we've published
+```
+
+Invoke it with `bash` rather than `./scripts/load.sh` — that way it doesn't matter whether the
+file arrived with its executable bit set, which depends on how your repo was created.
+
+It's safe to run more than once. Every table is fully replaced rather than appended to, so if
+you cancel it halfway through, or you're not sure whether it finished, just run it again.
 
 ### What you'll have
 
