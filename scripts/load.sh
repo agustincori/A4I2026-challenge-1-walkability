@@ -8,7 +8,7 @@
 # runtime is slow, unavailable, or the upstream NOAA service is down.
 #
 # Run it in Cloud Shell:
-#     ./scripts/load.sh              # defaults to chicago
+#     ./scripts/load.sh              # defaults to dallas
 #     ./scripts/load.sh atlanta
 #     ./scripts/load.sh --list       # show available cities
 #
@@ -28,7 +28,18 @@ TABLES=(heat_observations station_daily_temps tract_demographics)
 # --------------------------------------------------------------------------
 bold()  { printf '\033[1m%s\033[0m\n' "$*"; }
 info()  { printf '  %s\n' "$*"; }
-fail()  { printf '\n\033[1mERROR:\033[0m %s\n\n' "$*" >&2; exit 1; }
+fail()  { printf '\n\033[1mERROR:\033[0m %s\n\n%s\n\n' "$*" \
+          "This script is safe to run again - every table load replaces whatever was there." >&2
+          exit 1; }
+
+# Interrupting is safe. Say so, so nobody is left wondering.
+on_interrupt() {
+  printf '\n\n\033[1mInterrupted.\033[0m Nothing is broken.\n'
+  printf 'Every load replaces the whole table, so just run this script again:\n'
+  printf '    ./scripts/load.sh %s\n\n' "${CITY:-<city>}"
+  exit 130
+}
+trap on_interrupt INT TERM
 
 list_cities() {
   bold "Cities available in the snapshot"
@@ -42,7 +53,7 @@ list_cities() {
 # --------------------------------------------------------------------------
 # Arguments
 # --------------------------------------------------------------------------
-CITY="${1:-chicago}"
+CITY="${1:-dallas}"
 
 if [[ "${CITY}" == "--list" || "${CITY}" == "-l" ]]; then
   list_cities
@@ -90,6 +101,16 @@ fi
 bold "1/3  Creating dataset"
 if bq --project_id="${PROJECT_ID}" ls -d "${DATASET}" >/dev/null 2>&1; then
   info "${DATASET} already exists - reusing it"
+
+  # A dataset in the wrong region fails every load with a confusing error.
+  existing_loc="$(bq --project_id="${PROJECT_ID}" --format=json show -d "${DATASET}" 2>/dev/null \
+                  | tr ',' '\n' | grep -i '"location"' | head -1 \
+                  | sed 's/.*: *"\([^"]*\)".*/\1/' || true)"
+  if [[ -n "${existing_loc}" && "${existing_loc^^}" != "${LOCATION^^}" ]]; then
+    fail "Dataset ${DATASET} already exists in '${existing_loc}', but this script loads into
+       '${LOCATION}'. BigQuery cannot load across regions. Either delete the dataset
+       (bq rm -r -d ${DATASET}) or edit LOCATION at the top of this script to match."
+  fi
 else
   bq --project_id="${PROJECT_ID}" --location="${LOCATION}" mk -d "${DATASET}"
   info "created ${DATASET}"
@@ -99,6 +120,8 @@ echo
 # --------------------------------------------------------------------------
 # Load each table
 # --------------------------------------------------------------------------
+# Every load below uses --replace, so re-running this script from scratch is always
+# safe: each table is fully overwritten, never appended to.
 bold "2/3  Loading tables"
 for table in "${TABLES[@]}"; do
   # BigQuery's EXPORT DATA may shard into several parts, so we load the folder.
@@ -160,6 +183,8 @@ fi
 bold "Ready."
 echo
 echo "  Your tables are in ${PROJECT_ID}.${DATASET}"
+echo "  Safe to re-run at any time - each load replaces the whole table."
+echo
 echo "  Next: train your BigQuery ML model, and have your agent call it."
 echo "  See the README for what to predict and why."
 echo

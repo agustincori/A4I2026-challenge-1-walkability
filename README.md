@@ -35,12 +35,20 @@ You do **not** have to pick the city you're sitting in.
 
 Start here. These have the largest, best-tested datasets:
 
-| | |
-|---|---|
-| **Dallas** (the default) | **Chicago** — ~49k readings |
-| **New York (Manhattan/Bronx)** | **Seattle** — ~35k readings |
-| **New York (Brooklyn)** | **Atlanta** — ~23k readings |
-| **Los Angeles (Central)** | **Houston** — ~147k readings, the largest |
+| City | Street-level readings | |
+|---|---:|---|
+| **Houston** | ~147,000 | the largest campaign by far, and the slowest to load |
+| **Chicago** | ~49,000 | |
+| **Seattle** | ~35,000 | |
+| **Atlanta** | ~23,000 | |
+| **Dallas** | ~19,000 | the notebook default |
+| **Los Angeles (Central)** | ~17,000 | |
+| **New York (Brooklyn)** | ~15,000 | |
+| **New York (Manhattan/Bronx)** | ~12,000 | |
+
+More readings means more for your model to learn from and a slightly longer load. Fewer is not
+disqualifying — Manhattan's 12,000 points still cover the borough densely, because the routes
+are short. But if your team wants volume to play with, start at the top of that list.
 
 **We'd recommend staying on this list.** There are 87 cities available and Section 4 of the
 notebook lists them all, but these are the ones we've tested end to end.
@@ -112,8 +120,10 @@ Spend fifteen minutes deciding what *your* version does that nobody else's will.
   question superbly beats one that half-answers everything.
 - **Bring a dataset nobody else has** — your city's tree canopy, its existing cooling centers,
   311 heat complaints. (See "Bringing your own data" — check the licence first.)
-- **Make the equity audit the centrepiece** instead of a footnote. It's the most interesting
-  conversation available in this challenge and most teams will skip it.
+- **Make the equity audit the centrepiece** instead of a footnote — checking whether your
+  recommendations actually reached the neighbourhoods that need them most. It's the most
+  interesting conversation available in this challenge and most teams will skip it.
+  ([What that means, concretely](#what-auditing-the-outcome-actually-means).)
 - **Solve a different decision.** Cooling centers are the obvious one. Where do you plant trees
   for the best return in ten years? Which bus stops need shade first? Which blocks should get
   a cool-pavement pilot?
@@ -147,6 +157,12 @@ You have two good options, and you should consume one rather than writing your o
 
 **The Toolbox is generally the more flexible of the two**, and if you want your agent's database
 access shaped to your own tools rather than generic queries, start there.
+
+> **Hint worth taking:** run the Toolbox as a container on **Cloud Run with minimum instances
+> set to 1**. Cloud Run scales to zero by default, which means the first request after an idle
+> period pays a cold start — and the first request after an idle period is usually the one you
+> make on stage. Pinning one warm instance costs very little for a day and removes an entire
+> class of demo failure.
 
 ### And one required differentiator: **BigQuery ML**
 
@@ -208,18 +224,49 @@ everything between raw tables and a model the agent can call:
 - **The frequency analysis** — how often does this city cross dangerous thresholds, and is the
   trend moving?
 - **The equity audit** — where did our recommendations actually land, and who lives there?
+  ([Explained below](#what-auditing-the-outcome-actually-means).)
 - **Decide with the team whether to bring extra data**, and if so, source it and check the licence.
 
 #### Agent lane — 2 to 3 people
 
-The ADK agent, its custom Python tools, the MCP server integration, and deployment to Agent
-Runtime or Cloud Run. Deploy early rather than at the end — the front end needs a live endpoint.
+- **Prompt engineering.** Expect this to be the hardest part, and budget for it. Your system
+  instruction has to teach the agent who it's talking to, when to reach for which tool, what to
+  do with a vague question, and — importantly — **when to refuse.** An agent that confidently
+  answers something it has no data for is worse than one that says "I can't tell you that."
+- **Custom Python tools.** At least one is required. The obvious one wraps your BQML prediction,
+  so the agent can ask about a location nobody measured.
+- **Decide what goes through MCP and what needs a custom tool.** Generic "query my tables" access
+  is a good fit for the managed MCP server. Anything with shape to it — a ranked siting query, an
+  explanation call — usually wants a purpose-built tool. **This is your main coordination point
+  with the data lane**: they own the SQL, you own the wrapper. Ask them for it early.
+- **Deploy early, not at the end.** Agent Runtime or Cloud Run. The front end lane is blocked on
+  a live endpoint, and deployment always takes longer than you think.
+- **Test with the real questions.** Take the seven planner questions above and actually ask them.
+  You'll find the gaps faster than by reasoning about them.
+- **Decide what failure looks like.** What does your agent say when the model has no prediction
+  for a location, or the planner asks about a city you didn't load? Judges notice this.
 
 #### Front end lane — 2 people
 
-The face: a custom UI, Gemini Enterprise, or `adk web`. **Do not wait for a working agent.**
-Build against a mocked response and swap it later. That's precisely why deployment sits in the
-middle of the day rather than the end.
+You have three routes. **Pick deliberately and be ready to say why** — the choice tells judges
+something about who you think the user is.
+
+| Option | Strength | Trade-off |
+|---|---|---|
+| **Custom web UI** | Full control. A map a council member could actually read beats a chat log. | The most work by far. Scope it small. |
+| **Gemini Enterprise** | A polished interface with almost no front-end code. Free trial available, and an agent already deployed to Agent Runtime can be surfaced through it. | Serves **internal** users, not the public. |
+| **`adk web`** | Fastest. Built in. Works immediately. | Obviously a developer tool. Fine for a demo, weak as a product story. |
+
+The Gemini Enterprise trade-off is worth thinking about rather than working around. It's built
+for people *inside* an organisation — which, for a tool whose users are city planners and
+emergency management staff, is arguably exactly right. **Say that on purpose.** "We chose an
+internal-facing interface because our user is a city employee, not a resident" is a good answer.
+Discovering the limitation on stage is not.
+
+- **Do not wait for a working agent.** Mock the response, build against it, swap later. That is
+  precisely why deployment sits in the middle of the day rather than at the end.
+- **Whatever you build, the demo runs on it.** Test it on the machine you'll actually present
+  from, before you need it.
 
 #### Story lane — 1 to 2 people, starting at minute zero
 
@@ -258,27 +305,7 @@ to a council meeting.
 3. **Settings → Collaborators** → add every teammate's GitHub username.
 4. Paste the repo URL where everyone can see it.
 
-### Step 2 — Everyone: get into Cloud Shell
-
-**Cloud Shell is where you'll work.** It has `gcloud`, `bq`, Python, Node, git, Docker, and the
-Antigravity CLI already installed. Nothing to set up on your laptop, and no admin rights needed.
-
-1. Open [shell.cloud.google.com](https://shell.cloud.google.com), or click the terminal icon
-   (**>_**) in the top right of the Google Cloud console.
-2. Clone your team's repository:
-
-   ```bash
-   git clone https://github.com/YOUR-TEAM/YOUR-REPO.git
-   cd YOUR-REPO
-   ```
-
-3. Open the built-in editor with `cloudshell edit .`, or click **Open Editor** in the toolbar.
-   It's a full VS Code in your browser.
-
-New to Cloud Shell? The [official guide](https://cloud.google.com/shell/docs/using-cloud-shell)
-covers the basics. Your `$HOME` persists between sessions; anything outside it does not.
-
-### Step 3 — Get into your Google Cloud project
+### Step 2 — Get into your Google Cloud project
 
 **Your facilitator will tell you how to access your project. Follow those instructions** — they
 vary by venue and they're the fastest path.
@@ -287,6 +314,73 @@ vary by venue and they're the fastest path.
 same BigQuery tables. It also means you can overwrite each other. Agree on who creates what.
 
 You have Owner. You don't need to create a project, set up billing, or download a key file.
+
+### Step 3 — Everyone: get into Cloud Shell
+
+**Cloud Shell is where you'll work.** It has `gcloud`, `bq`, Python, Node, git, Docker, and the
+Antigravity CLI already installed. Nothing to set up on your laptop, and no admin rights needed.
+
+1. In the Google Cloud console — the one your facilitator just got you into — click the
+   **terminal icon (`>_`) in the top right**. Use that icon rather than a bookmark or a typed
+   address: it opens Cloud Shell attached to *this* project, in *this* browser session. Typing a
+   URL can land you in a different window signed in as a different account, which is a confusing
+   twenty minutes nobody needs.
+
+2. Clone your team's repository:
+
+   ```bash
+   git clone https://github.com/YOUR-TEAM/YOUR-REPO.git
+   ```
+
+3. Open the whole repo in the editor:
+
+   ```bash
+   cloudshell workspace .
+   ```
+
+   That opens your cloned folder as a workspace in the Cloud Shell Editor — the same thing as
+   **File → Open Folder** in VS Code, which is essentially what the editor is. You get a file
+   tree, a real editor, and a terminal in the same browser tab.
+
+New to any of this? Both guides open in a new tab:
+<a href="https://cloud.google.com/shell/docs/using-cloud-shell" target="_blank" rel="noopener noreferrer">Using Cloud Shell</a>
+·
+<a href="https://cloud.google.com/shell/docs/editor-overview" target="_blank" rel="noopener noreferrer">Cloud Shell Editor overview</a>
+
+One thing worth knowing: your `$HOME` directory persists between sessions. Anything outside it
+does not — so keep your work in the cloned repo.
+
+#### Optional but encouraged: the Antigravity CLI
+
+**`agy` is already installed in Cloud Shell.** You run zero setup commands — just type it.
+
+Google would like you to try it. It is **not a requirement**, and nothing in this challenge
+depends on it, so don't lose time fighting it if it isn't helping. But it's a genuinely capable
+terminal coding agent: it reads your codebase, proposes edits with your permission, and runs
+commands for you.
+
+```bash
+agy
+```
+
+Then talk to it in plain language. Places it tends to earn its keep in a hackathon:
+
+- **Agent lane** — scaffolding ADK boilerplate, wiring a custom tool around a query, drafting a
+  Cloud Run deploy. The tedious parts you already know how to do.
+- **Data lane** — drafting BigQuery SQL against tables you just loaded, or restructuring a query
+  you've already written.
+- **Anyone, stuck** — paste an error and ask what's wrong. Faster than a search, and it can see
+  your actual code.
+
+A couple of built-ins worth knowing: `/diff` shows you pending changes before you accept them,
+and `/permissions` controls what it's allowed to do on its own. Review before you accept — it's
+fast, which is exactly why it's worth reading what it did.
+
+<a href="https://antigravity.google/docs/cli/install" target="_blank" rel="noopener noreferrer">Docs</a>
+·
+<a href="https://github.com/google-antigravity/antigravity-cli" target="_blank" rel="noopener noreferrer">GitHub</a>
+·
+<a href="https://codelabs.developers.google.com/antigravity-cli-hands-on" target="_blank" rel="noopener noreferrer">Hands-on codelab</a>
 
 ### Step 4 — Load the data
 
@@ -356,6 +450,32 @@ more in a demo than another point of accuracy.
 
 **Strip the variable. Audit the outcome. Say you did both.**
 
+### What "auditing the outcome" actually means
+
+We keep saying this, so here is exactly what it is. It's three steps and about twenty minutes.
+
+1. **Produce your recommendations.** Say your agent's top ten sites.
+2. **Look up who lives there.** Find the census tract each site falls in, and pull its
+   demographics from `tract_demographics` — median income, poverty rate, share of households
+   without a car, median age.
+3. **Compare that to the city as a whole.** Are your recommended tracts poorer than the city
+   average, or richer? Older or younger? More or less likely to be without a vehicle?
+
+Then say the answer out loud: **did our recommendations land in the neighbourhoods that need
+them most, or in the ones that happened to be easiest to model?**
+
+Both answers are worth having. If your sites skew toward high-poverty, low-vehicle-access,
+older-resident tracts, you have evidence your model is finding real vulnerability — say so, with
+the numbers. If they skew the other way, you've found something more interesting: your features
+may be capturing where it's *hot* without capturing where heat *hurts*. That's a genuine finding
+about your own work, and presenting it honestly will land better with judges than a slide
+claiming everything worked.
+
+This is also where race belongs, and only here. You can compare the racial composition of your
+recommended tracts against the city — as a **check on your output**, after the fact. That's a
+completely different act from feeding race into the model, and it's the one that actually tells
+you something.
+
 ---
 
 ## Bringing your own data
@@ -411,7 +531,7 @@ clear reasoning and honest limitations will beat a team that demos something pol
 | **Impact & insight** | 30 | Would a planner actually use this? Is the answer specific enough to act on? |
 | **Technical execution** | 30 | Does it work, and is the required stack genuinely used rather than name-checked? |
 | **Rigor & judgment** | 25 | Can you defend the decisions you made along the way? |
-| **Craft & communication** | 15 | Does the short pitch land, does the quick demo work, can a non-technical person follow? |
+| **Craft & communication** | 15 | Does the short pitch land, does the quick demo work, and can you justify your interface choice? |
 | **Bonus — range** | **+10** | Technology breadth and ambition that *serves* the solution |
 
 Bonus sits **on top** of the 100, so ambition can't cannibalise the core. Nail the fundamentals
@@ -429,8 +549,9 @@ that source and not another? Did you check whether columns were the types you as
 **Validation.** Did you check your tables before modelling, or assume no error meant no problem?
 The notebook ships a validation section — using it, and saying what it told you, counts.
 
-**Bias handling.** Did you keep race out of your model inputs, and did you audit where your
-recommendations landed? Be ready to talk about this.
+**Bias handling.** Did you keep race out of your model inputs, and did you run the
+[equity audit](#what-auditing-the-outcome-actually-means) on your output? Be ready to talk about
+this, and bring the numbers rather than the intention.
 
 **Knowing what your model can't do.** The heat data is a single day. The campaigns were driven by
 volunteers. The stations are sparse. A team that volunteers its limitations shows more skill than
@@ -439,6 +560,16 @@ one that oversells — and judges are told to reward it.
 One warning worth internalising: **a model with 98% accuracy on this problem is almost certainly
 broken**, not brilliant. It usually means the features contain the answer. If your model can't be
 wrong, it isn't predicting anything.
+
+### A note on decisions generally
+
+Several places in this challenge ask you to choose rather than follow instructions — which city,
+which interface, which questions your agent handles well, whether to bring extra data, what to
+cut when you're behind. **None of those have a single right answer, and judges are not checking
+them against a key.** They're asking whether you made the choice on purpose and can say why.
+
+"We picked Gemini Enterprise because our user is a city employee" is a strong answer.
+"We used `adk web` because it was there" is a weaker one for the same amount of work.
 
 ---
 
