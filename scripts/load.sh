@@ -43,7 +43,7 @@ trap on_interrupt INT TERM
 
 list_cities() {
   bold "Cities available in the snapshot"
-  if ! gsutil ls "${BUCKET}/" 2>/dev/null | sed 's|.*/\([^/]*\)/$|  \1|' | grep -v '^\s*$'; then
+  if ! gcloud storage ls "${BUCKET}/" 2>/dev/null | sed 's|.*/\([^/]*\)/$|  \1|' | grep -v '^\s*$'; then
     fail "Could not list ${BUCKET}/. Check that you have network access."
   fi
   echo
@@ -76,7 +76,7 @@ bold "A4I Challenge 1 - loading data for: ${CITY}"
 echo
 
 command -v bq     >/dev/null 2>&1 || fail "'bq' not found. Run this in Cloud Shell."
-command -v gsutil >/dev/null 2>&1 || fail "'gsutil' not found. Run this in Cloud Shell."
+command -v gcloud >/dev/null 2>&1 || fail "'gcloud' not found. Run this in Cloud Shell."
 
 PROJECT_ID="$(gcloud config get-value project 2>/dev/null || true)"
 [[ -n "${PROJECT_ID}" && "${PROJECT_ID}" != "(unset)" ]] \
@@ -87,7 +87,7 @@ info "Source  : ${SRC}"
 info "Dataset : ${DATASET} (${LOCATION})"
 echo
 
-if ! gsutil ls "${SRC}/" >/dev/null 2>&1; then
+if ! gcloud storage ls "${SRC}/" >/dev/null 2>&1; then
   echo
   bold "No snapshot found for '${CITY}'."
   echo
@@ -127,7 +127,7 @@ for table in "${TABLES[@]}"; do
   # BigQuery's EXPORT DATA may shard into several parts, so we load the folder.
   uri="${SRC}/${table}/*.parquet"
 
-  if ! gsutil ls "${SRC}/${table}/" >/dev/null 2>&1; then
+  if ! gcloud storage ls "${SRC}/${table}/" >/dev/null 2>&1; then
     fail "Missing ${SRC}/${table}/. The snapshot for '${CITY}' looks incomplete - tell a coach."
   fi
 
