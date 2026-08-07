@@ -63,6 +63,47 @@ That's your scenario. Write it down. Everything you build should answer to it.
 
 ---
 
+## Then: pick a track
+
+Heat is one problem with several different decisions attached to it, and they belong to
+different people on different clocks. **Pick the one your team wants to solve.** The data and the
+model are the same for all three — what changes is who's asking, what they can actually do about
+it, and what a good answer looks like.
+
+| Track | The decision | Who's asking |
+|---|---|---|
+| ⚡ **Today** | It's 102° tomorrow. Where do the hydration trucks, wellness checks, and extended library hours go? | Emergency management |
+| 🏛️ **This budget cycle** | We can fund three permanent cooling centers. Where? | City planning, answerable to a council |
+| 🌳 **This decade** | Where does tree planting or cool pavement buy the most relief per dollar? | Sustainability, urban forestry |
+
+### What a strong version of each looks like
+
+**⚡ Today** — the hard part isn't finding the hot blocks, it's reaching people who *can't leave*.
+A strong version leans on `no_vehicle_rate` and median age, and outputs something a dispatcher
+could act on in twenty minutes: a ranked list with addresses and a reason per stop. Fully
+supported by the data you'll load.
+
+**🏛️ This budget cycle** — permanence needs justification, and that's where the seven years of
+station history earn their place. A location that's +8°F matters far more in a city crossing 95°F
+thirty times a summer than twice. A strong version pairs the prediction with that frequency and
+produces something that survives a council meeting, including what it costs and what it displaces.
+Fully supported.
+
+**🌳 This decade** — this is the one where `ML.EXPLAIN_PREDICT` does its best work, and most teams
+will miss it. The attributions don't just tell you *where* it's hot, they tell you **why** — and
+the feature driving the offset is the thing to change. If impervious surface dominates, that's a
+pavement problem. If it's building density and land-use mix, that's a canopy and open-space
+problem. **Your model can recommend the intervention, not just the location.**
+
+One honest limit on that last track: you can identify candidates and diagnose the cause, but you
+**cannot simulate the fix** — nothing in the data tells you what the offset becomes after you
+plant. Say that out loud rather than implying otherwise. Judges reward it.
+
+**Can you do more than one?** Yes, and a real planning assistant would. But three shallow tracks
+lose to one that's genuinely good, and you have four and a half hours.
+
+---
+
 ## What you're building
 
 **A planning assistant for a city's heat response.** Not a dashboard, and not a single query
@@ -88,45 +129,26 @@ human will sign their name to.
 **That range is the challenge.** An agent that can only answer the first question is a model
 with a chat box. An agent that handles all seven is something a planner would keep open.
 
-### Questions that need more than we gave you
-
-Be aware of the edges — and treat them as an opportunity, because closing one is exactly the
-kind of thing that separates a team.
-
-Our data uses **coordinates, not street names**, and **straight-line distance, not walking
-routes**. So these need something extra:
-
-| The question | What you'd need to add |
-|---|---|
-| *"What's at 63rd and Halsted?"* — talking in street names | Google Maps geocoding |
-| *"Who's within a **10-minute walk**?"* — real walking distance | Google Maps routing / isochrones |
-| *"Show me Ward 5"* — political boundaries | Your city's open data portal |
-| *"Can people get there on transit?"* | Your city's GTFS feed |
-
-We give you `no_vehicle_rate` per census tract, which tells you *who lacks a car* — that's the
-right input for "if the nearest center is two miles away, who can't reach it?" It is not the
-same as a walk-time isochrone. Know the difference, and say which one you used.
-
----
+Your track shifts the specific questions — an emergency manager asks about tomorrow, a forestry
+office asks about a decade. It doesn't change the shape. Some need a prediction, some need only a
+query, some need the agent to weigh a tradeoff, and one needs it to write prose.
 
 ## What will set yours apart
 
-Every team in this room building Challenge 1 gets the same data, the same model type, and the
-same starting notebook. **The core is not where you win.**
+Every team building Challenge 1 gets the same data, the same model type, and the same starting
+notebook. **The core is not where you win.** Whichever track you picked, these are the levers:
 
-Spend fifteen minutes deciding what *your* version does that nobody else's will. Some directions:
-
-- **Go deeper on one question** rather than shallow on seven. An agent that handles the siting
-  question superbly beats one that half-answers everything.
-- **Bring a dataset nobody else has** — your city's tree canopy, its existing cooling centers,
-  311 heat complaints. (See "Bringing your own data" — check the licence first.)
+- **Go deeper on one question** rather than shallow on seven. An agent that handles its track's
+  central question superbly beats one that half-answers everything.
+- **Bring a dataset nobody else has.** Your city's tree canopy, its existing cooling centers, 311
+  heat complaints. See [Bringing your own data](#bringing-your-own-data) for what would unlock
+  what, and check the licence first.
 - **Make the equity audit the centrepiece** instead of a footnote — checking whether your
   recommendations actually reached the neighbourhoods that need them most. It's the most
   interesting conversation available in this challenge and most teams will skip it.
-  ([What that means, concretely](#what-auditing-the-outcome-actually-means).)
-- **Solve a different decision.** Cooling centers are the obvious one. Where do you plant trees
-  for the best return in ten years? Which bus stops need shade first? Which blocks should get
-  a cool-pavement pilot?
+  ([What that means, concretely](#what-auditing-the-outcome-actually-means).) It lands hardest on
+  the decade track, where the question becomes whether your plan reverses a century of
+  disinvestment or repeats it.
 - **Give it a memorable face** — a map a council member could read, not a JSON blob.
 
 Read [how you'll be judged](#how-youll-be-judged) *before* you decide. It's at the bottom, it
@@ -204,8 +226,9 @@ everyone to it. Everything lands in that one repo — not eight forks.
 and **send your username to the repo owner.** Do it while they're setting up. Two minutes, and
 it unblocks the whole team.
 
-**Agree your scenario and your city** (see above). Five minutes. Write it on something everyone
-can see.
+**Agree your city, your track, and your scenario** (see above). Ten minutes, and it is the most
+valuable ten minutes of the day — everything downstream answers to it. Write it on something
+everyone can see.
 
 **Split into four lanes.** All four start immediately, in parallel.
 
@@ -491,10 +514,28 @@ you something.
 
 ## Bringing your own data
 
-**You're not limited to what we provide.** If your team knows a dataset that would make this
-better — your city's tree canopy, cooling center locations, transit feed, 311 complaints — bring
-it. Thoughtful sourcing is exactly the judgment this challenge rewards, and judges are looking
-for it. This is a natural second job for the data lane once the model is training.
+**You're not limited to what we provide.** Thoughtful sourcing is exactly the judgment this
+challenge rewards, and judges are looking for it. This is a natural second job for the data lane
+once the model is training.
+
+### What would unlock what
+
+Our data uses **coordinates, not street names**, and **straight-line distance, not walking
+routes**. That's not a flaw to work around so much as a list of things a team can go and fix —
+and closing one of these is precisely the kind of move that separates a demo.
+
+| What you can't currently ask | What would unlock it | Matters most to |
+|---|---|---|
+| *"What's at 63rd and Halsted?"* — talking in street names | Google Maps geocoding | every track |
+| *"Who's within a **10-minute walk**?"* — real walking distance | Google Maps routing / isochrones | Today, This budget cycle |
+| *"Can people get there on transit?"* | Your city's GTFS feed | Today |
+| *"Show me Ward 5"* — political boundaries | Your city's open data portal | This budget cycle |
+| *"How much canopy is there now?"* | Your city's tree inventory — NYC's is already in BigQuery at `bigquery-public-data.new_york_trees.tree_census_2015` | This decade |
+| *"Which blocks are mostly pavement?"* | An impervious-surface layer, if your city publishes one | This decade |
+
+One distinction worth getting right: we give you `no_vehicle_rate` per census tract, which tells
+you *who lacks a car*. That's the right input for "if the nearest center is two miles away, who
+can't reach it?" It is **not** a walk-time isochrone. Know which one you used, and say so.
 
 **Augment, don't replace.** Get the core working on the provided data *first*. "Let's find better
 data" is one of the most reliable ways to lose ninety minutes and have nothing to demo.
@@ -572,17 +613,15 @@ One warning worth internalising: **a model with 98% accuracy on this problem is 
 broken**, not brilliant. It usually means the features contain the answer. If your model can't be
 wrong, it isn't predicting anything.
 
-### A note on decisions generally
-
-Several places in this challenge ask you to choose rather than follow instructions — which city,
-which interface, which questions your agent handles well, whether to bring extra data, what to
-cut when you're behind. **None of those have a single right answer, and judges are not checking
-them against a key.** They're asking whether you made the choice on purpose and can say why.
-
-"We picked Gemini Enterprise because our user is a city employee" is a strong answer.
-"We used `adk web` because it was there" is a weaker one for the same amount of work.
+And a general note, because this challenge asks you to choose more than it asks you to follow
+instructions — which city, which track, which interface, what to cut when you're behind. **None
+of those have a single right answer and judges are not checking them against a key.** They're
+asking whether you chose on purpose and can say why. "We picked Gemini Enterprise because our
+user is a city employee" is a strong answer; "we used `adk web` because it was there" is a weaker
+one for the same work.
 
 ---
+
 
 ## Getting help
 
