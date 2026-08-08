@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # A4I 2026 - Challenge 1: Climate-Resilient Walkability
-# Headless fallback for notebooks/01_load_explore.ipynb
+# Headless fallback for notebooks/c1_01_load_explore.ipynb
 #
 # Rebuilds the same three BigQuery tables the notebook produces, from a
 # pre-staged snapshot in Cloud Storage. Use this when a Colab Enterprise
@@ -99,11 +99,21 @@ fi
 # Create the dataset
 # --------------------------------------------------------------------------
 bold "1/3  Creating dataset"
-if bq --project_id="${PROJECT_ID}" ls -d "${DATASET}" >/dev/null 2>&1; then
+
+# `bq ls -d NAME` lists the datasets in a PROJECT called NAME - it does not test
+# whether one dataset exists, so it always looked "missing" and mk then failed on
+# the second run. `bq show --dataset` is the correct existence test.
+dataset_exists() {
+  bq --project_id="${PROJECT_ID}" show --dataset --format=none \
+     "${PROJECT_ID}:${DATASET}" >/dev/null 2>&1
+}
+
+if dataset_exists; then
   info "${DATASET} already exists - reusing it"
 
   # A dataset in the wrong region fails every load with a confusing error.
-  existing_loc="$(bq --project_id="${PROJECT_ID}" --format=json show -d "${DATASET}" 2>/dev/null \
+  existing_loc="$(bq --project_id="${PROJECT_ID}" --format=json show --dataset \
+                    "${PROJECT_ID}:${DATASET}" 2>/dev/null \
                   | tr ',' '\n' | grep -i '"location"' | head -1 \
                   | sed 's/.*: *"\([^"]*\)".*/\1/' || true)"
   if [[ -n "${existing_loc}" && "${existing_loc^^}" != "${LOCATION^^}" ]]; then
@@ -112,8 +122,17 @@ if bq --project_id="${PROJECT_ID}" ls -d "${DATASET}" >/dev/null 2>&1; then
        (bq rm -r -d ${DATASET}) or edit LOCATION at the top of this script to match."
   fi
 else
-  bq --project_id="${PROJECT_ID}" --location="${LOCATION}" mk -d "${DATASET}"
-  info "created ${DATASET}"
+  # Belt and braces: if the check above ever misfires, or two teammates run this
+  # at the same moment, an "already exists" error is fine. Anything else is not.
+  if mk_out="$(bq --project_id="${PROJECT_ID}" --location="${LOCATION}" \
+                  mk --dataset "${PROJECT_ID}:${DATASET}" 2>&1)"; then
+    info "created ${DATASET}"
+  elif grep -qi "already exists" <<<"${mk_out}"; then
+    info "${DATASET} already exists - reusing it"
+  else
+    fail "Could not create dataset ${DATASET}:
+       ${mk_out}"
+  fi
 fi
 echo
 
