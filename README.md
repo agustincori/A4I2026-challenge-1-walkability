@@ -470,7 +470,7 @@ fast, which is exactly why it's worth reading what it did.
 3. **My Notebooks** → **Import** → source **URL**, and paste this:
 
    ```
-   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/notebooks/01_load_explore.ipynb
+   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/notebooks/c1_01_load_explore.ipynb
    ```
 
    *(If your team modifies the notebook later, get your own copy's raw URL by opening the file
@@ -615,7 +615,7 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 ## What's in this repository
 
 ```
-notebooks/01_load_explore.ipynb   The main artifact. Run this first.
+notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
 scripts/load.sh                   Headless fallback if Colab is unavailable.
 data/                             Seed data, if any.
 agent/                            Empty. Your agent goes here.
