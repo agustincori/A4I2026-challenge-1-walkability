@@ -632,9 +632,14 @@ We didn't build the vehicle. The design decisions in your agent are what you'll 
 4.5 hours — that's the design, not a failure. A team that gets three quarters of the way with
 clear reasoning and honest limitations will beat a team that demos something polished and hollow.
 
+**You're judged against the track you chose**, not against a fixed idea of the right answer. A
+decade-track team is expected to hand over a planting *program* at neighbourhood scale; a
+Today-track team is expected to hand over something a dispatcher could work this afternoon.
+Neither is marked down for not looking like the other. Say which track you took, early.
+
 | Dimension | Weight | The question judges are asking |
 |---|---:|---|
-| **Impact & insight** | 30 | Would a planner actually use this? Is the answer specific enough to act on? |
+| **Impact & insight** | 30 | Would your user actually use this? Is the answer specific enough for *them* to act on? |
 | **Technical execution** | 30 | Does it work, and is the required stack genuinely used rather than name-checked? |
 | **Rigor & judgment** | 25 | Can you defend the decisions you made along the way? |
 | **Craft & communication** | 15 | Does the short pitch land, does the quick demo work, and can you justify your interface choice? |
