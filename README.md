@@ -63,6 +63,19 @@ That's your scenario. Write it down. Everything you build should answer to it.
 
 ---
 
+## Four words we use precisely
+
+These turn up as column names later, so it's worth thirty seconds now:
+
+| Term | What it means here |
+|---|---|
+| **Campaign** | One city's Heat Watch day — volunteers driving fixed routes, three one-hour windows. Your `heat_observations` table is one campaign. |
+| **Traverse** | A single drive along one of those routes. Thousands of readings, one per second or so. |
+| **Offset** | How much hotter a spot is **than its own city's average** on that campaign day. Not a temperature — a difference. This is what your model predicts. |
+| **Track** | Which of the three decisions below your team chose to solve. Nothing to do with traverses, unhelpfully. |
+
+---
+
 ## Then: pick a track
 
 Heat is one problem with several different decisions attached to it, and they belong to
@@ -110,17 +123,19 @@ lose to one that's genuinely good, and you have four and a half hours.
 with a chat box on it — an agent a planner can hold a working conversation with, that reaches
 for real data and a real model to answer.
 
-Your planner isn't asking one question. Over an afternoon they might ask all of these:
+**One afternoon, one planner.** It's 3:40 on a Tuesday in July, the forecast for Thursday is
+102°F, and Dana in the city manager's office has a meeting at nine tomorrow. Everything below is
+a question she asks between now and then:
 
 | What they ask | What answers it |
 |---|---|
 | *"We can fund three cooling centers this summer. Where should they go?"* | Your BQML model, ranked against demographics |
-| *"Why is this spot so much worse than two blocks north?"* | `ML.EXPLAIN_PREDICT` attributions |
-| *"How often does that area reach dangerous heat? Is it getting worse?"* | Seven years of station history |
-| *"Who lives around the site we're considering — how many people, how old, how many without a car?"* | Census tract demographics |
-| *"We're down to two sites. Make the case for each."* | Both, plus Gemini weighing the tradeoff |
-| *"Draft the proposal I'd take to the council."* | Gemini, synthesising everything above |
-| *"Did our recommendations actually reach the most vulnerable areas?"* | An equity audit of your own output |
+| *"Why is 4th and Marsalis so much worse than two blocks north?"* | `ML.EXPLAIN_PREDICT` attributions |
+| *"How often does that area actually hit dangerous heat? Is it getting worse?"* | Seven years of station history |
+| *"Who lives around that site — how many people, how old, how many without a car?"* | Census tract demographics |
+| *"I'm down to two sites and have to pick one. Make the case for each."* | Both, plus Gemini weighing the tradeoff |
+| *"Draft the proposal I'm taking to council in the morning."* | Gemini, synthesising everything above |
+| *"Before I send it — did we actually reach the neighbourhoods that need this most?"* | An equity audit of your own output |
 
 Notice these need **different things**. Some need a prediction. Some need only a query against
 history. Some need the agent to weigh a tradeoff and say why. One needs it to write prose a
@@ -166,7 +181,15 @@ Every team, every challenge, uses the same core stack:
 | **Gemini** | The reasoning model behind the agent — interpreting what the planner meant, weighing tradeoffs, drafting the proposal. |
 | **BigQuery** | All the data this challenge needs lives here, and your agent queries it. |
 | **A managed MCP server** | Consume at least one — don't author your own. See below. |
+| **At least one custom Python tool** | Yours, not configuration. See below for why. |
 | **Deployed to Google Cloud** | Agent Runtime or Cloud Run, your choice. It has to actually run somewhere. |
+
+### One more thing already installed for you
+
+**Antigravity CLI (`agy`)** is pre-installed in Cloud Shell — a terminal coding agent that reads
+your codebase, proposes edits, and runs commands. Google would like you to try it. It is not
+required and nothing here depends on it, but it's free and it's already there. Details and
+examples are in [Step 3](#step-3--everyone-get-into-cloud-shell).
 
 ### Choosing your MCP server
 
@@ -179,6 +202,20 @@ You have two good options, and you should consume one rather than writing your o
 
 **The Toolbox is generally the more flexible of the two**, and if you want your agent's database
 access shaped to your own tools rather than generic queries, start there.
+
+### Why we also require a custom Python tool
+
+Fair question, since MCP Toolbox lets you define a tool as parameterised SQL — you could run the
+prediction through MCP and write no Python at all.
+
+**That's true of the query. It isn't true of the work around it.** Turning "somewhere on the
+south side" into a bounding box is judgment. `ML.EXPLAIN_PREDICT` hands you attributions as a
+nested structure, and turning that into *"impervious surface contributed +4.2°"* is code.
+Assembling a Placement Recommendation from four sources, deciding what to do when the model has
+no answer for a location — none of that is a single SQL call.
+
+So: **let the search itself be a Toolbox tool if you like.** The custom tool exists for the
+reasoning around it, which is the part a rulebook can't express and the part you'll be judged on.
 
 > **Hint worth taking:** run the Toolbox as a container on **Cloud Run with minimum instances
 > set to 1**. Cloud Run scales to zero by default, which means the first request after an idle
@@ -276,9 +313,13 @@ something about who you think the user is.
 
 | Option | Strength | Trade-off |
 |---|---|---|
-| **Custom web UI** | Full control. A map a council member could actually read beats a chat log. | The most work by far. Scope it small. |
+| **`adk web`** | Free. Built in. Works the moment your agent does. **Everyone starts here.** | It is visibly a developer tool. Fine as a demo, weak as a product story. |
 | **Gemini Enterprise** | A polished interface with almost no front-end code. Free trial available, and an agent already deployed to Agent Runtime can be surfaced through it. | Serves **internal** users, not the public. |
-| **`adk web`** | Fastest. Built in. Works immediately. | Obviously a developer tool. Fine for a demo, weak as a product story. |
+| **Custom web UI** | Full control. A map a council member could actually read beats a chat log. | The most work by far. Scope it small. |
+
+**Every team starts on `adk web`** — that's not a choice, it's just what's in front of you. The
+real question is whether you *finish* there. Staying is a legitimate decision if you spent the
+time elsewhere and can say so. "It was already there" is the weakest available defence of it.
 
 The Gemini Enterprise trade-off is worth thinking about rather than working around. It's built
 for people *inside* an organisation — which, for a tool whose users are city planners and
@@ -364,6 +405,19 @@ Antigravity CLI already installed. Nothing to set up on your laptop, and no admi
    That opens your cloned folder as a workspace in the Cloud Shell Editor — the same thing as
    **File → Open Folder** in VS Code, which is essentially what the editor is. You get a file
    tree, a real editor, and a terminal in the same browser tab.
+
+#### One repo, one branch per lane
+
+Eight to ten people committing to `main` will collide, and merge conflicts at minute 200 are a
+genuinely bad way to lose a demo. Nobody needs their own fork — just take a branch:
+
+```bash
+git checkout -b data        # or agent, frontend, story
+```
+
+Work on your lane's branch. Merge into `main` when you have something the other lanes need —
+the data lane's `ML.EXPLAIN_PREDICT` query is the obvious example, and the agent lane is blocked
+until they get it. Merging early and often beats one heroic merge at the end.
 
 New to any of this? Both guides open in a new tab:
 <a href="https://cloud.google.com/shell/docs/using-cloud-shell" target="_blank" rel="noopener noreferrer">Using Cloud Shell</a>
