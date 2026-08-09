@@ -25,6 +25,38 @@ help.** Your job today is to build the thing that helps them make it well.
 
 ---
 
+## How to read this
+
+**This is a reference for your whole afternoon, not something to read end to end now.** It is
+long on purpose — you will Ctrl-F it at hour three. Here is what each of you needs in the first
+fifteen minutes.
+
+| If you are… | Read now | Come back for |
+|---|---|---|
+| **Everyone, together** | [Pick a city](#first-pick-a-city) · [Pick a track](#then-pick-a-track) · [Four words](#four-words-we-use-precisely) | — decide these before anyone opens a keyboard |
+| **Team lead** | [Step 0](#step-0organise-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart) — read it *before* the team writes code, not after |
+| **Data lane** | [Data lane](#data-lane2-to-3-people) · [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) · [What would unlock what](#what-would-unlock-what) |
+| **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [Why we also require a custom Python tool](#why-we-also-require-a-custom-python-tool) · [`agent/README.md`](agent/) |
+| **Front end lane** | [Front end lane](#front-end-lane2-people) · [Step 3, Cloud Shell](#step-3everyone-get-into-cloud-shell) | [Your output artifact](#your-output-artifact-the-placement-recommendation) |
+| **Story lane** | [What you're building](#what-youre-building) · [Story lane](#story-lane1-to-2-people-starting-at-minute-zero) | [What "auditing the outcome" actually means](#what-auditing-the-outcome-actually-means) — you will be asked about this |
+
+**Three things everybody should know by the end of hour one**, whatever lane you are in:
+
+1. **Your model predicts an *offset*, not a temperature.** Not "it will be 106° here" but
+   "this spot runs 8° hotter than the rest of the city." Everything the agent says and everything
+   the deck claims depends on getting that right, and it is the easiest thing in the challenge to
+   describe wrongly on stage. [Why we frame it that way.](#and-one-required-differentiator-bigquery-ml)
+2. **Your agent has to actually *call* the prediction.** Querying the historical readings and
+   describing them is the most common way to miss the point while appearing to hit it — the whole
+   challenge is answering for locations nobody ever measured.
+3. **The street-level data is a single day, and many cities carry no timestamp at all.** That is
+   expected, not a broken load. If `observed_at` comes back entirely null, your city's campaign
+   simply did not record clock times — every reading still sits inside the same one-hour window,
+   which is exactly why the offset works. "How often does this happen?" is answered by the seven
+   years of station history instead, and *that* distinction is what a judge will probe.
+
+---
+
 ## First: pick a city
 
 **This is not a universal application. It is an application for one city**, and choosing yours
@@ -189,7 +221,7 @@ Every team, every challenge, uses the same core stack:
 **Antigravity CLI (`agy`)** is pre-installed in Cloud Shell — a terminal coding agent that reads
 your codebase, proposes edits, and runs commands. Google would like you to try it. It is not
 required and nothing here depends on it, but it's free and it's already there. Details and
-examples are in [Step 3](#step-3--everyone-get-into-cloud-shell).
+examples are in [Step 3](#step-3everyone-get-into-cloud-shell).
 
 ### Choosing your MCP server
 
@@ -250,7 +282,7 @@ You have **4.5 hours** and there are **8–10 of you**. That is too many people 
 and the biggest risk to your team is the first hour disappearing into setup and coordination.
 Spend twenty minutes on Step 0. It pays for itself twice over.
 
-### Step 0 — Organise your team
+### Step 0—Organise your team
 
 **Pick a team lead.** One person who makes the call when you're behind — and you *will* be
 behind. Deciding in advance who says "we're cutting that" is worth more than it sounds. They
@@ -269,7 +301,7 @@ everyone can see.
 
 **Split into four lanes.** All four start immediately, in parallel.
 
-#### Data lane — 2 to 3 people
+#### Data lane—2 to 3 people
 
 Running the notebook takes about a minute, so that is emphatically *not* the job. This lane owns
 everything between raw tables and a model the agent can call:
@@ -287,7 +319,7 @@ everything between raw tables and a model the agent can call:
   ([Explained below](#what-auditing-the-outcome-actually-means).)
 - **Decide with the team whether to bring extra data**, and if so, source it and check the licence.
 
-#### Agent lane — 2 to 3 people
+#### Agent lane—2 to 3 people
 
 - **Prompt engineering.** Expect this to be the hardest part, and budget for it. Your system
   instruction has to teach the agent who it's talking to, when to reach for which tool, what to
@@ -306,7 +338,7 @@ everything between raw tables and a model the agent can call:
 - **Decide what failure looks like.** What does your agent say when the model has no prediction
   for a location, or the planner asks about a city you didn't load? Judges notice this.
 
-#### Front end lane — 2 people
+#### Front end lane—2 people
 
 You have three routes. **Pick deliberately and be ready to say why** — the choice tells judges
 something about who you think the user is.
@@ -332,7 +364,7 @@ Discovering the limitation on stage is not.
 - **Whatever you build, the demo runs on it.** Test it on the machine you'll actually present
   from, before you need it.
 
-#### Story lane — 1 to 2 people, starting at minute zero
+#### Story lane—1 to 2 people, starting at minute zero
 
 Not "make slides at the end." This lane owns whether anyone understands what you built.
 
@@ -359,7 +391,7 @@ each carrying coordinates specific enough to stand on, the predicted heat risk, 
 factors drove it and by how much), who lives there, and a drafted proposal a planner could take
 to a council meeting.
 
-### Step 1 — Create the team repository
+### Step 1—Create the team repository
 
 **Repo owner only.**
 
@@ -369,7 +401,7 @@ to a council meeting.
 3. **Settings → Collaborators** → add every teammate's GitHub username.
 4. Paste the repo URL where everyone can see it.
 
-### Step 2 — Get into your Google Cloud project
+### Step 2—Get into your Google Cloud project
 
 **Your facilitator will tell you how to access your project. Follow those instructions** — they
 vary by venue and they're the fastest path.
@@ -379,7 +411,7 @@ same BigQuery tables. It also means you can overwrite each other. Agree on who c
 
 You have Owner. You don't need to create a project, set up billing, or download a key file.
 
-### Step 3 — Everyone: get into Cloud Shell
+### Step 3—Everyone: get into Cloud Shell
 
 **Cloud Shell is where you'll work.** It has `gcloud`, `bq`, Python, Node, git, Docker, and the
 Antigravity CLI already installed. Nothing to set up on your laptop, and no admin rights needed.
@@ -459,7 +491,7 @@ fast, which is exactly why it's worth reading what it did.
 ·
 <a href="https://codelabs.developers.google.com/antigravity-cli-hands-on" target="_blank" rel="noopener noreferrer">Hands-on codelab</a>
 
-### Step 4 — Load the data
+### Step 4—Load the data
 
 **Data lane's job.** One person runs it; nobody else waits.
 
@@ -649,7 +681,7 @@ Bonus sits **on top** of the 100, so ambition can't cannibalise the core. Nail t
 and add nothing, and you can still win. Wire up five services with no coherent recommendation,
 and you can't win on breadth alone.
 
-### What "Rigor & judgment" actually means
+### What "Rigor and judgment" actually means
 
 This is the one teams under-invest in, because it's least visible in a demo. It's a quarter of
 your score and the easiest place to stand out. Four concrete things:
