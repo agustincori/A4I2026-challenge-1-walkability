@@ -18,6 +18,6 @@ model your data lane trains is the shape most teams will land on.
 
 The per-feature attributions that come back from `ML.EXPLAIN_PREDICT` are what turn a
 location into a recommendation a city planner can defend. Don't treat the explanation as
-a reporting step at the end — it's the product.
+a reporting step at the end—it's the product.
 
 Build it however your team works best. Delete this file when you do.

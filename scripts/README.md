@@ -3,7 +3,7 @@
 Headless alternatives to the notebook, for when a Colab Enterprise runtime is slow or
 unavailable.
 
-`load.sh` reaches the same end state as `notebooks/c1_01_load_explore.ipynb` — the same tables, in
+`load.sh` reaches the same end state as `notebooks/c1_01_load_explore.ipynb`—the same tables, in
 the same dataset, in your project. Use the notebook if you can: it explains what it's doing and
 why, and the explanations matter. Use this if you can't.
 
@@ -23,4 +23,4 @@ file's executable bit survived however your copy of this repo was created.
 ## It is safe to run more than once
 
 Every table is fully replaced, never appended to. So if you cancel it halfway through, or you
-aren't sure whether it finished, just run it again — the end state is the same either way.
+aren't sure whether it finished, just run it again—the end state is the same either way.
