@@ -1,4 +1,4 @@
-# Challenge 1 — Climate-Resilient Walkability
+# Challenge 1 — Community Climate Resilience: Urban Heat
 
 **Agents for Impact 2026**
 
@@ -22,6 +22,24 @@ argument they can put in front of a council, and someone to ask when the questio
 
 **A city has a small budget, a hot summer coming, and a decision to make about where to put
 help.** Your job today is to build the thing that helps them make it well.
+
+### Why heat, specifically?
+
+Community climate resilience is a big tent — cold snaps, flooding, wind, air quality. We built
+this challenge around heat for one concrete reason: **it is the only climate hazard with a public
+dataset that resolves conditions *within* a city rather than between cities.**
+
+NOAA Heat Watch sends volunteers driving instrumented cars along fixed routes on one hot day,
+logging temperature roughly once per second. That gives you readings a block apart. Nothing
+comparable is published for cold, flood, or wind — and a challenge built on city-average data
+cannot answer *"this intersection, not the one two blocks north,"* which is the entire point of
+the exercise.
+
+So heat is the instrument, not the ceiling. The three tracks below are three genuinely different
+decisions, on three different clocks, for three different people. And if you want to take the
+same technique somewhere else — a cold-snap version, a flood version, indoor cooling access —
+that is exactly what [bringing your own data](#bringing-your-own-data) is for, and judges reward
+it.
 
 ---
 
@@ -114,6 +132,11 @@ Heat is one problem with several different decisions attached to it, and they be
 different people on different clocks. **Pick the one your team wants to solve.** The data and the
 model are the same for all three — what changes is who's asking, what they can actually do about
 it, and what a good answer looks like.
+
+**These are suggestions, not a menu you're confined to.** Pick one, combine two, or invent your
+own—if you can see a community climate-resilience problem in the same vein that these three miss,
+that is exactly the kind of judgment this challenge rewards. Just be ready to say why yours is
+worth solving.
 
 | Track | The decision | Who's asking |
 |---|---|---|
@@ -618,6 +641,9 @@ and closing one of these is precisely the kind of move that separates a demo.
 | *"Show me Ward 5"* — political boundaries | Your city's open data portal | This budget cycle |
 | *"How much canopy is there now?"* | Your city's tree inventory — NYC's is already in BigQuery at `bigquery-public-data.new_york_trees.tree_census_2015` | This decade |
 | *"Which blocks are mostly pavement?"* | An impervious-surface layer, if your city publishes one | This decade |
+| *"Where do people go when it's dangerously cold?"* | NOAA GHCN-Daily minimums and snow depth, plus your city's warming-centre list | a cold-snap track of your own |
+| *"Which underpasses flood?"* | Your city's stormwater or 311 flooding reports; FEMA flood layers | a storm track of your own |
+| *"Who has nowhere indoors to go?"* | Your city's public facility list — libraries, rec centres, senior centres, with hours | indoor cooling access |
 
 One distinction worth getting right: we give you `no_vehicle_rate` per census tract, which tells
 you *who lacks a car*. That's the right input for "if the nearest center is two miles away, who
