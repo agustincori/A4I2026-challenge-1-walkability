@@ -51,7 +51,7 @@ fifteen minutes.
 
 | If you are… | Read now | Come back for |
 |---|---|---|
-| **Everyone, together** | [Pick a city](#now-pick-your-city) · [Pick a track](#three-tracks-one-architecture) · [Four words](#the-four-things-youre-working-with) | — decide these before anyone opens a keyboard |
+| **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) · [Pick your city](#now-pick-your-city) | — decide these before anyone opens a keyboard |
 | **Team lead** | [Step 0](#step-0organize-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart)—read it *before* the team writes code, not after |
 | **Data lane** | [Data lane](#data-lane2-to-3-people) · [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) · [What would unlock what](#what-would-unlock-what) |
 | **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [Why we also require a custom Python tool](#why-we-also-require-a-custom-python-tool) · [`agent/README.md`](agent/) |
