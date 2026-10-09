@@ -53,7 +53,7 @@ fifteen minutes.
 | **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) · [Pick your city](#now-pick-your-city) | — decide these before anyone opens a keyboard |
 | **Team lead** | [Step 0](#step-0organize-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart)—read it *before* the team writes code, not after |
 | **Data lane** | [Data lane](#data-lane2-to-3-people) · [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) · [What would unlock what](#what-would-unlock-what) |
-| **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [Why we also require a custom Python tool](#why-we-also-require-a-custom-python-tool) · [`agent/README.md`](agent/) |
+| **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [What "a tool you built" means](#what-a-tool-you-built-means-and-why-we-ask) · [`agent/README.md`](agent/) |
 | **Front end lane** | [Front end lane](#front-end-lane2-people) · [Step 3, Cloud Shell](#step-3everyone-get-into-cloud-shell) | [Your output artifact](#your-output-artifact-the-placement-recommendation) |
 | **Story lane** | [What you're building](#what-youre-building) · [Story lane](#story-lane1-to-2-people-starting-at-minute-zero) | [What "auditing the outcome" actually means](#what-auditing-the-outcome-actually-means)—you will be asked about this |
 
@@ -212,7 +212,7 @@ Every team, every challenge, uses the same core stack:
 | **Gemini** | The reasoning model behind the agent—interpreting what the planner meant, weighing tradeoffs, drafting the proposal. |
 | **BigQuery** | All the data this challenge needs lives here, and your agent queries it. |
 | **A managed MCP server** | Consume at least one—don't author your own. See below. |
-| **At least one custom Python tool** | Yours, not configuration. See below for why. |
+| **At least one tool you built** | A Python function tool, or a tool you defined yourself in MCP Toolbox. See below. |
 | **Deployed to Google Cloud** | Agent Runtime or Cloud Run, your choice. It has to actually run somewhere. |
 
 ### One more thing already set up for you
@@ -235,19 +235,20 @@ You have two good options, and you should consume one rather than writing your o
 **The Toolbox is generally the more flexible of the two**, and if you want your agent's database
 access shaped to your own tools rather than generic queries, start there.
 
-### Why we also require a custom Python tool
+### What "a tool you built" means, and why we ask
 
-Fair question, since MCP Toolbox lets you define a tool as parameterized SQL—you could run the
-prediction through MCP and write no Python at all.
+You could, in principle, run the prediction through MCP Toolbox—it lets you define a tool as
+parameterized SQL, so the `ML.PREDICT` call itself can be a Toolbox tool with no Python at all.
+That's a legitimate design and we're not going to pretend otherwise.
 
-**That's true of the query. It isn't true of the work around it.** Turning "somewhere on the
-south side" into a bounding box is judgment. `ML.EXPLAIN_PREDICT` hands you attributions as a
-nested structure, and turning that into *"impervious surface contributed +4.2°"* is code.
-Assembling a Placement Recommendation from four sources, deciding what to do when the model has
-no answer for a location—none of that is a single SQL call.
+**The requirement is one tool you designed, in either form.** What we're actually looking for is
+the work that *isn't* a single query: turning "somewhere on the south side" into a bounding box,
+turning `ML.EXPLAIN_PREDICT`'s nested attributions into *"impervious surface contributed +4.2°"*,
+assembling a Placement Recommendation from four sources, deciding what to do when the model has no
+answer for a location. That tends to want Python. But if you can express it in Toolbox and defend
+the choice, that counts.
 
-So: **let the search itself be a Toolbox tool if you like.** The custom tool exists for the
-reasoning around it, which is the part a rulebook can't express and the part you'll be judged on.
+What doesn't count is consuming only prebuilt generic tools and calling that your design.
 
 > **Hint worth taking:** run the Toolbox as a container on **Cloud Run with minimum instances
 > set to 1**. Cloud Run scales to zero by default, which means the first request after an idle
@@ -324,7 +325,7 @@ everything between raw tables and a model the agent can call:
   instruction has to teach the agent who it's talking to, when to reach for which tool, what to
   do with a vague question, and—importantly—**when to refuse.** An agent that confidently
   answers something it has no data for is worse than one that says "I can't tell you that."
-- **Custom Python tools.** At least one is required. The obvious one wraps your BQML prediction,
+- **At least one tool you built.** Required. The obvious one wraps your BQML prediction,
   so the agent can ask about a location nobody measured.
 - **Decide what goes through MCP and what needs a custom tool.** Generic "query my tables" access
   is a good fit for the managed MCP server. Anything with shape to it—a ranked siting query, an
