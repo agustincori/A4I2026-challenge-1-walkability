@@ -451,9 +451,9 @@ Work on your lane's branch. Merge into `main` when you have something the other 
 until they get it. Merging early and often beats one heroic merge at the end.
 
 New to any of this? Both guides open in a new tab:
-<a href="https://cloud.google.com/shell/docs/using-cloud-shell" target="_blank" rel="noopener noreferrer">Using Cloud Shell</a>
+[Using Cloud Shell](https://docs.cloud.google.com/shell/docs/using-cloud-shell)
 ·
-<a href="https://cloud.google.com/shell/docs/editor-overview" target="_blank" rel="noopener noreferrer">Cloud Shell Editor overview</a>
+[Cloud Shell Editor overview](https://docs.cloud.google.com/shell/docs/editor-overview)
 
 One thing worth knowing: your `$HOME` directory persists between sessions. Anything outside it
 does not—so keep your work in the cloned repo.
