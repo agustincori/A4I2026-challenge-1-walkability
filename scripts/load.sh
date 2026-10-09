@@ -65,7 +65,7 @@ if [[ "${CITY}" == "--help" || "${CITY}" == "-h" ]]; then
   exit 0
 fi
 
-# Normalise: lowercase, spaces to hyphens
+# Normalize: lowercase, spaces to hyphens
 CITY="$(echo "${CITY}" | tr '[:upper:] ' '[:lower:]-')"
 SRC="${BUCKET}/${CITY}"
 

@@ -37,8 +37,7 @@ the exercise.
 
 So heat is the instrument, not the ceiling. The three tracks below are three genuinely different
 decisions, on three different clocks, for three different people. And if you want to take the
-same technique somewhere else—a cold-snap version, a flood version, indoor cooling access —
-that is exactly what [bringing your own data](#bringing-your-own-data) is for, and judges reward
+same technique somewhere else—a cold-snap version, a flood version, indoor cooling access—that is exactly what [bringing your own data](#bringing-your-own-data) is for, and judges reward
 it.
 
 ---
@@ -152,7 +151,7 @@ a question she asks between now and then:
 | *"Who lives around that site—how many people, how old, how many without a car?"* | Census tract demographics |
 | *"I'm down to two sites and have to pick one. Make the case for each."* | Both, plus Gemini weighing the tradeoff |
 | *"Draft the proposal I'm taking to council in the morning."* | Gemini, synthesising everything above |
-| *"Before I send it—did we actually reach the neighbourhoods that need this most?"* | An equity audit of your own output |
+| *"Before I send it—did we actually reach the neighborhoods that need this most?"* | An equity audit of your own output |
 
 Notice these need **different things**. Some need a prediction. Some need only a query against
 history. Some need the agent to weigh a tradeoff and say why. One needs it to write prose a
@@ -238,7 +237,7 @@ access shaped to your own tools rather than generic queries, start there.
 
 ### Why we also require a custom Python tool
 
-Fair question, since MCP Toolbox lets you define a tool as parameterised SQL—you could run the
+Fair question, since MCP Toolbox lets you define a tool as parameterized SQL—you could run the
 prediction through MCP and write no Python at all.
 
 **That's true of the query. It isn't true of the work around it.** Turning "somewhere on the
@@ -261,8 +260,7 @@ reasoning around it, which is the part a rulebook can't express and the part you
 Each of the five challenges has one required technology that makes it distinct. Yours is
 BigQuery ML, and here's why it belongs in this problem rather than being bolted on.
 
-Look back at the planner's questions. *"How often does this hit dangerous levels"* is history —
-a query answers it. But *"where should the cooling centers go"* is about places **nobody has
+Look back at the planner's questions. *"How often does this hit dangerous levels"* is history—a query answers it. But *"where should the cooling centers go"* is about places **nobody has
 measured**. Your data has temperature readings along the streets volunteers drove. It has
 nothing for the street they didn't.
 
@@ -355,7 +353,7 @@ real question is whether you *finish* there. Staying is a legitimate decision if
 time elsewhere and can say so. "It was already there" is the weakest available defense of it.
 
 The Gemini Enterprise trade-off is worth thinking about rather than working around. It's built
-for people *inside* an organisation—which, for a tool whose users are city planners and
+for people *inside* an organization—which, for a tool whose users are city planners and
 emergency management staff, is arguably exactly right. **Say that on purpose.** "We chose an
 internal-facing interface because our user is a city employee, not a resident" is a good answer.
 Discovering the limitation on stage is not.
@@ -449,8 +447,7 @@ genuinely bad way to lose a demo. Nobody needs their own fork—just take a bran
 git checkout -b data        # or agent, frontend, story
 ```
 
-Work on your lane's branch. Merge into `main` when you have something the other lanes need —
-the data lane's `ML.EXPLAIN_PREDICT` query is the obvious example, and the agent lane is blocked
+Work on your lane's branch. Merge into `main` when you have something the other lanes need—the data lane's `ML.EXPLAIN_PREDICT` query is the obvious example, and the agent lane is blocked
 until they get it. Merging early and often beats one heroic merge at the end.
 
 New to any of this? Both guides open in a new tab:
@@ -568,13 +565,13 @@ NYC Heat Vulnerability Index and CDC's Social Vulnerability Index include race a
 variable. We left those columns out.
 
 Race genuinely correlates with urban heat exposure—that's well established, and formerly
-redlined neighbourhoods run measurably hotter today. But the *cause* is the physical environment:
+redlined neighborhoods run measurably hotter today. But the *cause* is the physical environment:
 pavement, building density, missing tree cover. Those we can measure directly, and they're in
 your data. Race is a cruder measurement of something we already have.
 
 **Removing the column does not make your model unbiased.** Every proxy is still there. Which is
 why the answer isn't deletion, it's checking: when you have your ranked recommendations, look at
-whose neighbourhoods they landed in—as an audit of your output, never as a model input. If your
+whose neighborhoods they landed in—as an audit of your output, never as a model input. If your
 recommendations systematically miss the most vulnerable areas, that's a finding, and it's worth
 more in a demo than another point of accuracy.
 
@@ -591,7 +588,7 @@ We keep saying this, so here is exactly what it is. It's three steps and about t
 3. **Compare that to the city as a whole.** Are your recommended tracts poorer than the city
    average, or richer? Older or younger? More or less likely to be without a vehicle?
 
-Then say the answer out loud: **did our recommendations land in the neighbourhoods that need
+Then say the answer out loud: **did our recommendations land in the neighborhoods that need
 them most, or in the ones that happened to be easiest to model?**
 
 Both answers are worth having. If your sites skew toward high-poverty, low-vehicle-access,
@@ -624,7 +621,7 @@ notebook. **The core is not where you win.** Whichever track you picked, these a
   heat complaints. See [Bringing your own data](#bringing-your-own-data) for what would unlock
   what, and check the license first.
 - **Make the equity audit the centrepiece** instead of a footnote—checking whether your
-  recommendations actually reached the neighbourhoods that need them most. It's the most
+  recommendations actually reached the neighborhoods that need them most. It's the most
   interesting conversation available in this challenge and most teams will skip it.
   ([What that means, concretely](#what-auditing-the-outcome-actually-means).) It lands hardest on
   the decade track, where the question becomes whether your plan reverses a century of
@@ -645,8 +642,7 @@ once the model is training.
 ### What would unlock what
 
 Our data uses **coordinates, not street names**, and **straight-line distance, not walking
-routes**. That's not a flaw to work around so much as a list of things a team can go and fix —
-and closing one of these is precisely the kind of move that separates a demo.
+routes**. That's not a flaw to work around so much as a list of things a team can go and fix—and closing one of these is precisely the kind of move that separates a demo.
 
 | What you can't currently ask | What would unlock it | Matters most to |
 |---|---|---|
@@ -723,7 +719,7 @@ Neither is marked down for not looking like the other. Say which track you took,
 | **Craft & communication** | 15 | Does the short pitch land, does the quick demo work, and can you justify your interface choice? |
 | **Bonus—range** | **+10** | Technology breadth and ambition that *serves* the solution |
 
-Bonus sits **on top** of the 100, so ambition can't cannibalise the core. Nail the fundamentals
+Bonus sits **on top** of the 100, so ambition can't cannibalize the core. Nail the fundamentals
 and add nothing, and you can still win. Wire up five services with no coherent recommendation,
 and you can't win on breadth alone.
 
