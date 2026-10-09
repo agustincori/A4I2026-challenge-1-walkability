@@ -689,10 +689,15 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 
 ```
 notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
+notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
 scripts/load.sh                   Headless fallback if Colab is unavailable.
 data/                             Seed data, if any.
 agent/                            Empty. Your agent goes here.
 ```
+
+`c1_90_publish_snapshot.ipynb` is for ROI maintainers: it regenerates the Cloud Storage snapshot
+that `scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
+have write access to our bucket. That is expected, and you never need it.
 
 `agent/` is empty on purpose. We built the on-ramp—data, loading, validation, sample queries.
 We didn't build the vehicle. The design decisions in your agent are what you'll be judged on.
