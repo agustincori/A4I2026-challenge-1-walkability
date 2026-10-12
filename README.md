@@ -12,7 +12,7 @@ on sidewalks, mostly among the old, the poor, and people who can't afford to run
 conditioner.
 
 It is also the most *unequal* hazard. Two blocks in the same city, at the same hour on the same
-day, can differ by more than twenty degrees. One has tree cover and low buildings. The other is
+day, can differ by more than fifteen degrees. One has tree cover and low buildings. The other is
 parking lot and asphalt. The people walking those two blocks are having completely different
 days, and one of them is in danger.
 
@@ -50,7 +50,7 @@ fifteen minutes.
 
 | If you are… | Read now | Come back for |
 |---|---|---|
-| **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) · [Pick your city](#now-pick-your-city) | — decide these before anyone opens a keyboard |
+| **Everyone, together** | [The four things](#the-four-things-youre-working-with) · [Three tracks](#three-tracks-one-architecture) · [What you're building](#what-youre-building) · [Pick your city](#now-pick-your-city) | —decide these before anyone opens a keyboard |
 | **Team lead** | [Step 0](#step-0organize-your-team) · [How you'll be judged](#how-youll-be-judged) | [What will set yours apart](#what-will-set-yours-apart)—read it *before* the team writes code, not after |
 | **Data lane** | [Data lane](#data-lane2-to-3-people) · [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) · [What would unlock what](#what-would-unlock-what) |
 | **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [What "a tool you built" means](#what-a-tool-you-built-means-and-why-we-ask) · [`agent/README.md`](agent/) |
@@ -150,7 +150,7 @@ a question she asks between now and then:
 | *"How often does that area actually hit dangerous heat? Is it getting worse?"* | Seven years of station history |
 | *"Who lives around that site—how many people, how old, how many without a car?"* | Census tract demographics |
 | *"I'm down to two sites and have to pick one. Make the case for each."* | Both, plus Gemini weighing the tradeoff |
-| *"Draft the proposal I'm taking to council in the morning."* | Gemini, synthesising everything above |
+| *"Draft the proposal I'm taking to council in the morning."* | Gemini, synthesizing everything above |
 | *"Before I send it—did we actually reach the neighborhoods that need this most?"* | An equity audit of your own output |
 
 Notice these need **different things**. Some need a prediction. Some need only a query against
@@ -189,7 +189,7 @@ More readings means more for your model to learn from and a slightly longer load
 disqualifying—Manhattan's 12,000 points still cover the borough densely, because the routes
 are short. But if your team wants volume to play with, start at the top of that list.
 
-**We'd recommend staying on this list.** There are 87 cities available and Section 4 of the
+**We'd recommend staying on this list.** There are 68 cities available and Section 4 of the
 notebook lists them all, but these are the ones we've tested end to end.
 
 Then get specific, because specificity is what makes a demo land:
@@ -303,7 +303,8 @@ everyone can see.
 
 #### Data lane—2 to 3 people
 
-Running the notebook takes about a minute, so that is emphatically *not* the job. This lane owns
+Running the notebook end to end takes a few minutes (Houston takes longest); reading it properly
+takes about forty, and that is the point. Running it is emphatically *not* the job. This lane owns
 everything between raw tables and a model the agent can call:
 
 - **Feature engineering**—this is the real work. The loaded tables aren't model-ready. You'll
@@ -518,12 +519,15 @@ fast, which is exactly why it's worth reading what it did.
 
 4. Click **Import**, open the notebook, set `CITY` at the top, and run the cells top to bottom.
 
-It takes about a minute. **Read the text between the cells**—it explains why each step happens,
-and several explanations will save you time later. The notebook ends by validating everything and
-telling you plainly whether anything is wrong.
+Running it end to end takes a few minutes (Houston takes longest). Reading it properly takes
+about forty, and that is the point. **Read the text between the cells**—it explains why each step
+happens, and several explanations will save you time later. The notebook ends by validating
+everything and telling you plainly whether anything is wrong.
 
-**If the notebook won't run**, there's a headless fallback. From the root of your cloned repo
-in Cloud Shell:
+**If the notebook won't run**, or a federal data server starts refusing the room (150 people
+hitting one endpoint in ten minutes looks like an attack to some of them), there's a headless
+fallback. The snapshot already has everything the notebook pulls. From the root of your cloned
+repo in Cloud Shell:
 
 ```bash
 bash scripts/load.sh dallas
@@ -557,9 +561,9 @@ Three tables in your project, in a dataset called `a4i_climate`:
 through a city on one hot day, logging temperature roughly once per second. It's the only public
 dataset that resolves temperature differences *within* a city rather than between cities.
 
-The others fill gaps: **GHCN-Daily** for how often the city gets hot, **EPA Smart Location** for
-built environment, **ACS** for who is exposed. All public domain or CC0. Full detail is in the
-notebook.
+The others fill gaps: **GHCN-Daily** for how often the city gets hot and **ACS** for who is
+exposed. **EPA Smart Location** (built environment) is not loaded for you; the notebook's
+Section 11 tells you where to get it. All public domain or CC0. Full detail is in the notebook.
 
 **One thing we deliberately excluded, and you should know why.** Vulnerability indices like the
 NYC Heat Vulnerability Index and CDC's Social Vulnerability Index include race as a direct input
@@ -621,7 +625,7 @@ notebook. **The core is not where you win.** Whichever track you picked, these a
 - **Bring a dataset nobody else has.** Your city's tree canopy, its existing cooling centers, 311
   heat complaints. See [Bringing your own data](#bringing-your-own-data) for what would unlock
   what, and check the license first.
-- **Make the equity audit the centrepiece** instead of a footnote—checking whether your
+- **Make the equity audit the centerpiece** instead of a footnote—checking whether your
   recommendations actually reached the neighborhoods that need them most. It's the most
   interesting conversation available in this challenge and most teams will skip it.
   ([What that means, concretely](#what-auditing-the-outcome-actually-means).) It lands hardest on
@@ -688,8 +692,8 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
 notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
 scripts/load.sh                   Headless fallback if Colab is unavailable.
-data/                             Seed data, if any.
-agent/                            Empty. Your agent goes here.
+data/                             A short README. Seed data, if any.
+agent/                            A one-page README. Your agent goes here.
 ```
 
 `c1_90_publish_snapshot.ipynb` is for ROI maintainers: it regenerates the Cloud Storage snapshot
@@ -743,7 +747,7 @@ this, and bring the numbers rather than the intention.
 volunteers. The stations are sparse. A team that volunteers its limitations shows more skill than
 one that oversells—and judges are told to reward it.
 
-One warning worth internalising: **a model with 98% accuracy on this problem is almost certainly
+One warning worth internalizing: **a model with 98% accuracy on this problem is almost certainly
 broken**, not brilliant. It usually means the features contain the answer. If your model can't be
 wrong, it isn't predicting anything.
 

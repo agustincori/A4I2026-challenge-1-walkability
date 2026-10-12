@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# A4I 2026 - Challenge 1: Climate-Resilient Walkability
+# A4I 2026 - Challenge 1: Community Climate Resilience: Urban Heat
 # Headless fallback for notebooks/c1_01_load_explore.ipynb
 #
 # Rebuilds the same three BigQuery tables the notebook produces, from a
@@ -65,8 +65,10 @@ if [[ "${CITY}" == "--help" || "${CITY}" == "-h" ]]; then
   exit 0
 fi
 
-# Normalize: lowercase, spaces to hyphens
-CITY="$(echo "${CITY}" | tr '[:upper:] ' '[:lower:]-')"
+# Normalize: lowercase, and any run of characters that is not a letter or digit becomes one
+# hyphen, so "Los Angeles (Central)" and "Oakland/Berkeley" become folder names rather than
+# nested paths. Compare against what --list prints if a city is not found.
+CITY="$(echo "${CITY}" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//')"
 SRC="${BUCKET}/${CITY}"
 
 # --------------------------------------------------------------------------
