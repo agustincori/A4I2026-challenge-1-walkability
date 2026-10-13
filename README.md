@@ -369,7 +369,21 @@ Discovering the limitation on stage is not.
 
 Not "make slides at the end." This lane owns whether anyone understands what you built.
 
-**What you're preparing: a short pitch deck and a quick demo.** Presentation time at this event
+**What you hand in.** Four things, uploaded to the submission portal at
+https://portal.angelhack.com/a4i-console before the deadline your facilitator gives you:
+
+1. your GitHub repo link
+2. your Google Skills project link (the Qwiklabs environment you built in)
+3. your pitch deck
+4. a **pitch video**: a screen-share walkthrough, one of you talking the judges through what you
+   built while running it
+
+**Judges score those four things after the event. Nobody comes to your table and there is no
+Q&A.** Every question in [How you'll be judged](#how-youll-be-judged) has to be answered in the
+deck or the video, or it counts as unanswered.
+
+**What you're preparing: a short pitch deck, a quick demo, and the recording of it.** Presentation
+time at this event
 is tight—your facilitator will give you the exact number, but plan for short. That constraint
 should shape everything this lane does. **A crisp pitch with one moment that lands beats a
 thorough walkthrough nobody has time to hear.**
@@ -379,6 +393,8 @@ thorough walkthrough nobody has time to hear.**
 - **The demo.** Pick the one or two questions that best show what your agent can do, and
   **rehearse them.** A quick demo that works beats an ambitious one that stalls. Have a
   screenshot ready in case the live version misbehaves.
+  Once it works, **record it as your pitch video**: a screen-share with one of you narrating. That
+  recording, not the live demo, is what the judges watch.
 - **The Placement Recommendation**—your output artifact (see below). Something a planner would
   actually receive, not a console dump. This can carry the detail the deck has no time for.
 - **The honest limitations.** Judges explicitly reward this, and one line in the deck is enough.
@@ -716,6 +732,11 @@ decade-track team is expected to hand over a planting *program* at neighborhood 
 Today-track team is expected to hand over something a dispatcher could work this afternoon.
 Neither is marked down for not looking like the other. Say which track you took, early.
 
+**Judges score your submission, not a conversation.** They work from your repo, your Skills
+project, your deck and your pitch video, after the event, with no follow-up questions. The
+questions below are what they are looking for; put the answers in the deck or the video, in those
+words, rather than waiting to be asked.
+
 | Dimension | Weight | The question judges are asking |
 |---|---:|---|
 | **Impact & insight** | 30 | Would your user actually use this? Is the answer specific enough for *them* to act on? |
@@ -740,8 +761,8 @@ that source and not another? Did you check whether columns were the types you as
 The notebook ships a validation section—using it, and saying what it told you, counts.
 
 **Bias handling.** Did you keep race out of your model inputs, and did you run the
-[equity audit](#what-auditing-the-outcome-actually-means) on your output? Be ready to talk about
-this, and bring the numbers rather than the intention.
+[equity audit](#what-auditing-the-outcome-actually-means) on your output? Say what it found in the
+deck or the video, with the numbers rather than the intention.
 
 **Knowing what your model can't do.** The heat data is a single day. The campaigns were driven by
 volunteers. The stations are sparse. A team that volunteers its limitations shows more skill than
@@ -762,7 +783,9 @@ one for the same work.
 
 ## Getting help
 
-Ask a coach. That's what they're there for, and whatever you're stuck on has probably already
+Ask your table captain first. Every table has one: not a judge, a consultant who sits with you
+for the day. Then the ROI facilitator on the floor, and the event's Discord channel, which the
+organizers use for direct questions during the day. Whatever you're stuck on has probably already
 been solved at another table.
 
 To report a problem with the data or the notebook, run the **diagnostic cell** at the bottom of
