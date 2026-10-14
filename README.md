@@ -55,7 +55,7 @@ fifteen minutes.
 | **Data lane** | [Data lane](#data-lane2-to-3-people) · [Step 4, load the data](#step-4load-the-data) · [What you'll have](#what-youll-have) | [The data, and why we chose it](#the-data-and-why-we-chose-it) · [What would unlock what](#what-would-unlock-what) |
 | **Agent lane** | [Agent lane](#agent-lane2-to-3-people) · [The technology](#the-technology-youll-use) | [What "a tool you built" means](#what-a-tool-you-built-means-and-why-we-ask) · [`agent/README.md`](agent/) |
 | **Front end lane** | [Front end lane](#front-end-lane2-people) · [Step 3, Cloud Shell](#step-3everyone-get-into-cloud-shell) | [Your output artifact](#your-output-artifact-the-placement-recommendation) |
-| **Story lane** | [What you're building](#what-youre-building) · [Story lane](#story-lane1-to-2-people-starting-at-minute-zero) | [What "auditing the outcome" actually means](#what-auditing-the-outcome-actually-means)—you will be asked about this |
+| **Story lane** | [What you're building](#what-youre-building) · [Story lane](#story-lane1-to-2-people-starting-at-minute-zero) | [What "auditing the outcome" actually means](#what-auditing-the-outcome-actually-means)—judges look for this |
 
 **Three things everybody should know by the end of hour one**, whatever lane you are in:
 
