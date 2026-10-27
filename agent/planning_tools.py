@@ -209,7 +209,7 @@ class HeatResilienceRuntime:
             if not rows or not rows[0]["total_observations"]:
                 raise RuntimeError(
                     f"Table `{self.dataset_fqn}.heat_observations` is empty or missing. "
-                    "Run `bash scripts/load.sh <city>` or the load notebook first."
+                    "Run `bash data_plane/scripts/load.sh <city>` or the load notebook first."
                 )
             row = rows[0]
             self._city_meta = CityCampaignMetadata(

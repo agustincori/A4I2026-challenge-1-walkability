@@ -134,7 +134,9 @@ class TestToolContracts(unittest.TestCase):
         self.assertIn("poverty_rate BETWEEN 0 AND 1", sql)
         self.assertIn("EXTRACT(YEAR FROM @reference_time)", sql)
         self.assertIn("WHERE @tract_id IS NULL OR geo_id = @tract_id", sql)
-        self.assertNotIn("tree_canopy_pct", sql)
+        self.assertIn("LEFT JOIN canopy", sql)
+        model_inputs = sql.split("ML.EXPLAIN_PREDICT", 1)[1].split("STRUCT(3", 1)[0]
+        self.assertNotIn("tree_canopy_pct", model_inputs)
         self.client.get_model.assert_not_called()
 
     def test_ranking_uses_same_cleaning_and_honors_focus(self) -> None:

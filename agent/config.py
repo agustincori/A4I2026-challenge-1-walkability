@@ -145,7 +145,9 @@ class AgentConfig:
         default_factory=lambda: os.environ.get("BQ_LOCATION", "US")
     )
     bqml_model_name: str = field(
-        default_factory=lambda: os.environ.get("BQML_MODEL", "heat_offset_model")
+        default_factory=lambda: os.environ.get("BQML_MODEL")
+        or os.environ.get("BQ_MODEL_NAME")
+        or "heat_offset_model"
     )
     planning_bqml_model_name: str = field(
         default_factory=lambda: os.environ.get("PLANNING_BQML_MODEL", "heat_planning_model")

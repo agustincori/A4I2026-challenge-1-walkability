@@ -2,6 +2,13 @@
 
 **Agents for Impact 2026**
 
+### Team implementation layout
+
+The [data plane](data_plane/README.md) owns loading, notebooks, SQL, model training,
+evaluation and experiment history. The [agent](agent/) owns the online ADK tools and
+conversation runtime. Run data workflows as `python3 -m data_plane.pipelines.<workflow>`
+from the repository root; the data-plane guide lists the commands and integration contract.
+
 ---
 
 ## Why this one matters
@@ -547,14 +554,14 @@ fallback. The snapshot already has everything the notebook pulls. From the root 
 repo in Cloud Shell:
 
 ```bash
-bash scripts/load.sh dallas
+bash data_plane/scripts/load.sh dallas
 ```
 
 ```bash
-bash scripts/load.sh --list       # every city we've published
+bash data_plane/scripts/load.sh --list       # every city we've published
 ```
 
-Invoke it with `bash` rather than `./scripts/load.sh`—that way it doesn't matter whether the
+Invoke it with `bash` rather than `./data_plane/scripts/load.sh`—that way it doesn't matter whether the
 file arrived with its executable bit set, which depends on how your repo was created.
 
 It's safe to run more than once. Every table is fully replaced rather than appended to, so if
@@ -706,19 +713,24 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 ## What's in this repository
 
 ```
-notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
-notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
-scripts/load.sh                   Headless fallback if Colab is unavailable.
-data/                             A short README. Seed data, if any.
-agent/                            A one-page README. Your agent goes here.
+data_plane/notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
+data_plane/notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
+data_plane/scripts/load.sh                   Headless fallback if Colab is unavailable.
+data_plane/pipelines/             Training, tuning, audit and model-release workflows.
+data_plane/sql/                   Versioned SQL and inference handoff.
+data_plane/tests/                 Independent data-plane tests.
+data_plane/docs/                  Dataset inventory and pipeline walkthrough.
+data_plane/data/                  Small seed/reference files only.
+agent/                            Online ADK agent and tools; independent of data-plane code.
 ```
 
 `c1_90_publish_snapshot.ipynb` is for ROI maintainers: it regenerates the Cloud Storage snapshot
-that `scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
+that `data_plane/scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
 have write access to our bucket. That is expected, and you never need it.
 
-`agent/` is empty on purpose. We built the on-ramp—data, loading, validation, sample queries.
-We didn't build the vehicle. The design decisions in your agent are what you'll be judged on.
+The original template supplied the on-ramp: loading, validation and sample queries.
+This team's implementation separates that offline data plane from the online agent.
+The design decisions in your agent are what you'll be judged on.
 
 ---
 

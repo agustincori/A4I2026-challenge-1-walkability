@@ -41,6 +41,8 @@ class TestMergedAgent(unittest.TestCase):
                 "query_heat_history",
                 "get_tract_demographics",
                 "audit_equity",
+                "recommend_canopy_interventions",
+                "generate_council_proposal",
                 "predict_and_explain_location",
                 "rank_cooling_sites",
                 "audit_recommendations_equity",

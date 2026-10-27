@@ -29,6 +29,8 @@ __all__ = [
     "query_heat_history",
     "get_tract_demographics",
     "audit_equity",
+    "recommend_canopy_interventions",
+    "generate_council_proposal",
     "CUSTOM_HEAT_TOOLS",
     "HeatResilienceRuntime",
     "audit_recommendations_equity",
@@ -50,6 +52,17 @@ def _clean_tracts_sql() -> str:
     )
 
 
+def _canopy_sql() -> str:
+    return f"""
+    SELECT GEOID,
+      AVG(CASE WHEN tree_canopy_pct BETWEEN 0 AND 1 THEN tree_canopy_pct * 100
+               WHEN tree_canopy_pct BETWEEN 0 AND 100 THEN tree_canopy_pct END) AS tree_canopy_pct,
+      AVG(integrated_risk_score) AS integrated_risk_score
+    FROM `{get_runtime().dataset_fqn}.atlanta_canopy_heat_svi_modeling`
+    GROUP BY GEOID
+    """
+
+
 def _error(code: str, message: str) -> Dict[str, Any]:
     logger.warning("Atlanta tool rejected request: %s: %s", code, message)
     return {"status": "ERROR", "error_code": code, "error": message}
@@ -61,6 +74,12 @@ def _finite_number(value: Any) -> bool:
 
 def _valid_tract_id(value: Any) -> bool:
     return isinstance(value, str) and re.fullmatch(r"[0-9]{11}", value) is not None
+
+
+def _valid_model_name(value: Optional[str]) -> bool:
+    return value is None or (
+        isinstance(value, str) and re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value) is not None
+    )
 
 
 def _location_error(
@@ -83,7 +102,8 @@ def predict_heat_offset_and_explain(
     latitude: Optional[float] = None, 
     longitude: Optional[float] = None, 
     tract_id: Optional[str] = None,
-    baseline_forecast_f: Optional[float] = 102.0
+    baseline_forecast_f: Optional[float] = 102.0,
+    model_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Predicts the urban heat offset in degrees Fahrenheit for any location or Census tract in Atlanta 
@@ -94,10 +114,14 @@ def predict_heat_offset_and_explain(
         longitude: Longitude coordinate of the location (optional if tract_id provided).
         tract_id: 11-digit Census tract GEOID (optional if coordinates provided).
         baseline_forecast_f: Regional baseline forecast temperature in Fahrenheit (default 102.0).
+        model_name: Optional simple model name in the configured dataset for explicit candidate testing.
 
     Returns:
         Dict with predicted offset, predicted temperature, top feature attributions, and demographic context.
     """
+    if not _valid_model_name(model_name):
+        return _error("INVALID_MODEL", "model_name must be a simple BigQuery model identifier.")
+    target_model = model_name or get_runtime().config.bqml_model_name
     invalid = _location_error(latitude, longitude, tract_id)
     if invalid is not None:
         return invalid
@@ -125,9 +149,12 @@ def predict_heat_offset_and_explain(
     sql = f"""
     WITH cleaned_tracts AS (
       {_clean_tracts_sql()}
+    ), canopy AS (
+      {_canopy_sql()}
     ), tract AS (
-      SELECT *
-      FROM cleaned_tracts
+      SELECT d.*, c.tree_canopy_pct
+      FROM cleaned_tracts d
+      LEFT JOIN canopy c ON d.geo_id = c.GEOID
       WHERE @tract_id IS NULL OR geo_id = @tract_id
       ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(tract_lon, tract_lat)), geo_id
       LIMIT 1
@@ -137,7 +164,7 @@ def predict_heat_offset_and_explain(
       p.top_feature_attributions,
       t.*
     FROM ML.EXPLAIN_PREDICT(
-      MODEL `{get_runtime().dataset_fqn}.{get_runtime().config.bqml_model_name}`,
+      MODEL `{get_runtime().dataset_fqn}.{target_model}`,
       (
         SELECT 
           @lat AS latitude,
@@ -179,7 +206,7 @@ def predict_heat_offset_and_explain(
     return {
         "status": "OK",
         "provenance": {
-            "model": f"{get_runtime().dataset_fqn}.{get_runtime().config.bqml_model_name}",
+            "model": f"{get_runtime().dataset_fqn}.{target_model}",
             "preprocessing_contract": "data-lane/831a7f7/eight-feature",
             "temperature_units": "degF",
             "limitations": [
@@ -199,7 +226,8 @@ def predict_heat_offset_and_explain(
             "poverty_rate_pct": round(row.poverty_rate * 100, 1),
             "no_vehicle_rate_pct": round(row.no_vehicle_rate * 100, 1),
             "median_age": round(row.median_age, 1),
-            "median_year_structure_built": int(row.median_year_structure_built)
+            "median_year_structure_built": int(row.median_year_structure_built),
+            "tree_canopy_pct": getattr(row, "tree_canopy_pct", None),
         }
     }
 
@@ -210,7 +238,8 @@ def compare_locations_and_explain(
     label1: str, 
     lat2: float, 
     lon2: float, 
-    label2: str
+    label2: str,
+    model_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Compares heat risk and underlying drivers between two Atlanta locations.
@@ -223,6 +252,7 @@ def compare_locations_and_explain(
         lat2: Latitude of second site.
         lon2: Longitude of second site.
         label2: Name or description of second site (e.g. 'Piedmont Park').
+        model_name: Optional model override for both sites in the configured dataset.
 
     Returns:
         Dict detailing the offset differential and comparative feature breakdown.
@@ -231,29 +261,35 @@ def compare_locations_and_explain(
         invalid = _location_error(lat, lon, None)
         if invalid is not None:
             return invalid
-    site1 = predict_heat_offset_and_explain(lat1, lon1)
+    site1 = predict_heat_offset_and_explain(lat1, lon1, model_name=model_name)
     if "error" in site1:
         return {**_error("COMPARISON_FAILED", "First location could not be predicted."), "details": site1}
-    site2 = predict_heat_offset_and_explain(lat2, lon2)
+    site2 = predict_heat_offset_and_explain(lat2, lon2, model_name=model_name)
     if "error" in site2:
         return {**_error("COMPARISON_FAILED", "Second location could not be predicted."), "details": site2}
     
     diff_f = round(site1["predicted_heat_offset_f"] - site2["predicted_heat_offset_f"], 2)
-    
+    canopy1 = site1.get("demographics", {}).get("tree_canopy_pct")
+    canopy2 = site2.get("demographics", {}).get("tree_canopy_pct")
+    canopy_summary = (
+        f" Tree canopy cover: {label1} has {canopy1}% versus {label2} with {canopy2}%."
+        if canopy1 is not None and canopy2 is not None else ""
+    )
     return {
         "site_1": {"name": label1, "details": site1},
         "site_2": {"name": label2, "details": site2},
         "temperature_difference_f": diff_f,
         "comparison_summary": (
             f"{label1} is predicted to be {abs(diff_f)}°F "
-            f"{'hotter than' if diff_f > 0 else 'cooler than' if diff_f < 0 else 'different from'} {label2}."
+            f"{'hotter than' if diff_f > 0 else 'cooler than' if diff_f < 0 else 'different from'} {label2}.{canopy_summary}"
         )
     }
 
 
 def rank_cooling_center_sites(
     top_n: int = 3, 
-    focus_criteria: str = "vulnerability_and_heat"
+    focus_criteria: str = "vulnerability_and_heat",
+    model_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Ranks candidate cooling center locations across Atlanta by combining BQML heat offset 
@@ -262,6 +298,7 @@ def rank_cooling_center_sites(
     Args:
         top_n: Number of recommendations to return (default 3).
         focus_criteria: Ranking methodology, e.g. 'vulnerability_and_heat' or 'pure_heat'.
+        model_name: Optional simple model name in the configured dataset for candidate testing.
 
     Returns:
         Dict with ranked candidate sites, coordinates, demographic stats, and siting justification.
@@ -270,6 +307,9 @@ def rank_cooling_center_sites(
         return _error("INVALID_LIMIT", "top_n must be an integer between 1 and 20.")
     if focus_criteria not in ("vulnerability_and_heat", "pure_heat"):
         return _error("INVALID_CRITERIA", "focus_criteria must be vulnerability_and_heat or pure_heat.")
+    if not _valid_model_name(model_name):
+        return _error("INVALID_MODEL", "model_name must be a simple BigQuery model identifier.")
+    target_model = model_name or get_runtime().config.bqml_model_name
     order_column = "offset_f" if focus_criteria == "pure_heat" else "composite_vulnerability_score"
     sql = f"""
     WITH cleaned_tracts AS (
@@ -286,10 +326,11 @@ def rank_cooling_center_sites(
         t.median_year_structure_built,
         t.no_vehicle_rate,
         t.poverty_rate,
-        p.predicted_offset_f
+        p.predicted_offset_f,
+        p.top_feature_attributions
       FROM cleaned_tracts t,
-      ML.PREDICT(
-        MODEL `{get_runtime().dataset_fqn}.{get_runtime().config.bqml_model_name}`,
+      ML.EXPLAIN_PREDICT(
+        MODEL `{get_runtime().dataset_fqn}.{target_model}`,
         (
           SELECT 
             geo_id,
@@ -302,7 +343,8 @@ def rank_cooling_center_sites(
             housing_units,
             median_year_structure_built
           FROM cleaned_tracts
-        )
+        ),
+        STRUCT(3 AS top_k_features)
       ) p
       WHERE t.geo_id = p.geo_id
         AND t.tract_lat BETWEEN 33.55 AND 34.02
@@ -314,6 +356,8 @@ def rank_cooling_center_sites(
       tract_lat,
       tract_lon,
       ROUND(predicted_offset_f, 2) AS offset_f,
+      top_feature_attributions,
+      (SELECT c.tree_canopy_pct FROM ({_canopy_sql()}) c WHERE c.GEOID = candidate.geo_id) AS tree_canopy_pct,
       ROUND(total_pop) AS total_pop,
       ROUND(poverty_rate * 100, 1) AS poverty_pct,
       ROUND(no_vehicle_rate * 100, 1) AS no_vehicle_pct,
@@ -324,7 +368,7 @@ def rank_cooling_center_sites(
         (COALESCE(no_vehicle_rate, 0) * 10.0 * 0.3),
         2
       ) AS composite_vulnerability_score
-    FROM candidate_tracts
+    FROM candidate_tracts AS candidate
     ORDER BY {order_column} DESC, geo_id
     LIMIT @top_n
     """
@@ -345,7 +389,12 @@ def rank_cooling_center_sites(
             "poverty_rate_pct": r.poverty_pct,
             "no_vehicle_rate_pct": r.no_vehicle_pct,
             "median_age": r.median_age,
-            "composite_score": r.composite_vulnerability_score
+            "composite_score": r.composite_vulnerability_score,
+            "tree_canopy_pct": r.tree_canopy_pct,
+            "top_feature_attributions": [
+                {"feature": a["feature"], "attribution_deg_f": round(a["attribution"], 2)}
+                for a in r.top_feature_attributions
+            ],
         })
     return {"ranked_sites": sites, "count": len(sites)}
 
@@ -478,6 +527,13 @@ def get_tract_demographics(
     if not results:
         return _error("TRACT_NOT_FOUND", "No demographic data found for this location or tract ID.")
     r = results[0]
+    canopy_config = bigquery.QueryJobConfig(query_parameters=[
+        bigquery.ScalarQueryParameter("tract_id", "STRING", r.geo_id),
+    ])
+    canopy_rows = get_runtime().query_rows(
+        f"SELECT * FROM ({_canopy_sql()}) WHERE GEOID = @tract_id", canopy_config
+    )
+    canopy = canopy_rows[0] if canopy_rows else None
     return {
         "tract_id": r.geo_id,
         "latitude": r.tract_lat,
@@ -489,13 +545,16 @@ def get_tract_demographics(
         "median_year_built": int(r.median_year_structure_built) if r.median_year_structure_built else None,
         "households_without_vehicle": int(r.no_cars) if r.no_cars else None,
         "poverty_rate_pct": r.poverty_pct,
-        "no_vehicle_rate_pct": r.no_vehicle_pct
+        "no_vehicle_rate_pct": r.no_vehicle_pct,
+        "tree_canopy_pct": canopy.tree_canopy_pct if canopy is not None else None,
+        "integrated_risk_score": canopy.integrated_risk_score if canopy is not None else None,
     }
 
 
 def compare_census_tracts(
     tract_id_1: str, 
-    tract_id_2: str
+    tract_id_2: str,
+    model_name: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Compares two Atlanta Census tracts side-by-side on heat risk, feature attributions, 
@@ -504,14 +563,15 @@ def compare_census_tracts(
     Args:
         tract_id_1: First 11-digit Census tract GEOID (e.g. '13121006802').
         tract_id_2: Second 11-digit Census tract GEOID (e.g. '13121007808').
+        model_name: Optional model override for both tracts in the configured dataset.
 
     Returns:
         Dict detailing direct comparisons, trade-offs, and strategic considerations for each site.
     """
     if not (_valid_tract_id(tract_id_1) and _valid_tract_id(tract_id_2)):
         return _error("INVALID_TRACT_ID", "Both tract IDs must be 11-digit Census GEOIDs.")
-    site1 = predict_heat_offset_and_explain(tract_id=tract_id_1)
-    site2 = predict_heat_offset_and_explain(tract_id=tract_id_2)
+    site1 = predict_heat_offset_and_explain(tract_id=tract_id_1, model_name=model_name)
+    site2 = predict_heat_offset_and_explain(tract_id=tract_id_2, model_name=model_name)
     
     if "error" in site1 or "error" in site2:
         return {
@@ -540,6 +600,13 @@ def compare_census_tracts(
             "larger_population_tract": tract_id_1 if (site1["demographics"]["total_pop"] or 0) > (site2["demographics"]["total_pop"] or 0) else tract_id_2,
             "higher_poverty_tract": tract_id_1 if site1["demographics"]["poverty_rate_pct"] > site2["demographics"]["poverty_rate_pct"] else tract_id_2,
             "higher_transit_dependency_tract": tract_id_1 if site1["demographics"]["no_vehicle_rate_pct"] > site2["demographics"]["no_vehicle_rate_pct"] else tract_id_2,
+            "lower_tree_canopy_tract": (
+                None if site1["demographics"]["tree_canopy_pct"] is None
+                or site2["demographics"]["tree_canopy_pct"] is None
+                or site1["demographics"]["tree_canopy_pct"] == site2["demographics"]["tree_canopy_pct"]
+                else tract_id_1 if site1["demographics"]["tree_canopy_pct"] < site2["demographics"]["tree_canopy_pct"]
+                else tract_id_2
+            ),
         }
     }
 
@@ -623,4 +690,141 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
             "citywide_75th_percentile_no_vehicle_pct": r.city_p75_no_vehicle_pct
         },
         "audit_finding": r.audit_status
+    }
+
+
+def recommend_canopy_interventions(
+    top_n: int = 5, min_pop_density: float = 1000.0
+) -> Dict[str, Any]:
+    """Rank Atlanta canopy interventions using measured heat and contextual SVI.
+
+    Args:
+        top_n: Number of priority tracts, between 1 and 20.
+        min_pop_density: Minimum population density per square mile.
+    """
+    if type(top_n) is not int or not 1 <= top_n <= 20:
+        return _error("INVALID_LIMIT", "top_n must be an integer between 1 and 20.")
+    if not _finite_number(min_pop_density) or min_pop_density < 0:
+        return _error("INVALID_DENSITY", "min_pop_density must be finite and nonnegative.")
+    sql = f"""
+    SELECT GEOID AS tract_id, NAME AS tract_name, POP100 AS population,
+      ROUND(pop_density, 1) AS pop_density, ROUND(mean_temp, 1) AS mean_temp_f,
+      ROUND(CASE WHEN tree_canopy_pct <= 1 THEN tree_canopy_pct * 100
+                 ELSE tree_canopy_pct END, 1) AS tree_canopy_pct,
+      ROUND(RPL_THEMES, 3) AS svi_percentile,
+      ROUND(integrated_risk_score, 2) AS integrated_risk_score,
+      ROUND(EP_POV150, 1) AS poverty_pct, ROUND(EP_NOVEH, 1) AS no_vehicle_pct
+    FROM `{get_runtime().dataset_fqn}.atlanta_canopy_heat_svi_modeling`
+    WHERE pop_density >= @min_pop_density AND tree_canopy_pct BETWEEN 0 AND 100
+    ORDER BY integrated_risk_score DESC, tree_canopy_pct ASC, GEOID
+    LIMIT @top_n
+    """
+    config = bigquery.QueryJobConfig(query_parameters=[
+        bigquery.ScalarQueryParameter("top_n", "INT64", top_n),
+        bigquery.ScalarQueryParameter("min_pop_density", "FLOAT64", min_pop_density),
+    ])
+    recommendations = []
+    for row in get_runtime().query_rows(sql, config):
+        actions = [
+            "Right-of-way street tree planting along pedestrian and transit corridors",
+            "Cool pavement and reflective surface treatments for unshaded asphalt",
+        ]
+        if (row.no_vehicle_pct or 0) > 20:
+            actions.append("Shaded bus stop canopy retrofits and cooling shelters")
+        if (row.poverty_pct or 0) > 25:
+            actions.append("Residential tree distribution and community green space expansion")
+        recommendations.append({
+            "tract_id": row.tract_id, "tract_name": row.tract_name,
+            "population": int(row.population) if row.population is not None else None,
+            "pop_density_per_sq_mi": row.pop_density,
+            "mean_summer_temp_f": row.mean_temp_f,
+            "tree_canopy_pct": row.tree_canopy_pct,
+            "city_target_gap_pct": round(max(0, 50 - row.tree_canopy_pct), 1),
+            "social_vulnerability_index": row.svi_percentile,
+            "integrated_risk_score": row.integrated_risk_score,
+            "poverty_pct": row.poverty_pct, "no_vehicle_pct": row.no_vehicle_pct,
+            "priority_interventions": actions,
+        })
+    return {
+        "city_target_canopy_pct": 50.0,
+        "recommended_priority_tracts": recommendations,
+        "count": len(recommendations),
+        "strategic_framework": "Atlanta Decade Track Urban Forestry & Heat Equity Plan",
+    }
+
+
+def generate_council_proposal(
+    top_n: int = 3,
+    baseline_forecast_f: float = 102.0,
+    funding_source: str = "Atlanta Climate Resilience Emergency Fund",
+) -> Dict[str, Any]:
+    """Build a council memo from verified rankings, equity, and canopy context.
+
+    Args:
+        top_n: Number of cooling-center priority tracts, between 1 and 20.
+        baseline_forecast_f: User-supplied regional scenario baseline in Fahrenheit.
+        funding_source: Proposed funding vehicle; availability is not verified.
+    """
+    if not _finite_number(baseline_forecast_f):
+        return _error("INVALID_BASELINE", "baseline_forecast_f must be finite.")
+    if not isinstance(funding_source, str) or not funding_source.strip():
+        return _error("INVALID_FUNDING", "funding_source must be a nonempty string.")
+    ranking = rank_cooling_center_sites(top_n)
+    if "error" in ranking:
+        return ranking
+    sites = ranking["ranked_sites"]
+    if not sites:
+        return _error("NO_SITES", "No cooling-center candidates available.")
+    audit = audit_equity([site["tract_id"] for site in sites])
+    if "error" in audit:
+        return audit
+    canopy = recommend_canopy_interventions(top_n)
+    if "error" in canopy:
+        return canopy
+    lines = [
+        "# MEMORANDUM", "", "**TO:** Atlanta City Council",
+        "**FROM:** Office of Sustainability and Resilience",
+        f"**DATE:** {datetime.now(timezone.utc).date().isoformat()}",
+        "**SUBJECT:** Proposed cooling-center and canopy priorities", "",
+        "## Executive Summary",
+        f"Recommend feasibility review of {len(sites)} priority tracts using a "
+        f"{baseline_forecast_f} F regional scenario baseline.", "",
+        "## Priority Cooling Center Deployments",
+    ]
+    for site in sites:
+        attrs = "; ".join(
+            f"{a['feature']}: {a['attribution_deg_f']:+.2f} F"
+            for a in site["top_feature_attributions"]
+        ) or "No feature attributions returned."
+        lines.extend([
+            f"### Census Tract {site['tract_id']}",
+            f"- Coordinates: {site['latitude']}, {site['longitude']}",
+            f"- Heat offset: {site['predicted_heat_offset_f']:+.2f} F; "
+            f"baseline plus offset: {baseline_forecast_f + site['predicted_heat_offset_f']:.2f} F.",
+            f"- Population: {site['population']}; poverty: {site['poverty_rate_pct']}%; "
+            f"no-vehicle households: {site['no_vehicle_rate_pct']}%.",
+            f"- Predictive associations (not causal effects): {attrs}",
+        ])
+    lines.extend(["", "## Equity Audit", audit["audit_finding"], "",
+                  "## Long-Term Canopy Priorities"])
+    for tract in canopy["recommended_priority_tracts"]:
+        lines.append(
+            f"- Tract {tract['tract_id']}: canopy {tract['tree_canopy_pct']}%; "
+            f"gap to 50% planning target: {tract['city_target_gap_pct']} percentage points."
+        )
+    lines.extend([
+        "", "## Funding & Limitations", f"Proposed funding source: {funding_source}.",
+        "Funding, facility availability, capacity, and walkability require independent verification.",
+        "Campaign offsets are not live forecasts or surface-temperature measurements.",
+        "Canopy is contextual data, not a prediction input or a modeled intervention effect.",
+        "Race and ethnicity are excluded from prediction; economic tract features remain inputs.",
+    ])
+    return {
+        "title": "Atlanta Emergency Cooling Center Mobilization & Canopy Mitigation Plan",
+        "target_tract_ids": [site["tract_id"] for site in sites],
+        "funding_source": funding_source,
+        "proposal_markdown": "\n".join(lines),
+        "recommended_sites": sites,
+        "equity_audit": audit,
+        "canopy_interventions": canopy,
     }

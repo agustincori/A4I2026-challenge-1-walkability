@@ -27,3 +27,10 @@ Thumbs.db
 .adk/
 agent/.adk/
 
+# Node & Frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.vite/
+

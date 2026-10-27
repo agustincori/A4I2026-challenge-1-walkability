@@ -20,7 +20,7 @@ The **Atlanta Heat Resilience Advisor** assists municipal decision-makers (city 
 
 ## 2. Tools & Capabilities
 
-The agent preserves the 7 Atlanta tools and adds 4 planning tools from `feat/agent`:
+The agent exposes 9 Atlanta tools and 4 extended planning tools:
 
 1. `predict_heat_offset_and_explain(latitude, longitude, tract_id, baseline_forecast_f)`
    - Predicts localized microclimate heat offset (°F) and computes localized temperatures against any forecast.
@@ -50,6 +50,14 @@ The agent preserves the 7 Atlanta tools and adds 4 planning tools from `feat/age
    - Benchmarks recommended sites against the Atlanta citywide 75th percentile (top quartile) for poverty and no-vehicle rates.
    - Validates that public investments counteract historic climate inequities.
 
+8. `recommend_canopy_interventions(top_n, min_pop_density)`
+   - Ranks contextual canopy/SVI data and reports gaps to the 50% planning target.
+
+9. `generate_council_proposal(top_n, baseline_forecast_f, funding_source)`
+   - Composes rankings, feature attributions, equity findings, and canopy context.
+   - Propagates missing-data/audit errors rather than claiming verification.
+   - Funding and facility availability remain unverified planning assumptions.
+
 ### Extended Planning Tools
 
 - `predict_and_explain_location(latitude, longitude)`: campaign-bound prediction,
@@ -77,6 +85,7 @@ Both toolsets share a lazily created BigQuery client configured by
 | `BQ_DATASET` | `a4i_climate` | Input tables and models |
 | `BQ_LOCATION` | `US` | BigQuery job location |
 | `BQML_MODEL` | `heat_offset_model` | Existing Atlanta model; label `offset_f` |
+| `BQ_MODEL_NAME` | unset | Data-lane compatibility alias, used only when `BQML_MODEL` is unset |
 | `PLANNING_BQML_MODEL` | `heat_planning_model` | Extended planning model; label `heat_offset_f` |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | ADK reasoning model |
 | `AUTO_BOOTSTRAP_BQML` | `true` | Train the planning model on first use if absent |
@@ -112,7 +121,11 @@ boundary is BigQuery, not Python imports from the training pipeline:
   Update this serving copy and its contract tests when the training contract changes.
 - The Atlanta model consumes exactly eight features: latitude, longitude, income,
   poverty rate, no-vehicle rate, median age, housing units, and structure vintage.
-  Canopy/SVI analysis tables are not additional prediction inputs.
+  Canopy/SVI analysis tables are contextual joins, not additional prediction inputs.
+  The nine Atlanta tools require `atlanta_canopy_heat_svi_modeling` for that context.
+  Atlanta rankings use `ML.EXPLAIN_PREDICT` so proposal drivers come from actual
+  model attributions. Optional `model_name` overrides on prediction, ranking, and
+  comparison tools accept only simple model names in the configured dataset.
 - [`HeatResilienceRuntime.query_rows`](./planning_tools.py) is the execution boundary
   for both toolsets, including metadata and optional planning bootstrap queries.
   It applies cost and deadline limits, logs job ID/billed bytes/row count, and
