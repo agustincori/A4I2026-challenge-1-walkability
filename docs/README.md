@@ -48,6 +48,10 @@ All competition submission deliverables, presentation decks, video walkthrough s
 
 ## 🔬 Background Research & Context
 
+* **[Data Sources & Analytical Framework (DATA_SOURCES.md)](DATA_SOURCES.md)**  
+  Comprehensive data dictionary, lineage, mathematical derivations (tree canopy, plantable ROW, marginal costs), multi-departmental cost-sharing matrix, MILP optimization formulation, and cohort equity drawdown analysis.
+
+
 * **[Atlanta Heat Vulnerability Synopsis (`atlanta_heat_vulnerability_synopsis (2).md`)](atlanta_heat_vulnerability_synopsis%20(2).md)**  
   Comprehensive research synopsis documenting the empirical drivers of Atlanta's urban heat island effect, historical tree canopy deficits, and demographic transportation vulnerabilities across Fulton County census tracts.
 
