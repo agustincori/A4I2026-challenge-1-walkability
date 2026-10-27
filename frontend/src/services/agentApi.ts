@@ -1,6 +1,9 @@
 import { ToolCallTrace } from '../types';
+import { parseAgentEvents } from './agentEvidence';
 
-export const CLOUD_RUN_URL = 'https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app';
+export const CLOUD_RUN_URL = (
+  import.meta.env?.VITE_AGENT_API_URL || 'https://atlanta-heat-advisor-1004921377034.us-central1.run.app'
+).replace(/\/+$/, '');
 
 // Detect whether to use relative proxy in dev or direct Cloud Run URL
 const getBaseUrl = () => {
@@ -30,6 +33,7 @@ class AgentApiService {
   public setEndpoint(url: string) {
     this.baseUrl = url;
     this.directUrl = url;
+    this.sessionId = null;
   }
 
   public getEndpoint(): string {
@@ -81,105 +85,62 @@ class AgentApiService {
   public async getOrCreateSession(): Promise<string> {
     if (this.sessionId) return this.sessionId;
 
-    try {
-      const url = this.baseUrl.startsWith('/')
-        ? `${this.baseUrl}/apps/agent/users/${this.userId}/sessions`
-        : `${this.directUrl}/apps/agent/users/${this.userId}/sessions`;
+    const url = this.baseUrl.startsWith('/')
+      ? `${this.baseUrl}/apps/agent/users/${this.userId}/sessions`
+      : `${this.directUrl}/apps/agent/users/${this.userId}/sessions`;
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({}),
-      });
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+    });
 
-      if (res.ok) {
-        const data = await res.json();
-        this.sessionId = data.id;
-        return data.id;
-      }
-    } catch (e) {
-      console.warn('Session endpoint fallback, generating client UUID', e);
+    if (!res.ok) throw new Error(`Could not create agent session (HTTP ${res.status}).`);
+    const data: unknown = await res.json();
+    if (!data || typeof data !== 'object' || !('id' in data)
+      || typeof data.id !== 'string' || !data.id) {
+      throw new Error('The agent returned an invalid session.');
     }
-
-    this.sessionId = 'session-' + Math.random().toString(36).substring(2, 10);
-    return this.sessionId;
+    this.sessionId = data.id;
+    return data.id;
   }
 
   public async runAgent(
     messageText: string,
     options?: { useMockFallback?: boolean }
-  ): Promise<{ responseText: string; toolCalls: ToolCallTrace[]; model?: string; latencyMs: number }> {
+  ): Promise<{ responseText: string; toolCalls: ToolCallTrace[]; model?: string; latencyMs: number; source: 'live' | 'mock' }> {
     const start = performance.now();
 
     if (!options?.useMockFallback) {
-      try {
-        const sessionId = await this.getOrCreateSession();
-        const url = this.baseUrl.startsWith('/') ? `${this.baseUrl}/run` : `${this.directUrl}/run`;
+      const sessionId = await this.getOrCreateSession();
+      const url = this.baseUrl.startsWith('/') ? `${this.baseUrl}/run` : `${this.directUrl}/run`;
 
-        const payload = {
-          appName: 'agent',
-          userId: this.userId,
-          sessionId: sessionId,
-          newMessage: {
-            role: 'user',
-            parts: [{ text: messageText }],
-          },
-        };
+      const payload = {
+        appName: 'agent',
+        userId: this.userId,
+        sessionId: sessionId,
+        newMessage: {
+          role: 'user',
+          parts: [{ text: messageText }],
+        },
+      };
 
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(payload),
-        });
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-        const end = performance.now();
-        const latencyMs = Math.round(end - start);
+      const end = performance.now();
+      const latencyMs = Math.round(end - start);
 
-        if (res.ok) {
-          const events = await res.json();
-          let fullText = '';
-          const toolCalls: ToolCallTrace[] = [];
-          let model = 'gemini-2.5-flash';
-
-          if (Array.isArray(events)) {
-            for (const ev of events) {
-              if (ev.modelVersion) model = ev.modelVersion;
-
-              // Extract text parts
-              if (ev.content?.parts) {
-                for (const p of ev.content.parts) {
-                  if (p.text) fullText += p.text;
-                  if (p.functionCall) {
-                    toolCalls.push({
-                      name: p.functionCall.name,
-                      arguments: p.functionCall.args || {},
-                    });
-                  }
-                  if (p.functionResponse) {
-                    const existing = toolCalls.find(t => t.name === p.functionResponse.name);
-                    if (existing) {
-                      existing.output = p.functionResponse.response;
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          if (fullText.trim()) {
-            return {
-              responseText: fullText.trim(),
-              toolCalls,
-              model,
-              latencyMs,
-            };
-          }
-        }
-      } catch (err) {
-        console.warn('Direct Cloud Run call encountered issue, triggering smart fallback:', err);
+      if (!res.ok) {
+        if (res.status === 404) this.sessionId = null;
+        throw new Error(`Agent request failed (HTTP ${res.status}). No simulated results were substituted.`);
       }
+      return { ...parseAgentEvents(await res.json()), latencyMs, source: 'live' };
     }
 
     // High fidelity domain-specific fallback for offline demo or simulated mock mode
@@ -190,6 +151,7 @@ class AgentApiService {
       toolCalls: fallback.toolCalls,
       model: 'gemini-2.5-flash (local / mock cached)',
       latencyMs: Math.round(end - start),
+      source: 'mock',
     };
   }
 

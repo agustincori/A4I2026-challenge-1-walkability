@@ -12,5 +12,5 @@ COPY agent /app/agent
 ENV PORT=8080
 ENV PYTHONUNBUFFERED=1
 
-# Run ADK Web / API Server on Cloud Run (deploy with --min-instances=1 to avoid cold starts)
-CMD ["sh", "-c", "adk web --host 0.0.0.0 --port ${PORT} /app"]
+# Allow the deployed frontend and the documented local development origins.
+CMD ["sh", "-c", "adk web --host 0.0.0.0 --port ${PORT} --allow_origins https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app --allow_origins https://atlanta-heat-advisor-frontend-hxywpvumaq-uc.a.run.app --allow_origins http://127.0.0.1:5173 --allow_origins http://localhost:5173 --allow_origins http://127.0.0.1:8080 --allow_origins http://localhost:8080 /app"]

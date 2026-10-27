@@ -178,6 +178,20 @@ boundary is BigQuery, not Python imports from the training pipeline:
   one year returns an explicit `INSUFFICIENT_HISTORY` direction and null trend
   values. No adequately observed years returns an error.
 
+### Planner-facing presentation
+
+Both agent families use concise decision summaries and separate campaign-relative
+offsets from vulnerability, historical campaign temperatures, and forecast scenarios.
+Rankings are screening candidates, not verified facilities, served populations or
+measured walking routes. Next steps use plain language rather than Python syntax.
+Planning attribution `direction` values are `increases_prediction`,
+`decreases_prediction`, or `neutral` (replacing the causal-sounding legacy
+`warming_driver`/`cooling_mitigator`). Formatted explanations describe model
+contributions as associations, not causal physical effects. The legacy
+`why_it_is_hot` payload key remains for compatibility, with noncausal wording.
+The custom frontend's evidence cards require successful structured tool payloads;
+deploy the frontend and agent changes separately to update both experiences.
+
 ### Correlated execution telemetry
 
 [`telemetry.py`](./telemetry.py) emits one-line JSON to stderr, captured as
@@ -337,11 +351,16 @@ adk web --port 8080 .
 ## 4. Live Cloud Run Deployment & Front-End Integration
 
 ### Live Endpoints
-- **Web UI:** [https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app)
+- **Web UI:** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)
 - **Health Check:** `GET /health` -> `{"status":"ok"}`
 - **List Agents:** `GET /list-apps` -> `["agent"]`
 - **Agent Run API:** `POST /run` (JSON body with user query)
 - **Streaming API:** `POST /run_sse` (Server-sent events for streaming UI)
+
+The ADK server explicitly allows requests from the deployed frontend origins and
+the documented local development origins in [`Dockerfile`](./Dockerfile). If the
+frontend hostname or development port changes, update that origin allowlist and
+redeploy the agent.
 
 ### Local Dev Alternative
 ```bash
