@@ -136,6 +136,47 @@
   .slider-emerald:hover::-webkit-slider-thumb {
     box-shadow: 0 0 12px rgba(16, 185, 129, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
   }
+
+  /* Tree Canopy Progress Bars */
+  .canopy-progress-bar {
+    @apply w-full h-2 bg-slate-800 rounded-full overflow-hidden border border-slate-700/50 relative;
+  }
+  .canopy-progress-fill {
+    @apply h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-amber-500 via-lime-500 to-emerald-500;
+  }
+  .canopy-progress-deficit {
+    @apply h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-rose-600 via-amber-500 to-emerald-500;
+  }
+
+  /* Multi-Departmental Budget Progress Bars */
+  .budget-bar-parks {
+    @apply h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-emerald-600 to-teal-400 shadow-sm shadow-emerald-950;
+  }
+  .budget-bar-watershed {
+    @apply h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-cyan-600 to-blue-400 shadow-sm shadow-cyan-950;
+  }
+  .budget-bar-resilience {
+    @apply h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-indigo-600 to-violet-400 shadow-sm shadow-indigo-950;
+  }
+
+  /* Tree Canopy Level Badges */
+  .badge-canopy-target {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-500/40;
+  }
+  .badge-canopy-median {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-lime-950/60 text-lime-300 border border-lime-500/40;
+  }
+  .badge-canopy-deficit {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-500/40;
+  }
+  .badge-canopy-critical {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-950/60 text-rose-300 border border-rose-500/40;
+  }
+
+  /* Bivariate Lens Hotspot Badges */
+  .bivariate-badge {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-gradient-to-r from-rose-950/80 via-amber-950/80 to-slate-900 border border-rose-500/50 text-rose-200 shadow-md shadow-rose-950/50;
+  }
 }
 
 @layer utilities {
@@ -278,12 +319,18 @@
   .small-asset-marker:hover .glow-rose {
     box-shadow: 0 0 22px rgba(251, 113, 133, 0.95), 0 5px 12px rgba(0, 0, 0, 0.85);
   }
+
+  /* Bivariate lens hotspot pulses or glowing rings */
+  .bivariate-hotspot-glow {
+    animation: bivariatePulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
 }
 
 /* Leaflet custom divIcon default wrapper reset */
 .leaflet-div-icon.custom-asset-pin,
 .leaflet-div-icon.small-asset-marker,
-.leaflet-div-icon.candidate-cooling-pin {
+.leaflet-div-icon.candidate-cooling-pin,
+.leaflet-div-icon.bivariate-hotspot-pin {
   background: transparent !important;
   border: none !important;
 }
@@ -305,5 +352,14 @@
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+@keyframes bivariatePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7), 0 0 14px rgba(245, 158, 11, 0.6);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(244, 63, 94, 0), 0 0 24px rgba(245, 158, 11, 0.95);
   }
 }

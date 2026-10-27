@@ -1,4 +1,4 @@
-import { CensusTract, CoolingCenterRanking, StationHeatRecord, FeatureAttribution, EquityAuditSummary, PlannerDecision, HeatAlert, DispatchedAsset } from '../types';
+import { CensusTract, CoolingCenterRanking, StationHeatRecord, FeatureAttribution, EquityAuditSummary, PlannerDecision, HeatAlert, DispatchedAsset, GreeningProjectAllocation } from '../types';
 
 export const CITYWIDE_BENCHMARKS = {
   city: 'Atlanta, GA',
@@ -11,6 +11,9 @@ export const CITYWIDE_BENCHMARKS = {
   citywideMedianAge: 33.6,
   citywideMedianIncome: 69164,
   citywideAvgCanopyPct: 36.5,
+  citywideMedianCanopyPct: 37.16,
+  citywideCanopyTargetPct: 50.0,
+  citywideCriticalCanopyPct: 20.0,
   citywideMedianSviScore: 0.52,
   citywideP75SviScore: 0.75,
 };
@@ -41,7 +44,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "coolingCenterType": "Community Center",
     "seniorsLivingAlonePct": 19.0,
     "disabilityRatePct": 24.2,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 6001,
+    "targetGapPct": 17.0,
+    "plantableRowSqm": 21783,
+    "marginalPlantingCost": 1068,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 33.0,
+      "targetGapPct": 17.0,
+      "plantableRowSqm": 21783,
+      "marginalPlantingCost": 1068,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006500",
@@ -66,7 +85,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "coolingCenterType": "Community Center",
     "seniorsLivingAlonePct": 25.6,
     "disabilityRatePct": 23.2,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 8318,
+    "targetGapPct": 10.2,
+    "plantableRowSqm": 26937,
+    "marginalPlantingCost": 886,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.8,
+      "targetGapPct": 10.2,
+      "plantableRowSqm": 26937,
+      "marginalPlantingCost": 886,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006601",
@@ -91,7 +126,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "coolingCenterType": "Recreation Center",
     "seniorsLivingAlonePct": 25.2,
     "disabilityRatePct": 21.5,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 4576,
+    "targetGapPct": 11.1,
+    "plantableRowSqm": 12553,
+    "marginalPlantingCost": 938,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 38.9,
+      "targetGapPct": 11.1,
+      "plantableRowSqm": 12553,
+      "marginalPlantingCost": 938,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121005700",
@@ -114,7 +165,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.0,
     "disabilityRatePct": 20.9,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 3488,
+    "targetGapPct": 16.1,
+    "plantableRowSqm": 12127,
+    "marginalPlantingCost": 957,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 33.9,
+      "targetGapPct": 16.1,
+      "plantableRowSqm": 12127,
+      "marginalPlantingCost": 957,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121005800",
@@ -137,7 +204,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 26.1,
     "disabilityRatePct": 19.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3438,
+    "targetGapPct": 3.7,
+    "plantableRowSqm": 10153,
+    "marginalPlantingCost": 912,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.3,
+      "targetGapPct": 3.7,
+      "plantableRowSqm": 10153,
+      "marginalPlantingCost": 912,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006000",
@@ -160,7 +243,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.2,
     "disabilityRatePct": 19.5,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 7065,
+    "targetGapPct": 11.8,
+    "plantableRowSqm": 25248,
+    "marginalPlantingCost": 931,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 38.2,
+      "targetGapPct": 11.8,
+      "plantableRowSqm": 25248,
+      "marginalPlantingCost": 931,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121004200",
@@ -185,7 +284,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "coolingCenterType": "Community Center",
     "seniorsLivingAlonePct": 28.5,
     "disabilityRatePct": 23.9,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 5497,
+    "targetGapPct": 12.4,
+    "plantableRowSqm": 22493,
+    "marginalPlantingCost": 1068,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 37.6,
+      "targetGapPct": 12.4,
+      "plantableRowSqm": 22493,
+      "marginalPlantingCost": 1068,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121010006",
@@ -208,7 +323,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.9,
     "disabilityRatePct": 15.7,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 10548,
+    "targetGapPct": 28.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 898,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 21.1,
+      "targetGapPct": 28.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 898,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008302",
@@ -231,7 +362,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 30.5,
     "disabilityRatePct": 23.9,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 3728,
+    "targetGapPct": 1.9,
+    "plantableRowSqm": 14356,
+    "marginalPlantingCost": 976,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 48.1,
+      "targetGapPct": 1.9,
+      "plantableRowSqm": 14356,
+      "marginalPlantingCost": 976,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006300",
@@ -254,7 +401,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.8,
     "disabilityRatePct": 21.3,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 3953,
+    "targetGapPct": 8.1,
+    "plantableRowSqm": 15095,
+    "marginalPlantingCost": 1016,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 41.9,
+      "targetGapPct": 8.1,
+      "plantableRowSqm": 15095,
+      "marginalPlantingCost": 1016,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008104",
@@ -277,7 +440,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.1,
     "disabilityRatePct": 23.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7679,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 52.1,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006100",
@@ -300,7 +479,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.8,
     "disabilityRatePct": 22.0,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 7355,
+    "targetGapPct": 19.4,
+    "plantableRowSqm": 23600,
+    "marginalPlantingCost": 918,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 30.6,
+      "targetGapPct": 19.4,
+      "plantableRowSqm": 23600,
+      "marginalPlantingCost": 918,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008000",
@@ -323,7 +518,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.8,
     "disabilityRatePct": 20.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 10512,
+    "targetGapPct": 3.4,
+    "plantableRowSqm": 39306,
+    "marginalPlantingCost": 931,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.6,
+      "targetGapPct": 3.4,
+      "plantableRowSqm": 39306,
+      "marginalPlantingCost": 931,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121002500",
@@ -346,7 +557,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.7,
     "disabilityRatePct": 24.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5114,
+    "targetGapPct": 18.9,
+    "plantableRowSqm": 20164,
+    "marginalPlantingCost": 1074,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 31.1,
+      "targetGapPct": 18.9,
+      "plantableRowSqm": 20164,
+      "marginalPlantingCost": 1074,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008301",
@@ -369,7 +596,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.7,
     "disabilityRatePct": 23.9,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 5679,
+    "targetGapPct": 12.8,
+    "plantableRowSqm": 23671,
+    "marginalPlantingCost": 1009,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 37.2,
+      "targetGapPct": 12.8,
+      "plantableRowSqm": 23671,
+      "marginalPlantingCost": 1009,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121002802",
@@ -392,7 +635,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.8,
     "disabilityRatePct": 24.2,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 7790,
+    "targetGapPct": 27.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 1028,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 22.1,
+      "targetGapPct": 27.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 1028,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121012000",
@@ -415,7 +674,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.0,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7668,
+    "targetGapPct": 9.2,
+    "plantableRowSqm": 26597,
+    "marginalPlantingCost": 976,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.8,
+      "targetGapPct": 9.2,
+      "plantableRowSqm": 26597,
+      "marginalPlantingCost": 976,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008601",
@@ -438,7 +713,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.1,
     "disabilityRatePct": 24.6,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 11234,
+    "targetGapPct": 3.1,
+    "plantableRowSqm": 35131,
+    "marginalPlantingCost": 1054,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.9,
+      "targetGapPct": 3.1,
+      "plantableRowSqm": 35131,
+      "marginalPlantingCost": 1054,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121006801",
@@ -461,7 +752,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.3,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5168,
+    "targetGapPct": 15.5,
+    "plantableRowSqm": 0,
+    "marginalPlantingCost": 879,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 34.5,
+      "targetGapPct": 15.5,
+      "plantableRowSqm": 0,
+      "marginalPlantingCost": 879,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121004100",
@@ -484,7 +791,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.6,
     "disabilityRatePct": 17.0,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 4385,
+    "targetGapPct": 17.8,
+    "plantableRowSqm": 17083,
+    "marginalPlantingCost": 872,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.2,
+      "targetGapPct": 17.8,
+      "plantableRowSqm": 17083,
+      "marginalPlantingCost": 872,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121002300",
@@ -507,7 +830,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.3,
     "disabilityRatePct": 22.1,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 2756,
+    "targetGapPct": 13.7,
+    "plantableRowSqm": 16926,
+    "marginalPlantingCost": 1048,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 36.3,
+      "targetGapPct": 13.7,
+      "plantableRowSqm": 16926,
+      "marginalPlantingCost": 1048,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001901",
@@ -530,7 +869,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.9,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5011,
+    "targetGapPct": 39.3,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 10.7,
+      "targetGapPct": 39.3,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121003800",
@@ -553,7 +908,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.6,
     "disabilityRatePct": 21.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7776,
+    "targetGapPct": 26.2,
+    "plantableRowSqm": 5112,
+    "marginalPlantingCost": 1028,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 23.8,
+      "targetGapPct": 26.2,
+      "plantableRowSqm": 5112,
+      "marginalPlantingCost": 1028,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008903",
@@ -576,7 +947,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.8,
     "disabilityRatePct": 20.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5443,
+    "targetGapPct": 6.1,
+    "plantableRowSqm": 15805,
+    "marginalPlantingCost": 866,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 43.9,
+      "targetGapPct": 6.1,
+      "plantableRowSqm": 15805,
+      "marginalPlantingCost": 866,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121002400",
@@ -599,7 +986,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.8,
     "disabilityRatePct": 23.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5634,
+    "targetGapPct": 10.9,
+    "plantableRowSqm": 23160,
+    "marginalPlantingCost": 970,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.1,
+      "targetGapPct": 10.9,
+      "plantableRowSqm": 23160,
+      "marginalPlantingCost": 970,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008701",
@@ -622,7 +1025,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.0,
     "disabilityRatePct": 24.6,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7499,
+    "targetGapPct": 8.3,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 1002,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 41.7,
+      "targetGapPct": 8.3,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 1002,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121004300",
@@ -645,7 +1064,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.8,
     "disabilityRatePct": 19.8,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 5569,
+    "targetGapPct": 16.0,
+    "plantableRowSqm": 9273,
+    "marginalPlantingCost": 964,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 34.0,
+      "targetGapPct": 16.0,
+      "plantableRowSqm": 9273,
+      "marginalPlantingCost": 964,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008202",
@@ -668,7 +1103,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.4,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4570,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 15080,
+    "marginalPlantingCost": 1002,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 51.6,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 15080,
+      "marginalPlantingCost": 1002,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13089023802",
@@ -691,7 +1142,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.7,
     "disabilityRatePct": 19.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9101,
+    "targetGapPct": 0.5,
+    "plantableRowSqm": 22706,
+    "marginalPlantingCost": 905,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 49.5,
+      "targetGapPct": 0.5,
+      "plantableRowSqm": 22706,
+      "marginalPlantingCost": 905,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121007100",
@@ -714,7 +1181,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.9,
     "disabilityRatePct": 23.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5101,
+    "targetGapPct": 10.7,
+    "plantableRowSqm": 15833,
+    "marginalPlantingCost": 931,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.3,
+      "targetGapPct": 10.7,
+      "plantableRowSqm": 15833,
+      "marginalPlantingCost": 931,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121003900",
@@ -737,7 +1220,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.4,
     "disabilityRatePct": 23.8,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 3951,
+    "targetGapPct": 12.8,
+    "plantableRowSqm": 12425,
+    "marginalPlantingCost": 957,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 37.2,
+      "targetGapPct": 12.8,
+      "plantableRowSqm": 12425,
+      "marginalPlantingCost": 957,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121004800",
@@ -760,7 +1259,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 27.4,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 2644,
+    "targetGapPct": 18.1,
+    "plantableRowSqm": 10977,
+    "marginalPlantingCost": 1022,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 31.9,
+      "targetGapPct": 18.1,
+      "plantableRowSqm": 10977,
+      "marginalPlantingCost": 1022,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121009503",
@@ -783,7 +1298,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.5,
     "disabilityRatePct": 14.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4522,
+    "targetGapPct": 20.8,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 983,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.2,
+      "targetGapPct": 20.8,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 983,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121011802",
@@ -806,7 +1337,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.1,
     "disabilityRatePct": 24.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3082,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 950,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 51.9,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 950,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008500",
@@ -829,7 +1376,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 28.1,
     "disabilityRatePct": 23.1,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 6340,
+    "targetGapPct": 4.9,
+    "plantableRowSqm": 18815,
+    "marginalPlantingCost": 944,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 45.1,
+      "targetGapPct": 4.9,
+      "plantableRowSqm": 18815,
+      "marginalPlantingCost": 944,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001801",
@@ -852,7 +1415,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.0,
     "disabilityRatePct": 23.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4583,
+    "targetGapPct": 23.6,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 1087,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 26.4,
+      "targetGapPct": 23.6,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 1087,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008602",
@@ -875,7 +1454,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.0,
     "disabilityRatePct": 22.5,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 3179,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 8889,
+    "marginalPlantingCost": 976,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 55.1,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 8889,
+      "marginalPlantingCost": 976,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121011901",
@@ -898,7 +1493,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.3,
     "disabilityRatePct": 24.2,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 4183,
+    "targetGapPct": 10.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 990,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.5,
+      "targetGapPct": 10.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 990,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121009001",
@@ -921,7 +1532,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.3,
     "disabilityRatePct": 13.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5875,
+    "targetGapPct": 26.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 872,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 24.0,
+      "targetGapPct": 26.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 872,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121003500",
@@ -944,7 +1571,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.2,
     "disabilityRatePct": 21.1,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 9580,
+    "targetGapPct": 22.7,
+    "plantableRowSqm": 16799,
+    "marginalPlantingCost": 976,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 27.3,
+      "targetGapPct": 22.7,
+      "plantableRowSqm": 16799,
+      "marginalPlantingCost": 976,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121004000",
@@ -967,7 +1610,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 23.0,
     "disabilityRatePct": 20.7,
-    "wellnessPriority": true
+    "wellnessPriority": true,
+    "popDensity": 5231,
+    "targetGapPct": 20.3,
+    "plantableRowSqm": 19255,
+    "marginalPlantingCost": 944,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.7,
+      "targetGapPct": 20.3,
+      "plantableRowSqm": 19255,
+      "marginalPlantingCost": 944,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121009104",
@@ -990,7 +1649,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.6,
     "disabilityRatePct": 12.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6368,
+    "targetGapPct": 9.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 886,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.5,
+      "targetGapPct": 9.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 886,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001302",
@@ -1013,7 +1688,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.2,
     "disabilityRatePct": 16.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4903,
+    "targetGapPct": 20.7,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 853,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.3,
+      "targetGapPct": 20.7,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 853,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008204",
@@ -1036,7 +1727,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.0,
     "disabilityRatePct": 18.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7335,
+    "targetGapPct": 12.7,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 931,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 37.3,
+      "targetGapPct": 12.7,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 931,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001206",
@@ -1059,7 +1766,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.8,
     "disabilityRatePct": 12.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9666,
+    "targetGapPct": 40.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 905,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 9.9,
+      "targetGapPct": 40.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 905,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121000602",
@@ -1082,7 +1805,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.9,
     "disabilityRatePct": 21.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7398,
+    "targetGapPct": 23.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 27.0,
+      "targetGapPct": 23.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008203",
@@ -1105,7 +1844,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.4,
     "disabilityRatePct": 22.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5670,
+    "targetGapPct": 10.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 1054,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.9,
+      "targetGapPct": 10.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 1054,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008400",
@@ -1128,7 +1883,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 31.7,
     "disabilityRatePct": 24.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6446,
+    "targetGapPct": 4.8,
+    "plantableRowSqm": 34194,
+    "marginalPlantingCost": 957,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 45.2,
+      "targetGapPct": 4.8,
+      "plantableRowSqm": 34194,
+      "marginalPlantingCost": 957,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121000700",
@@ -1151,7 +1922,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.4,
     "disabilityRatePct": 16.3,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7875,
+    "targetGapPct": 15.7,
+    "plantableRowSqm": 6589,
+    "marginalPlantingCost": 892,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 34.3,
+      "targetGapPct": 15.7,
+      "plantableRowSqm": 6589,
+      "marginalPlantingCost": 892,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121003600",
@@ -1174,7 +1961,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.0,
     "disabilityRatePct": 16.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 2030,
+    "targetGapPct": 10.6,
+    "plantableRowSqm": 14030,
+    "marginalPlantingCost": 996,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.4,
+      "targetGapPct": 10.6,
+      "plantableRowSqm": 14030,
+      "marginalPlantingCost": 996,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121002100",
@@ -1197,7 +2000,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 28.9,
     "disabilityRatePct": 20.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5672,
+    "targetGapPct": 17.1,
+    "plantableRowSqm": 18247,
+    "marginalPlantingCost": 892,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.9,
+      "targetGapPct": 17.1,
+      "plantableRowSqm": 18247,
+      "marginalPlantingCost": 892,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121003200",
@@ -1220,7 +2039,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.2,
     "disabilityRatePct": 9.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5458,
+    "targetGapPct": 14.7,
+    "plantableRowSqm": 20732,
+    "marginalPlantingCost": 853,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 35.3,
+      "targetGapPct": 14.7,
+      "plantableRowSqm": 20732,
+      "marginalPlantingCost": 853,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121003000",
@@ -1243,7 +2078,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.9,
     "disabilityRatePct": 11.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9130,
+    "targetGapPct": 8.8,
+    "plantableRowSqm": 28996,
+    "marginalPlantingCost": 840,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 41.2,
+      "targetGapPct": 8.8,
+      "plantableRowSqm": 28996,
+      "marginalPlantingCost": 840,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121006802",
@@ -1266,7 +2117,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.3,
     "disabilityRatePct": 25.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3114,
+    "targetGapPct": 7.9,
+    "plantableRowSqm": 8449,
+    "marginalPlantingCost": 1087,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 42.1,
+      "targetGapPct": 7.9,
+      "plantableRowSqm": 8449,
+      "marginalPlantingCost": 1087,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001400",
@@ -1289,7 +2156,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 14.9,
     "disabilityRatePct": 10.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5634,
+    "targetGapPct": 25.6,
+    "plantableRowSqm": 22166,
+    "marginalPlantingCost": 846,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 24.4,
+      "targetGapPct": 25.6,
+      "plantableRowSqm": 22166,
+      "marginalPlantingCost": 846,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001600",
@@ -1312,7 +2195,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.1,
     "disabilityRatePct": 10.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5535,
+    "targetGapPct": 8.8,
+    "plantableRowSqm": 22124,
+    "marginalPlantingCost": 866,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 41.2,
+      "targetGapPct": 8.8,
+      "plantableRowSqm": 22124,
+      "marginalPlantingCost": 866,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001205",
@@ -1335,7 +2234,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 12.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5884,
+    "targetGapPct": 30.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 892,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 19.1,
+      "targetGapPct": 30.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 892,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121000601",
@@ -1358,7 +2273,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.9,
     "disabilityRatePct": 19.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9547,
+    "targetGapPct": 22.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 27.5,
+      "targetGapPct": 22.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121008702",
@@ -1381,7 +2312,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.7,
     "disabilityRatePct": 15.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5146,
+    "targetGapPct": 1.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 49.0,
+      "targetGapPct": 1.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121004900",
@@ -1404,7 +2351,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.2,
     "disabilityRatePct": 18.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6460,
+    "targetGapPct": 17.4,
+    "plantableRowSqm": 19411,
+    "marginalPlantingCost": 898,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.6,
+      "targetGapPct": 17.4,
+      "plantableRowSqm": 19411,
+      "marginalPlantingCost": 898,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001902",
@@ -1427,7 +2390,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 22.3,
     "disabilityRatePct": 16.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5080,
+    "targetGapPct": 18.8,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 918,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 31.2,
+      "targetGapPct": 18.8,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 918,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001002",
@@ -1450,7 +2429,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.0,
     "disabilityRatePct": 20.3,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 15772,
+    "targetGapPct": 18.5,
+    "plantableRowSqm": 8264,
+    "marginalPlantingCost": 918,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 31.5,
+      "targetGapPct": 18.5,
+      "plantableRowSqm": 8264,
+      "marginalPlantingCost": 918,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121001301",
@@ -1473,7 +2468,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.5,
     "disabilityRatePct": 13.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5173,
+    "targetGapPct": 19.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 938,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 30.5,
+      "targetGapPct": 19.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 938,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009803",
@@ -1496,7 +2507,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.1,
     "disabilityRatePct": 14.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6890,
+    "targetGapPct": 7.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 872,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 42.1,
+      "targetGapPct": 7.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 872,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009405",
@@ -1519,7 +2546,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.7,
     "disabilityRatePct": 13.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9747,
+    "targetGapPct": 25.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 938,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 24.1,
+      "targetGapPct": 25.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 938,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009607",
@@ -1542,7 +2585,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.6,
     "disabilityRatePct": 14.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 10595,
+    "targetGapPct": 26.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 898,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 23.9,
+      "targetGapPct": 26.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 898,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121006900",
@@ -1565,7 +2624,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.1,
     "disabilityRatePct": 15.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 8399,
+    "targetGapPct": 4.1,
+    "plantableRowSqm": 22819,
+    "marginalPlantingCost": 892,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": true,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 45.9,
+      "targetGapPct": 4.1,
+      "plantableRowSqm": 22819,
+      "marginalPlantingCost": 892,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": true
+    }
   },
   {
     "geoId": "13121009406",
@@ -1588,7 +2663,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.4,
     "disabilityRatePct": 14.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5355,
+    "targetGapPct": 15.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 866,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 34.9,
+      "targetGapPct": 15.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 866,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13089022404",
@@ -1611,7 +2702,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.8,
     "disabilityRatePct": 20.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9243,
+    "targetGapPct": 15.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 944,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 34.1,
+      "targetGapPct": 15.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 944,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009501",
@@ -1634,7 +2741,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 27.8,
     "disabilityRatePct": 9.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 10305,
+    "targetGapPct": 10.0,
+    "plantableRowSqm": 28215,
+    "marginalPlantingCost": 840,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.0,
+      "targetGapPct": 10.0,
+      "plantableRowSqm": 28215,
+      "marginalPlantingCost": 840,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001203",
@@ -1657,7 +2780,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.9,
     "disabilityRatePct": 12.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4563,
+    "targetGapPct": 35.4,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 918,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 14.6,
+      "targetGapPct": 35.4,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 918,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121002900",
@@ -1680,7 +2819,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.6,
     "disabilityRatePct": 14.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5744,
+    "targetGapPct": 21.8,
+    "plantableRowSqm": 20902,
+    "marginalPlantingCost": 898,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 28.2,
+      "targetGapPct": 21.8,
+      "plantableRowSqm": 20902,
+      "marginalPlantingCost": 898,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13089023444",
@@ -1703,7 +2858,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 21.4,
     "disabilityRatePct": 15.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5108,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 67.6,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009002",
@@ -1726,7 +2897,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 9.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6707,
+    "targetGapPct": 11.2,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 38.8,
+      "targetGapPct": 11.2,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008801",
@@ -1749,7 +2936,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.1,
     "disabilityRatePct": 10.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5972,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 840,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 51.5,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 840,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121007900",
@@ -1772,7 +2975,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 28.0,
     "disabilityRatePct": 12.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 11401,
+    "targetGapPct": 4.1,
+    "plantableRowSqm": 37687,
+    "marginalPlantingCost": 866,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 45.9,
+      "targetGapPct": 4.1,
+      "plantableRowSqm": 37687,
+      "marginalPlantingCost": 866,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121005000",
@@ -1795,7 +3014,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.0,
     "disabilityRatePct": 11.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7574,
+    "targetGapPct": 22.8,
+    "plantableRowSqm": 22493,
+    "marginalPlantingCost": 879,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 27.2,
+      "targetGapPct": 22.8,
+      "plantableRowSqm": 22493,
+      "marginalPlantingCost": 879,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001802",
@@ -1818,7 +3053,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.7,
     "disabilityRatePct": 14.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5566,
+    "targetGapPct": 20.8,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 912,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.2,
+      "targetGapPct": 20.8,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 912,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001001",
@@ -1841,7 +3092,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 15.5,
     "disabilityRatePct": 14.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 11014,
+    "targetGapPct": 24.6,
+    "plantableRowSqm": 24310,
+    "marginalPlantingCost": 886,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 25.4,
+      "targetGapPct": 24.6,
+      "plantableRowSqm": 24310,
+      "marginalPlantingCost": 886,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009900",
@@ -1864,7 +3131,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.9,
     "disabilityRatePct": 9.8,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 12395,
+    "targetGapPct": 5.2,
+    "plantableRowSqm": 31297,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 44.8,
+      "targetGapPct": 5.2,
+      "plantableRowSqm": 31297,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121010211",
@@ -1887,7 +3170,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.3,
     "disabilityRatePct": 9.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7589,
+    "targetGapPct": 4.0,
+    "plantableRowSqm": 19127,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.0,
+      "targetGapPct": 4.0,
+      "plantableRowSqm": 19127,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121010003",
@@ -1910,7 +3209,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.2,
     "disabilityRatePct": 11.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 8917,
+    "targetGapPct": 20.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 853,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.9,
+      "targetGapPct": 20.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 853,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009802",
@@ -1933,7 +3248,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.4,
     "disabilityRatePct": 11.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9346,
+    "targetGapPct": 0.0,
+    "plantableRowSqm": 28428,
+    "marginalPlantingCost": 853,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 52.8,
+      "targetGapPct": 0.0,
+      "plantableRowSqm": 28428,
+      "marginalPlantingCost": 853,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009504",
@@ -1956,7 +3287,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.7,
     "disabilityRatePct": 12.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7492,
+    "targetGapPct": 13.8,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 853,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 36.2,
+      "targetGapPct": 13.8,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 853,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121005200",
@@ -1979,7 +3326,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 12.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 10618,
+    "targetGapPct": 17.5,
+    "plantableRowSqm": 30871,
+    "marginalPlantingCost": 827,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.5,
+      "targetGapPct": 17.5,
+      "plantableRowSqm": 30871,
+      "marginalPlantingCost": 827,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009804",
@@ -2002,7 +3365,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 9.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5656,
+    "targetGapPct": 5.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 45.0,
+      "targetGapPct": 5.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121000501",
@@ -2025,7 +3404,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.4,
     "disabilityRatePct": 11.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9632,
+    "targetGapPct": 10.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 860,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.5,
+      "targetGapPct": 10.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 860,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008908",
@@ -2048,7 +3443,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.9,
     "disabilityRatePct": 14.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5112,
+    "targetGapPct": 16.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 866,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 33.9,
+      "targetGapPct": 16.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 866,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009103",
@@ -2071,7 +3482,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.2,
     "disabilityRatePct": 12.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 7337,
+    "targetGapPct": 19.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 860,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 30.9,
+      "targetGapPct": 19.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 860,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008907",
@@ -2094,7 +3521,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.0,
     "disabilityRatePct": 10.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6896,
+    "targetGapPct": 17.7,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.3,
+      "targetGapPct": 17.7,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121001204",
@@ -2117,7 +3560,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.9,
     "disabilityRatePct": 11.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4786,
+    "targetGapPct": 33.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 918,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 16.5,
+      "targetGapPct": 33.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 918,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008802",
@@ -2140,7 +3599,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 12.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 8300,
+    "targetGapPct": 2.1,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 866,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 47.9,
+      "targetGapPct": 2.1,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 866,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009601",
@@ -2163,7 +3638,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 14.7,
     "disabilityRatePct": 10.3,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6703,
+    "targetGapPct": 14.1,
+    "plantableRowSqm": 27647,
+    "marginalPlantingCost": 834,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 35.9,
+      "targetGapPct": 14.1,
+      "plantableRowSqm": 27647,
+      "marginalPlantingCost": 834,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009410",
@@ -2186,7 +3677,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.9,
     "disabilityRatePct": 10.9,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4237,
+    "targetGapPct": 13.6,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 840,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 36.4,
+      "targetGapPct": 13.6,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 840,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121000502",
@@ -2209,7 +3716,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.6,
     "disabilityRatePct": 12.1,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4408,
+    "targetGapPct": 3.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 846,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 47.0,
+      "targetGapPct": 3.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 846,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121000400",
@@ -2232,7 +3755,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 25.9,
     "disabilityRatePct": 11.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4196,
+    "targetGapPct": 10.0,
+    "plantableRowSqm": 17480,
+    "marginalPlantingCost": 879,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.0,
+      "targetGapPct": 10.0,
+      "plantableRowSqm": 17480,
+      "marginalPlantingCost": 879,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008905",
@@ -2255,7 +3794,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.8,
     "disabilityRatePct": 12.2,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 12456,
+    "targetGapPct": 21.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.0,
+      "targetGapPct": 21.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13089022405",
@@ -2278,7 +3833,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.1,
     "disabilityRatePct": 17.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6273,
+    "targetGapPct": 10.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 846,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.0,
+      "targetGapPct": 10.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 846,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009301",
@@ -2301,7 +3872,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.9,
     "disabilityRatePct": 13.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 6379,
+    "targetGapPct": 17.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 846,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 33.0,
+      "targetGapPct": 17.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 846,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009606",
@@ -2324,7 +3911,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 18.0,
     "disabilityRatePct": 10.5,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3400,
+    "targetGapPct": 8.0,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 42.0,
+      "targetGapPct": 8.0,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13089022403",
@@ -2347,7 +3950,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 20.8,
     "disabilityRatePct": 8.6,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9268,
+    "targetGapPct": 3.2,
+    "plantableRowSqm": 21882,
+    "marginalPlantingCost": 834,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.8,
+      "targetGapPct": 3.2,
+      "plantableRowSqm": 21882,
+      "marginalPlantingCost": 834,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009302",
@@ -2370,7 +3989,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.4,
     "disabilityRatePct": 12.0,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5121,
+    "targetGapPct": 17.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 879,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 32.5,
+      "targetGapPct": 17.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 879,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009604",
@@ -2393,7 +4028,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.7,
     "disabilityRatePct": 12.6,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 9252,
+    "targetGapPct": 20.8,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": true,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 29.2,
+      "targetGapPct": 20.8,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": true,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008906",
@@ -2416,7 +4067,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 19.2,
     "disabilityRatePct": 11.3,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 5056,
+    "targetGapPct": 3.9,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 872,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 46.1,
+      "targetGapPct": 3.9,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 872,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121010004",
@@ -2439,7 +4106,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.6,
     "disabilityRatePct": 10.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3852,
+    "targetGapPct": 9.2,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 827,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 40.8,
+      "targetGapPct": 9.2,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 827,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121009700",
@@ -2462,7 +4145,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 24.0,
     "disabilityRatePct": 9.7,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 10305,
+    "targetGapPct": 6.9,
+    "plantableRowSqm": 24538,
+    "marginalPlantingCost": 834,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 43.1,
+      "targetGapPct": 6.9,
+      "plantableRowSqm": 24538,
+      "marginalPlantingCost": 834,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121010007",
@@ -2485,7 +4184,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 17.7,
     "disabilityRatePct": 9.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 4306,
+    "targetGapPct": 10.3,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 834,
+    "isParksEligible": false,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 39.7,
+      "targetGapPct": 10.3,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 834,
+      "isParksEligible": false,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121008909",
@@ -2508,7 +4223,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.4,
     "disabilityRatePct": 9.3,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 3692,
+    "targetGapPct": 13.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 834,
+    "isParksEligible": true,
+    "isWatershedEligible": false,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 36.5,
+      "targetGapPct": 13.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 834,
+      "isParksEligible": true,
+      "isWatershedEligible": false,
+      "isResilienceEligible": false
+    }
   },
   {
     "geoId": "13121010005",
@@ -2531,7 +4262,23 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "hasCoolingCenter": false,
     "seniorsLivingAlonePct": 16.5,
     "disabilityRatePct": 9.4,
-    "wellnessPriority": false
+    "wellnessPriority": false,
+    "popDensity": 8388,
+    "targetGapPct": 7.5,
+    "plantableRowSqm": 19880,
+    "marginalPlantingCost": 840,
+    "isParksEligible": false,
+    "isWatershedEligible": true,
+    "isResilienceEligible": false,
+    "treeCanopyMetrics": {
+      "treeCanopyPct": 42.5,
+      "targetGapPct": 7.5,
+      "plantableRowSqm": 19880,
+      "marginalPlantingCost": 840,
+      "isParksEligible": false,
+      "isWatershedEligible": true,
+      "isResilienceEligible": false
+    }
   }
 ];
 
@@ -2924,3 +4671,1229 @@ export const INITIAL_DISPATCHED_ASSETS: DispatchedAsset[] = [
   }
 ];
 
+export const INITIAL_GREENING_ALLOCATIONS: GreeningProjectAllocation[] = [
+  {
+    "id": "GP-2026-001",
+    "tractGeoId": "13121004400",
+    "tractName": "Census Tract 44",
+    "neighborhood": "Sweet Auburn / Old Fourth Ward",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-15T10:10:00Z"
+  },
+  {
+    "id": "GP-2026-002",
+    "tractGeoId": "13121010006",
+    "tractName": "Census Tract 100.06",
+    "neighborhood": "Adamsville / Southwest Atlanta",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-16T10:11:00Z"
+  },
+  {
+    "id": "GP-2026-003",
+    "tractGeoId": "13121006100",
+    "tractName": "Census Tract 61",
+    "neighborhood": "Atlanta - Census Tract 61",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-17T10:12:00Z"
+  },
+  {
+    "id": "GP-2026-004",
+    "tractGeoId": "13121002802",
+    "tractName": "Census Tract 28.02",
+    "neighborhood": "Atlanta - Census Tract 28.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T10:13:00Z"
+  },
+  {
+    "id": "GP-2026-005",
+    "tractGeoId": "13121003800",
+    "tractName": "Census Tract 38",
+    "neighborhood": "Atlanta - Census Tract 38",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T10:14:00Z"
+  },
+  {
+    "id": "GP-2026-006",
+    "tractGeoId": "13121004300",
+    "tractName": "Census Tract 43",
+    "neighborhood": "Atlanta - Census Tract 43",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-20T10:15:00Z"
+  },
+  {
+    "id": "GP-2026-007",
+    "tractGeoId": "13121003500",
+    "tractName": "Census Tract 35",
+    "neighborhood": "East Atlanta Village / Kirkwood",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-21T10:16:00Z"
+  },
+  {
+    "id": "GP-2026-008",
+    "tractGeoId": "13121004000",
+    "tractName": "Census Tract 40",
+    "neighborhood": "Atlanta - Census Tract 40",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-22T10:17:00Z"
+  },
+  {
+    "id": "GP-2026-009",
+    "tractGeoId": "13121000602",
+    "tractName": "Census Tract 6.02",
+    "neighborhood": "Atlanta - Census Tract 6.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-23T10:18:00Z"
+  },
+  {
+    "id": "GP-2026-010",
+    "tractGeoId": "13121000700",
+    "tractName": "Census Tract 7",
+    "neighborhood": "Atlanta - Census Tract 7",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-24T10:19:00Z"
+  },
+  {
+    "id": "GP-2026-011",
+    "tractGeoId": "13121002100",
+    "tractName": "Census Tract 21",
+    "neighborhood": "Atlanta - Census Tract 21",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-15T10:20:00Z"
+  },
+  {
+    "id": "GP-2026-012",
+    "tractGeoId": "13121000601",
+    "tractName": "Census Tract 6.01",
+    "neighborhood": "Atlanta - Census Tract 6.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-16T10:21:00Z"
+  },
+  {
+    "id": "GP-2026-013",
+    "tractGeoId": "13121004900",
+    "tractName": "Census Tract 49",
+    "neighborhood": "Atlanta - Census Tract 49",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-17T10:22:00Z"
+  },
+  {
+    "id": "GP-2026-014",
+    "tractGeoId": "13121001002",
+    "tractName": "Census Tract 10.02",
+    "neighborhood": "Atlanta - Census Tract 10.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T10:23:00Z"
+  },
+  {
+    "id": "GP-2026-015",
+    "tractGeoId": "13121004400",
+    "tractName": "Census Tract 44",
+    "neighborhood": "Sweet Auburn / Old Fourth Ward",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T10:24:00Z"
+  },
+  {
+    "id": "GP-2026-016",
+    "tractGeoId": "13121010006",
+    "tractName": "Census Tract 100.06",
+    "neighborhood": "Adamsville / Southwest Atlanta",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-20T10:25:00Z"
+  },
+  {
+    "id": "GP-2026-017",
+    "tractGeoId": "13121006100",
+    "tractName": "Census Tract 61",
+    "neighborhood": "Atlanta - Census Tract 61",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 500,
+      "watershed": 500,
+      "resilience": 500
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-21T10:26:00Z"
+  },
+  {
+    "id": "GP-2026-018",
+    "tractGeoId": "13121004400",
+    "tractName": "Census Tract 44",
+    "neighborhood": "Sweet Auburn / Old Fourth Ward",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-16T11:10:00Z"
+  },
+  {
+    "id": "GP-2026-019",
+    "tractGeoId": "13121010006",
+    "tractName": "Census Tract 100.06",
+    "neighborhood": "Adamsville / Southwest Atlanta",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-17T11:11:00Z"
+  },
+  {
+    "id": "GP-2026-020",
+    "tractGeoId": "13121006100",
+    "tractName": "Census Tract 61",
+    "neighborhood": "Atlanta - Census Tract 61",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-18T11:12:00Z"
+  },
+  {
+    "id": "GP-2026-021",
+    "tractGeoId": "13121002802",
+    "tractName": "Census Tract 28.02",
+    "neighborhood": "Atlanta - Census Tract 28.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-19T11:13:00Z"
+  },
+  {
+    "id": "GP-2026-022",
+    "tractGeoId": "13121006801",
+    "tractName": "Census Tract 68.01",
+    "neighborhood": "Atlanta - Census Tract 68.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-20T11:14:00Z"
+  },
+  {
+    "id": "GP-2026-023",
+    "tractGeoId": "13121003800",
+    "tractName": "Census Tract 38",
+    "neighborhood": "Atlanta - Census Tract 38",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-21T11:15:00Z"
+  },
+  {
+    "id": "GP-2026-024",
+    "tractGeoId": "13121004300",
+    "tractName": "Census Tract 43",
+    "neighborhood": "Atlanta - Census Tract 43",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-22T11:16:00Z"
+  },
+  {
+    "id": "GP-2026-025",
+    "tractGeoId": "13121009001",
+    "tractName": "Census Tract 90.01",
+    "neighborhood": "Atlanta - Census Tract 90.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-23T11:17:00Z"
+  },
+  {
+    "id": "GP-2026-026",
+    "tractGeoId": "13121003500",
+    "tractName": "Census Tract 35",
+    "neighborhood": "East Atlanta Village / Kirkwood",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-24T11:18:00Z"
+  },
+  {
+    "id": "GP-2026-027",
+    "tractGeoId": "13121004000",
+    "tractName": "Census Tract 40",
+    "neighborhood": "Atlanta - Census Tract 40",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-25T11:19:00Z"
+  },
+  {
+    "id": "GP-2026-028",
+    "tractGeoId": "13121001206",
+    "tractName": "Census Tract 12.06",
+    "neighborhood": "Atlanta - Census Tract 12.06",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-16T11:20:00Z"
+  },
+  {
+    "id": "GP-2026-029",
+    "tractGeoId": "13121000602",
+    "tractName": "Census Tract 6.02",
+    "neighborhood": "Atlanta - Census Tract 6.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-17T11:21:00Z"
+  },
+  {
+    "id": "GP-2026-030",
+    "tractGeoId": "13121000700",
+    "tractName": "Census Tract 7",
+    "neighborhood": "Atlanta - Census Tract 7",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-18T11:22:00Z"
+  },
+  {
+    "id": "GP-2026-031",
+    "tractGeoId": "13121002100",
+    "tractName": "Census Tract 21",
+    "neighborhood": "Atlanta - Census Tract 21",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-19T11:23:00Z"
+  },
+  {
+    "id": "GP-2026-032",
+    "tractGeoId": "13121003200",
+    "tractName": "Census Tract 32",
+    "neighborhood": "Atlanta - Census Tract 32",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-20T11:24:00Z"
+  },
+  {
+    "id": "GP-2026-033",
+    "tractGeoId": "13121001400",
+    "tractName": "Census Tract 14",
+    "neighborhood": "Atlanta - Census Tract 14",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-21T11:25:00Z"
+  },
+  {
+    "id": "GP-2026-034",
+    "tractGeoId": "13121001205",
+    "tractName": "Census Tract 12.05",
+    "neighborhood": "Atlanta - Census Tract 12.05",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-22T11:26:00Z"
+  },
+  {
+    "id": "GP-2026-035",
+    "tractGeoId": "13121000601",
+    "tractName": "Census Tract 6.01",
+    "neighborhood": "Atlanta - Census Tract 6.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-23T11:27:00Z"
+  },
+  {
+    "id": "GP-2026-036",
+    "tractGeoId": "13121004900",
+    "tractName": "Census Tract 49",
+    "neighborhood": "Atlanta - Census Tract 49",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-24T11:28:00Z"
+  },
+  {
+    "id": "GP-2026-037",
+    "tractGeoId": "13121001002",
+    "tractName": "Census Tract 10.02",
+    "neighborhood": "Atlanta - Census Tract 10.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-25T11:29:00Z"
+  },
+  {
+    "id": "GP-2026-038",
+    "tractGeoId": "13121001301",
+    "tractName": "Census Tract 13.01",
+    "neighborhood": "Atlanta - Census Tract 13.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-16T11:30:00Z"
+  },
+  {
+    "id": "GP-2026-039",
+    "tractGeoId": "13121009405",
+    "tractName": "Census Tract 94.05",
+    "neighborhood": "Atlanta - Census Tract 94.05",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-17T11:31:00Z"
+  },
+  {
+    "id": "GP-2026-040",
+    "tractGeoId": "13121009607",
+    "tractName": "Census Tract 96.07",
+    "neighborhood": "Atlanta - Census Tract 96.07",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-18T11:32:00Z"
+  },
+  {
+    "id": "GP-2026-041",
+    "tractGeoId": "13121009406",
+    "tractName": "Census Tract 94.06",
+    "neighborhood": "Atlanta - Census Tract 94.06",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-19T11:33:00Z"
+  },
+  {
+    "id": "GP-2026-042",
+    "tractGeoId": "13089022404",
+    "tractName": "Census Tract 224.04",
+    "neighborhood": "Atlanta - Census Tract 224.04",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-20T11:34:00Z"
+  },
+  {
+    "id": "GP-2026-043",
+    "tractGeoId": "13121002900",
+    "tractName": "Census Tract 29",
+    "neighborhood": "Atlanta - Census Tract 29",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-21T11:35:00Z"
+  },
+  {
+    "id": "GP-2026-044",
+    "tractGeoId": "13121005000",
+    "tractName": "Census Tract 50",
+    "neighborhood": "Atlanta - Census Tract 50",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 750,
+      "resilience": 0
+    },
+    "eligibleDepartments": [
+      "parks",
+      "watershed"
+    ],
+    "timestamp": "2026-10-22T11:36:00Z"
+  },
+  {
+    "id": "GP-2026-045",
+    "tractGeoId": "13121004400",
+    "tractName": "Census Tract 44",
+    "neighborhood": "Sweet Auburn / Old Fourth Ward",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-17T14:10:00Z"
+  },
+  {
+    "id": "GP-2026-046",
+    "tractGeoId": "13121005700",
+    "tractName": "Census Tract 57",
+    "neighborhood": "Atlanta - Census Tract 57",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T14:11:00Z"
+  },
+  {
+    "id": "GP-2026-047",
+    "tractGeoId": "13121010006",
+    "tractName": "Census Tract 100.06",
+    "neighborhood": "Adamsville / Southwest Atlanta",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T14:12:00Z"
+  },
+  {
+    "id": "GP-2026-048",
+    "tractGeoId": "13121006100",
+    "tractName": "Census Tract 61",
+    "neighborhood": "Atlanta - Census Tract 61",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-20T14:13:00Z"
+  },
+  {
+    "id": "GP-2026-049",
+    "tractGeoId": "13121002500",
+    "tractName": "Census Tract 25",
+    "neighborhood": "Atlanta - Census Tract 25",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-21T14:14:00Z"
+  },
+  {
+    "id": "GP-2026-050",
+    "tractGeoId": "13121002802",
+    "tractName": "Census Tract 28.02",
+    "neighborhood": "Atlanta - Census Tract 28.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-22T14:15:00Z"
+  },
+  {
+    "id": "GP-2026-051",
+    "tractGeoId": "13121004100",
+    "tractName": "Census Tract 41",
+    "neighborhood": "Atlanta - Census Tract 41",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-23T14:16:00Z"
+  },
+  {
+    "id": "GP-2026-052",
+    "tractGeoId": "13121002300",
+    "tractName": "Census Tract 23",
+    "neighborhood": "Atlanta - Census Tract 23",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-24T14:17:00Z"
+  },
+  {
+    "id": "GP-2026-053",
+    "tractGeoId": "13121001901",
+    "tractName": "Census Tract 19.01",
+    "neighborhood": "Atlanta - Census Tract 19.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-25T14:18:00Z"
+  },
+  {
+    "id": "GP-2026-054",
+    "tractGeoId": "13121003800",
+    "tractName": "Census Tract 38",
+    "neighborhood": "Atlanta - Census Tract 38",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-26T14:19:00Z"
+  },
+  {
+    "id": "GP-2026-055",
+    "tractGeoId": "13121004300",
+    "tractName": "Census Tract 43",
+    "neighborhood": "Atlanta - Census Tract 43",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-17T14:20:00Z"
+  },
+  {
+    "id": "GP-2026-056",
+    "tractGeoId": "13121004800",
+    "tractName": "Census Tract 48",
+    "neighborhood": "Atlanta - Census Tract 48",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T14:21:00Z"
+  },
+  {
+    "id": "GP-2026-057",
+    "tractGeoId": "13121001801",
+    "tractName": "Census Tract 18.01",
+    "neighborhood": "Atlanta - Census Tract 18.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 750,
+      "watershed": 0,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "parks",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T14:22:00Z"
+  },
+  {
+    "id": "GP-2026-058",
+    "tractGeoId": "13121004400",
+    "tractName": "Census Tract 44",
+    "neighborhood": "Sweet Auburn / Old Fourth Ward",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T15:10:00Z"
+  },
+  {
+    "id": "GP-2026-059",
+    "tractGeoId": "13121006500",
+    "tractName": "Census Tract 65",
+    "neighborhood": "South Pryor St / Peoplestown",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T15:11:00Z"
+  },
+  {
+    "id": "GP-2026-060",
+    "tractGeoId": "13121006000",
+    "tractName": "Census Tract 60",
+    "neighborhood": "Atlanta - Census Tract 60",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-20T15:12:00Z"
+  },
+  {
+    "id": "GP-2026-061",
+    "tractGeoId": "13121004200",
+    "tractName": "Census Tract 42",
+    "neighborhood": "Pittsburgh / University Homes",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-21T15:13:00Z"
+  },
+  {
+    "id": "GP-2026-062",
+    "tractGeoId": "13121010006",
+    "tractName": "Census Tract 100.06",
+    "neighborhood": "Adamsville / Southwest Atlanta",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-22T15:14:00Z"
+  },
+  {
+    "id": "GP-2026-063",
+    "tractGeoId": "13121008104",
+    "tractName": "Census Tract 81.04",
+    "neighborhood": "Atlanta - Census Tract 81.04",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-23T15:15:00Z"
+  },
+  {
+    "id": "GP-2026-064",
+    "tractGeoId": "13121006100",
+    "tractName": "Census Tract 61",
+    "neighborhood": "Atlanta - Census Tract 61",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-24T15:16:00Z"
+  },
+  {
+    "id": "GP-2026-065",
+    "tractGeoId": "13121008000",
+    "tractName": "Census Tract 80",
+    "neighborhood": "Atlanta - Census Tract 80",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-25T15:17:00Z"
+  },
+  {
+    "id": "GP-2026-066",
+    "tractGeoId": "13121008301",
+    "tractName": "Census Tract 83.01",
+    "neighborhood": "Grove Park / Donald Lee Hollowell",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-26T15:18:00Z"
+  },
+  {
+    "id": "GP-2026-067",
+    "tractGeoId": "13121002802",
+    "tractName": "Census Tract 28.02",
+    "neighborhood": "Atlanta - Census Tract 28.02",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-27T15:19:00Z"
+  },
+  {
+    "id": "GP-2026-068",
+    "tractGeoId": "13121012000",
+    "tractName": "Census Tract 120",
+    "neighborhood": "Atlanta - Census Tract 120",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-18T15:20:00Z"
+  },
+  {
+    "id": "GP-2026-069",
+    "tractGeoId": "13121008601",
+    "tractName": "Census Tract 86.01",
+    "neighborhood": "Atlanta - Census Tract 86.01",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-19T15:21:00Z"
+  },
+  {
+    "id": "GP-2026-070",
+    "tractGeoId": "13121003800",
+    "tractName": "Census Tract 38",
+    "neighborhood": "Atlanta - Census Tract 38",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-20T15:22:00Z"
+  },
+  {
+    "id": "GP-2026-071",
+    "tractGeoId": "13121008903",
+    "tractName": "Census Tract 89.03",
+    "neighborhood": "Atlanta - Census Tract 89.03",
+    "totalCost": 1500,
+    "contributions": {
+      "parks": 0,
+      "watershed": 750,
+      "resilience": 750
+    },
+    "eligibleDepartments": [
+      "watershed",
+      "resilience"
+    ],
+    "timestamp": "2026-10-21T15:23:00Z"
+  }
+];

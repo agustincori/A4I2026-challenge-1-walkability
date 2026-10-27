@@ -19,6 +19,13 @@ import {
 } from 'lucide-react';
 import { useMetricChoropleth } from '../hooks/useMetricChoropleth';
 import { useUI } from '../context/UIContext';
+import {
+  calculateTractCanopyMetrics,
+  isBivariateHotspot,
+  CITYWIDE_CANOPY_TARGET_PCT,
+  COHORT_MEDIAN_CANOPY_PCT,
+  CRITICAL_CANOPY_THRESHOLD_PCT,
+} from '../services/canopyService';
 
 interface HeatMapProps {
   tracts: CensusTract[];
@@ -60,6 +67,8 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   const [onlyCandidates, setOnlyCandidates] = useState<boolean>(false);
   const [onlyWellnessPriority, setOnlyWellnessPriority] = useState<boolean>(false);
   const [showDispatchedAssets, setShowDispatchedAssets] = useState<boolean>(true);
+  const [canopyFilter, setCanopyFilter] = useState<'all' | 'belowMedian' | 'critical'>('all');
+  const [bivariateLens, setBivariateLens] = useState<boolean>(false);
   const [selectedAsset, setSelectedAsset] = useState<DispatchedAsset | null>(null);
   const [dispatchFeedback, setDispatchFeedback] = useState<string | null>(null);
 
@@ -76,6 +85,16 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   const wellnessTractsCount = useMemo(() => {
     return tracts.filter(isWellnessPriority).length;
   }, [tracts]);
+
+  const bivariateHotspotsCount = useMemo(() => {
+    return tracts.filter(isBivariateHotspot).length;
+  }, [tracts]);
+
+  // Tree canopy metrics for the currently selected tract
+  const selectedCanopyMetrics = useMemo(() => {
+    if (!selectedTract) return null;
+    return calculateTractCanopyMetrics(selectedTract);
+  }, [selectedTract]);
 
   // Calculate CDC SVI rank for selected tract among all tracts
   const sviRankInfo = useMemo(() => {
@@ -169,6 +188,8 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       if (t.povertyRatePct < minPovertyFilter) return false;
       if (onlyCandidates && !t.hasCoolingCenter) return false;
       if (onlyWellnessPriority && !isWellnessPriority(t)) return false;
+      if (canopyFilter === 'belowMedian' && (t.treeCanopyPct ?? 35) >= COHORT_MEDIAN_CANOPY_PCT) return false;
+      if (canopyFilter === 'critical' && (t.treeCanopyPct ?? 35) >= CRITICAL_CANOPY_THRESHOLD_PCT) return false;
       return true;
     });
 
@@ -176,16 +197,38 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       const color = getColor(activeMetric, tract);
       const isSelected = selectedTract?.geoId === tract.geoId;
       const isWellness = isWellnessPriority(tract);
+      const isHotspot = isBivariateHotspot(tract);
 
       // Draw tract heat footprint circle colored by active choropleth metric
       const circle = L.circleMarker([tract.latitude, tract.longitude], {
-        radius: isSelected ? 18 : 13,
+        radius: isSelected ? 18 : bivariateLens && isHotspot ? 16 : 13,
         fillColor: color,
-        color: isSelected ? '#ffffff' : isWellness && onlyWellnessPriority ? '#fb7185' : color,
-        weight: isSelected ? 3.5 : isWellness && onlyWellnessPriority ? 2.5 : 1.5,
+        color: isSelected
+          ? '#ffffff'
+          : bivariateLens && isHotspot
+          ? '#f43f5e'
+          : isWellness && onlyWellnessPriority
+          ? '#fb7185'
+          : color,
+        weight: isSelected ? 3.5 : bivariateLens && isHotspot ? 3.5 : isWellness && onlyWellnessPriority ? 2.5 : 1.5,
         opacity: 0.95,
         fillOpacity: isSelected ? 0.92 : 0.68,
       });
+
+      // Bivariate acute lens glowing outer ring
+      if (bivariateLens && isHotspot) {
+        const glowMarker = L.marker([tract.latitude, tract.longitude], {
+          icon: L.divIcon({
+            html: `<div class="bivariate-hotspot-glow" style="width:34px;height:34px;border-radius:9999px;border:2.5px solid #f43f5e;pointer-events:none;background:rgba(244,63,94,0.18);"></div>`,
+            className: 'bivariate-hotspot-pin',
+            iconSize: [34, 34],
+            iconAnchor: [17, 17],
+          }),
+          interactive: false,
+          zIndexOffset: 450,
+        });
+        layerGroupRef.current?.addLayer(glowMarker);
+      }
 
       // Tooltip for tract
       circle.bindTooltip(
@@ -197,6 +240,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore !== undefined ? tract.sviScore.toFixed(2) : 'N/A'}</b></div>
           <div class="text-slate-700">Poverty: <b>${tract.povertyRatePct}%</b> | No Car: <b>${tract.noVehicleRatePct}%</b></div>
           ${tract.seniorsLivingAlonePct !== undefined ? `<div class="text-slate-700">Seniors Alone: <b>${tract.seniorsLivingAlonePct}%</b> | Disability: <b>${tract.disabilityRatePct ?? 14}%</b></div>` : ''}
+          ${isHotspot ? '<div class="text-rose-600 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🔬 Bivariate Acute Hotspot (Heat > +3.5°F & Canopy < 30%)</div>' : ''}
           ${isWellness ? '<div class="text-rose-700 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🛡️ Senior & Disability Wellness Priority Zone</div>' : ''}
           ${tract.hasCoolingCenter ? '<div class="text-emerald-700 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🏛️ Identified Cooling Center Candidate</div>' : ''}
           <div class="text-indigo-600 font-medium text-[10px] mt-1">👉 Click tract to inspect full demographic & AI dossier</div>
@@ -350,6 +394,8 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     showWalkBuffers,
     onlyCandidates,
     onlyWellnessPriority,
+    canopyFilter,
+    bivariateLens,
     showDispatchedAssets,
     dispatchedAssets,
     activeMetric,
@@ -370,32 +416,56 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   return (
     <div className="relative w-full h-[calc(100vh-8.5rem)] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col md:flex-row">
       {/* Top Search & Filter Bar */}
-      <div className="absolute top-4 left-4 z-[400] w-72 sm:w-84 space-y-2">
-        {/* Direct Risk Mode Switcher */}
-        <div className="bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-1 flex items-center gap-1">
+      <div className="absolute top-4 left-4 z-[400] w-72 sm:w-96 space-y-2">
+        {/* Multi-Mode Switcher (4 Modes) */}
+        <div className="bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-1 grid grid-cols-2 gap-1">
           <button
             type="button"
             onClick={() => setActiveMetric('heat')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
               activeMetric === 'heat'
                 ? 'bg-rose-600 text-white shadow-md shadow-rose-950/60'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
             }`}
           >
             <span>🌡️</span>
-            <span className="truncate">Predicted Heat Offset (°F)</span>
+            <span className="truncate">Heat Offset (°F)</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveMetric('integratedRisk')}
-            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
               activeMetric === 'integratedRisk'
                 ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950/60'
                 : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
             }`}
           >
             <span>🛡️</span>
-            <span className="truncate">Multi-Criteria Integrated Risk (0-100)</span>
+            <span className="truncate">Integrated Risk (0-100)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMetric('canopy')}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
+              activeMetric === 'canopy'
+                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+            }`}
+          >
+            <span>🌳</span>
+            <span className="truncate">Tree Canopy Cover (%)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMetric('canopyDeficit')}
+            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
+              activeMetric === 'canopyDeficit'
+                ? 'bg-amber-600 text-white shadow-md shadow-amber-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+            }`}
+          >
+            <span>🎯</span>
+            <span className="truncate">Shade Deficit (% Gap)</span>
           </button>
         </div>
 
@@ -554,6 +624,79 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                     <Truck className="w-3.5 h-3.5 text-emerald-400" />
                     <span>Mobile Fleet Units ({dispatchedAssets.length})</span>
                   </span>
+                </label>
+              </div>
+
+              {/* Canopy Coverage Deficit Filter */}
+              <div className="pt-1.5 border-t border-slate-800/60 space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-300 font-medium flex items-center gap-1">
+                    <Trees className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Canopy Coverage Filter:</span>
+                  </span>
+                </div>
+                <div className="grid grid-cols-3 gap-1 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setCanopyFilter('all')}
+                    className={`py-1 px-1 rounded text-[10px] font-medium transition-colors text-center cursor-pointer ${
+                      canopyFilter === 'all'
+                        ? 'bg-slate-700 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    All Tracts
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCanopyFilter('belowMedian')}
+                    className={`py-1 px-1 rounded text-[10px] font-medium transition-colors text-center cursor-pointer ${
+                      canopyFilter === 'belowMedian'
+                        ? 'bg-amber-600 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Canopy below cohort median (< 37.16%)"
+                  >
+                    &lt; 37.16%
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setCanopyFilter('critical')}
+                    className={`py-1 px-1 rounded text-[10px] font-medium transition-colors text-center cursor-pointer ${
+                      canopyFilter === 'critical'
+                        ? 'bg-rose-600 text-white font-bold'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                    title="Critical Shelter Deficit (< 20%)"
+                  >
+                    &lt; 20% Crit
+                  </button>
+                </div>
+              </div>
+
+              {/* Bivariate Acute Lens Toggle */}
+              <div className="pt-1.5 border-t border-slate-800/60">
+                <label className="flex items-start space-x-1.5 text-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={bivariateLens}
+                    onChange={(e) => setBivariateLens(e.target.checked)}
+                    className="rounded accent-rose-500 text-rose-500 mt-0.5"
+                  />
+                  <div className="leading-tight flex-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-semibold text-rose-300 flex items-center gap-1 text-[11px]">
+                        <span>🔬</span>
+                        <span>Bivariate Acute Lens</span>
+                      </span>
+                      <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold">
+                        {bivariateHotspotsCount} Flagged
+                      </span>
+                    </div>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      Heat &gt; +3.5°F &amp; Canopy &lt; 30%
+                    </span>
+                  </div>
                 </label>
               </div>
             </div>
@@ -883,21 +1026,25 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               </div>
             </div>
 
-            {/* Tree Canopy & SVI Cards (Interactive Layer Switchers) */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Tree Canopy Card */}
+            {/* Tree Canopy & Shade Equity Card (Progress towards 50% City Target) */}
+            {selectedCanopyMetrics && (
               <div
-                onClick={() => setActiveMetric('canopy')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                  activeMetric === 'canopy'
-                    ? 'bg-emerald-950/40 border-emerald-400 ring-2 ring-emerald-400/50 shadow-lg'
-                    : 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-400/60'
+                onClick={() => setActiveMetric(activeMetric === 'canopy' ? 'canopyDeficit' : 'canopy')}
+                className={`p-3.5 rounded-xl border transition-all cursor-pointer relative ${
+                  activeMetric === 'canopy' || activeMetric === 'canopyDeficit'
+                    ? 'bg-emerald-950/40 border-emerald-500 ring-2 ring-emerald-500/50 shadow-lg shadow-emerald-950/50'
+                    : 'bg-slate-950 border-slate-800 hover:border-slate-700'
                 }`}
               >
-                <div className="flex items-center justify-between text-xs text-emerald-300 mb-1">
-                  <div className="flex items-center space-x-1.5">
-                    <Trees className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="font-semibold">Tree Canopy</span>
+                <div className="flex justify-between items-center text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Trees className="w-4 h-4 text-emerald-400" />
+                    <span className="font-semibold text-slate-200">Tree Canopy &amp; Shade Equity</span>
+                    {(activeMetric === 'canopy' || activeMetric === 'canopyDeficit') && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-emerald-500/30 text-emerald-300 border border-emerald-500/40">
+                        Active: {activeMetric === 'canopy' ? 'Canopy %' : 'Deficit Gap'}
+                      </span>
+                    )}
                   </div>
                   <button
                     type="button"
@@ -905,61 +1052,145 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                       e.stopPropagation();
                       openGlossary('explainability-ai-attribution');
                     }}
-                    className="text-emerald-400/70 hover:text-white"
-                    title="Tree Canopy info in Glossary"
+                    className="text-slate-400 hover:text-white p-1 rounded"
+                    title="Canopy details in Glossary"
                   >
-                    <Info className="w-3 h-3" />
+                    <Info className="w-3.5 h-3.5" />
                   </button>
                 </div>
-                <div className="text-base font-bold text-white font-mono">
-                  {selectedTract.treeCanopyPct !== undefined ? `${selectedTract.treeCanopyPct}%` : '36.5%'}
+
+                {/* Canopy Level & 50% Target */}
+                <div className="flex justify-between items-baseline mt-2">
+                  <div>
+                    <span className="text-[11px] text-slate-400">Current Canopy: </span>
+                    <span className="font-mono text-emerald-400 text-lg font-bold">
+                      {selectedCanopyMetrics.treeCanopyPct}%
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono"> / 50% Target</span>
+                  </div>
+                  <span className="font-mono font-bold text-xs text-amber-400">
+                    Gap: -{selectedCanopyMetrics.targetGapPct}%
+                  </span>
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-slate-400">City Avg: 36.5%</span>
-                  {activeMetric === 'canopy' && (
-                    <span className="text-[9px] font-bold text-emerald-400">Active</span>
-                  )}
+
+                {/* Progress bar towards 50% City Target */}
+                <div className="mt-2 space-y-1">
+                  <div className="flex justify-between text-[10px] text-slate-400">
+                    <span>Progress towards 50% City Target</span>
+                    <span className="font-mono font-semibold">
+                      {((selectedCanopyMetrics.treeCanopyPct / CITYWIDE_CANOPY_TARGET_PCT) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="canopy-progress-bar">
+                    <div
+                      className="canopy-progress-fill"
+                      style={{ width: `${Math.min(100, (selectedCanopyMetrics.treeCanopyPct / CITYWIDE_CANOPY_TARGET_PCT) * 100)}%` }}
+                    />
+                  </div>
+                </div>
+
+                {/* Plantable ROW and Marginal Planting Cost */}
+                <div className="grid grid-cols-2 gap-2 mt-2.5 pt-2 border-t border-slate-800 text-[11px]">
+                  <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Plantable ROW:</span>
+                    <span className="font-mono font-bold text-slate-200">
+                      {(selectedTract.plantableRowSqm ?? selectedCanopyMetrics?.plantableRowSqm ?? 12500).toLocaleString()} m²
+                    </span>
+                  </div>
+                  <div className="bg-slate-900/80 px-2.5 py-1.5 rounded-lg border border-slate-800">
+                    <span className="text-[10px] text-slate-400 block">Marginal Cost:</span>
+                    <span className="font-mono font-bold text-emerald-300">
+                      ${selectedTract.marginalPlantingCost ?? selectedCanopyMetrics?.marginalPlantingCost ?? 650}/tree
+                    </span>
+                  </div>
+                </div>
+
+                {/* Multi-Departmental Co-Funding Eligibility Tags */}
+                <div className="mt-2.5 pt-2 border-t border-slate-800">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Co-Funding Eligibility ($1,500 Split):</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${
+                        selectedCanopyMetrics.isParksEligible
+                          ? 'bg-emerald-950/60 text-emerald-300 border-emerald-500/50'
+                          : 'bg-slate-900/80 text-slate-500 border-slate-800 opacity-60'
+                      }`}
+                      title="Office of Parks: Canopy < 37.16% cohort median"
+                    >
+                      <span>🌳 Parks</span>
+                      <span>({selectedCanopyMetrics.isParksEligible ? 'Eligible' : '<37.16% req'})</span>
+                    </span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${
+                        selectedCanopyMetrics.isWatershedEligible
+                          ? 'bg-cyan-950/60 text-cyan-300 border-cyan-500/50'
+                          : 'bg-slate-900/80 text-slate-500 border-slate-800 opacity-60'
+                      }`}
+                      title="Watershed: Pop Density > 5,141.4 / sq mi"
+                    >
+                      <span>💧 Watershed</span>
+                      <span>({selectedCanopyMetrics.isWatershedEligible ? 'Eligible' : '>5.1k pop req'})</span>
+                    </span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-semibold flex items-center gap-1 ${
+                        selectedCanopyMetrics.isResilienceEligible
+                          ? 'bg-indigo-950/60 text-indigo-300 border-indigo-500/50'
+                          : 'bg-slate-900/80 text-slate-500 border-slate-800 opacity-60'
+                      }`}
+                      title="Resilience: SVI > 0.50 equity priority"
+                    >
+                      <span>🛡️ Resilience</span>
+                      <span>({selectedCanopyMetrics.isResilienceEligible ? 'Eligible' : '>0.50 SVI req'})</span>
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-[10px] text-slate-400 mt-2 flex items-center justify-between">
+                  <span>👉 Click card to color map by Canopy % / Deficit Gap</span>
                 </div>
               </div>
+            )}
 
-              {/* CDC SVI Percentile Card */}
-              <div
-                onClick={() => setActiveMetric('svi')}
-                className={`p-3 rounded-xl border transition-all cursor-pointer ${
-                  activeMetric === 'svi'
-                    ? 'bg-purple-950/40 border-purple-400 ring-2 ring-purple-400/50 shadow-lg'
-                    : 'bg-purple-950/20 border-purple-500/30 hover:border-purple-400/60'
-                }`}
-              >
-                <div className="flex items-center justify-between text-xs text-purple-300 mb-1">
-                  <div className="flex items-center space-x-1.5">
-                    <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
-                    <span className="font-semibold">CDC SVI</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openGlossary('cdc-svi');
-                    }}
-                    className="text-purple-400/70 hover:text-white"
-                    title="CDC SVI definition in Glossary"
-                  >
-                    <Info className="w-3 h-3" />
-                  </button>
+            {/* CDC SVI Percentile Card */}
+            <div
+              onClick={() => setActiveMetric('svi')}
+              className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                activeMetric === 'svi'
+                  ? 'bg-purple-950/40 border-purple-400 ring-2 ring-purple-400/50 shadow-lg'
+                  : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex items-center justify-between text-xs text-purple-300 mb-1">
+                <div className="flex items-center space-x-1.5">
+                  <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+                  <span className="font-semibold">CDC SVI (Social Vulnerability Index)</span>
                 </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openGlossary('cdc-svi');
+                  }}
+                  className="text-purple-400/70 hover:text-white"
+                  title="CDC SVI definition in Glossary"
+                >
+                  <Info className="w-3 h-3" />
+                </button>
+              </div>
+              <div className="flex items-baseline justify-between mt-1">
                 <div className="text-base font-bold text-white font-mono">
                   {selectedTract.sviScore !== undefined ? selectedTract.sviScore.toFixed(2) : '0.85'}
+                  <span className="text-xs text-slate-400 font-sans font-normal"> / 1.00</span>
                 </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-slate-400">
-                    {sviRankInfo ? `#${sviRankInfo.rank} of ${sviRankInfo.total}` : 'Composite Score'}
-                  </span>
-                  {activeMetric === 'svi' && (
-                    <span className="text-[9px] font-bold text-purple-300">Active</span>
-                  )}
-                </div>
+                <span className="text-[10px] text-slate-400">
+                  {sviRankInfo ? `#${sviRankInfo.rank} of ${sviRankInfo.total}` : 'Composite Score'}
+                </span>
               </div>
+              {activeMetric === 'svi' && (
+                <div className="text-[9px] font-bold text-purple-300 mt-1">Active Map Layer</div>
+              )}
             </div>
 
             {/* Socioeconomic Vulnerability Grid (Interactive Layer Switchers) */}

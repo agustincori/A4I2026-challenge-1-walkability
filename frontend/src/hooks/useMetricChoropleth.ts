@@ -5,6 +5,7 @@ export type MetricLayerType =
   | 'heat'
   | 'integratedRisk'
   | 'canopy'
+  | 'canopyDeficit'
   | 'svi'
   | 'poverty'
   | 'noVehicle'
@@ -55,10 +56,17 @@ export const METRIC_CONFIGS: Record<MetricLayerType, MetricConfig> = {
   },
   canopy: {
     id: 'canopy',
-    label: 'Tree Canopy',
+    label: 'Tree Canopy Cover',
     unit: '%',
-    description: 'Urban vegetative canopy coverage mitigating pedestrian thermal load',
+    description: 'Urban vegetative canopy coverage (50% City Target; 37.2% Cohort Median)',
     format: (raw) => `${raw.toFixed(1)}%`,
+  },
+  canopyDeficit: {
+    id: 'canopyDeficit',
+    label: 'Shade / Canopy Deficit',
+    unit: '% gap',
+    description: 'Deficit from the Atlanta Decade Track 50% tree canopy target: max(0, 50% - canopy)',
+    format: (raw) => (raw > 0 ? `-${raw.toFixed(1)}%` : '0.0% (Met)'),
   },
   svi: {
     id: 'svi',
@@ -118,11 +126,22 @@ export function getColor(metric: MetricLayer, tract: CensusTract): string {
 
     case 'canopy': {
       const canopy = tract.treeCanopyPct ?? 0;
-      if (canopy >= 45) return '#15803d'; // High canopy (≥ 45%)
-      if (canopy >= 35) return '#22c55e'; // Moderate canopy (35–44%)
-      if (canopy >= 25) return '#84cc16'; // Sub-optimal (25–34%)
-      if (canopy >= 15) return '#f59e0b'; // Canopy deficit (15–24%)
-      return '#ef4444'; // Critical deficit (< 15%)
+      if (canopy >= 50) return '#15803d'; // Deep forest green / target met
+      if (canopy >= 37.16) return '#22c55e'; // Moderate canopy / emerald
+      if (canopy >= 20) return '#eab308'; // Below cohort median / light amber-yellow
+      return '#ef4444'; // Critical canopy deficit / stark red (< 20%)
+    }
+
+    case 'canopyDeficit': {
+      const gap =
+        tract.targetGapPct !== undefined
+          ? tract.targetGapPct
+          : Math.max(0, 50 - (tract.treeCanopyPct ?? 0));
+      if (gap >= 30) return '#b91c1c'; // Critical deficit ≥ 30%
+      if (gap >= 20) return '#ea580c'; // High deficit 20–29%
+      if (gap >= 10) return '#eab308'; // Moderate deficit 10–19%
+      if (gap > 0) return '#84cc16'; // Low deficit 1–9%
+      return '#10b981'; // 50% Target Met
     }
 
     case 'svi': {
@@ -198,6 +217,15 @@ export function getMetricValue(metric: MetricLayer, tract: CensusTract): MetricV
       return { raw, formatted };
     }
 
+    case 'canopyDeficit': {
+      const gap =
+        tract.targetGapPct !== undefined
+          ? tract.targetGapPct
+          : Math.max(0, +(50 - (tract.treeCanopyPct ?? 0)).toFixed(1));
+      const formatted = gap > 0 ? `-${gap.toFixed(1)}%` : 'Target Met (50%)';
+      return { raw: gap, formatted };
+    }
+
     case 'svi': {
       const raw = tract.sviScore ?? 0;
       const formatted = tract.sviScore !== undefined ? raw.toFixed(2) : 'N/A';
@@ -263,13 +291,24 @@ export function getLegendConfig(metric: MetricLayer): LegendConfig {
 
     case 'canopy':
       return {
-        title: 'Tree Canopy Coverage (%)',
+        title: 'Tree Canopy Cover (%)',
         items: [
-          { color: '#15803d', label: '≥ 45% (High Canopy)' },
-          { color: '#22c55e', label: '35% – 44% (Moderate)' },
-          { color: '#84cc16', label: '25% – 34% (Sub-optimal)' },
-          { color: '#f59e0b', label: '15% – 24% (Canopy Deficit)' },
-          { color: '#ef4444', label: '< 15% (Critical Deficit)' },
+          { color: '#15803d', label: '≥ 50% (50% City Target)' },
+          { color: '#22c55e', label: '37.2% – 49.9% (Above Median)' },
+          { color: '#eab308', label: '20.0% – 37.1% (Below Median)' },
+          { color: '#ef4444', label: '< 20.0% (Critical Shelter Deficit)' },
+        ],
+      };
+
+    case 'canopyDeficit':
+      return {
+        title: 'Shade / Canopy Deficit (% Gap)',
+        items: [
+          { color: '#b91c1c', label: '≥ 30% Gap (Critical)' },
+          { color: '#ea580c', label: '20% – 29% Gap (High)' },
+          { color: '#eab308', label: '10% – 19% Gap (Moderate)' },
+          { color: '#84cc16', label: '1% – 9% Gap (Low)' },
+          { color: '#10b981', label: '0% Gap (50% Target Met)' },
         ],
       };
 

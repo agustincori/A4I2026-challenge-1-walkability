@@ -92,6 +92,26 @@ Select one of the preset planner questions below or enter a custom prompt.`,
       icon: '🛡️',
       query: 'Audit the equity of cooling centers in tracts 13121006802, 13121007808, and 13121002200.',
     },
+    {
+      label: 'Co-Funding Eligibility',
+      icon: '🌳',
+      query: 'Which tracts qualify for Parks & Resilience co-funding for street trees?',
+    },
+    {
+      label: 'SW Atlanta Canopy Audit',
+      icon: '🌿',
+      query: 'Audit the canopy deficit in Southwest Atlanta transit corridors.',
+    },
+    {
+      label: 'ROW Planting Ordinance',
+      icon: '📜',
+      query: 'Draft an ordinance to fund right-of-way planting in heat island corridors.',
+    },
+    {
+      label: '50% Canopy Target Siting',
+      icon: '🎯',
+      query: 'Recommend top right-of-way street tree planting locations under the 50% canopy target.',
+    },
   ];
 
   const handleSendMessage = async (textToSend?: string) => {

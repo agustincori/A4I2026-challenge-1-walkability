@@ -270,6 +270,61 @@ The proposed cooling center interventions land squarely in tracts suffering both
       };
     }
 
+    if (
+      lower.includes('canopy') ||
+      lower.includes('greening') ||
+      lower.includes('tree') ||
+      lower.includes('forestry') ||
+      lower.includes('parks & resilience') ||
+      lower.includes('ordinance') ||
+      lower.includes('50%')
+    ) {
+      return {
+        text: `### Urban Tree Canopy & Nature-Based Resilience Siting
+
+**Strategic Benchmark Alignment:**
+- **City of Atlanta Decade Track Target:** **50.0%** canopy coverage
+- **Urban Cohort Median Canopy:** **37.16%**
+- **Critical Canopy Deficit Threshold:** **< 20.0%** (Severe heat exposure & shade deprivation)
+
+**Top Prioritized Canopy Interventions:**
+1. **Tract 13121006802 (South Pryor / Peoplestown)**
+   - **Current Canopy:** **14.2%** (Deficit: **-35.8%** vs 50% target)
+   - **Thermal Offset:** **+4.2°F** | **SVI:** **0.86**
+   - **Recommended Action:** 65 right-of-way street trees + cool pavement transit retrofits.
+   - **Co-Funding Matrix:** Fully qualifies for Parks & Recreation (<37.16%) + Watershed (>5,141.4 pop/sq mi) + Resilience (SVI > 0.50).
+
+2. **Tract 13121007808 (English Avenue / Bankhead)**
+   - **Current Canopy:** **18.7%** (Deficit: **-31.3%** vs 50% target)
+   - **Thermal Offset:** **+3.8°F** | **SVI:** **0.92**
+   - **Recommended Action:** 55 right-of-way street trees + shaded MARTA stop canopies.
+   - **Co-Funding Matrix:** Qualifies for Parks + Watershed + Resilience co-budgeting ($500 split each).
+
+3. **Tract 13121002200 (Thomasville Heights / South Atlanta)**
+   - **Current Canopy:** **16.5%** (Deficit: **-33.5%** vs 50% target)
+   - **Thermal Offset:** **+4.6°F** | **SVI:** **0.94**
+   - **Recommended Action:** 60 right-of-way street trees + residential canopy distribution.
+   - **Co-Funding Matrix:** Qualifies for Parks + Watershed + Resilience co-funding.
+
+**Multi-Departmental Funding Framework ($120,000 Cap):**
+- **Office of Parks & Recreation ($40,000 cap):** $38,500 allocated (96.3%)
+- **Department of Watershed Management ($50,000 cap):** $39,250 allocated (78.5%)
+- **Office of Resilience ($30,000 cap):** $28,750 allocated (95.8%)
+- **Standard Project Grant:** $1,500 per tract intervention, divided equally among eligible departments.`,
+        toolCalls: [
+          {
+            name: 'recommend_canopy_interventions',
+            arguments: { top_n: 3, min_pop_density: 1000.0 },
+            output: {
+              city_target_canopy_pct: 50.0,
+              strategic_framework: 'Atlanta Decade Track Urban Forestry & Heat Equity Plan',
+              count: 3,
+            },
+          },
+        ],
+      };
+    }
+
     // Default assistant response
     return {
       text: `As Senior Climate Resilience Advisor for the City of Atlanta, I can assist you with:
@@ -277,6 +332,7 @@ The proposed cooling center interventions land squarely in tracts suffering both
 - **Ranking candidate cooling centers** based on thermal and social vulnerability
 - **Explaining microclimate disparities** using BigQuery ML feature attributions
 - **Auditing public investments** for climate equity against citywide thresholds
+- **Optimizing urban canopy & street tree investments** under the Atlanta 50% canopy target and multi-departmental co-funding model
 - **Analyzing multi-year GHCN weather trends** from 2018 to present.
 
 What decision or scenario would you like to evaluate today?`,

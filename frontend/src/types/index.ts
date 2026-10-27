@@ -1,3 +1,13 @@
+export interface TreeCanopyMetrics {
+  treeCanopyPct: number;
+  targetGapPct: number; // max(0, 50 - treeCanopyPct)
+  plantableRowSqm?: number;
+  marginalPlantingCost?: number;
+  isParksEligible?: boolean;     // canopy < 37.16%
+  isWatershedEligible?: boolean; // popDensity > 5141.4 (or high runoff proxy)
+  isResilienceEligible?: boolean;// sviScore > 0.50
+}
+
 export interface CensusTract {
   geoId: string;
   name: string;
@@ -22,6 +32,14 @@ export interface CensusTract {
   seniorsLivingAlonePct?: number;
   disabilityRatePct?: number;
   wellnessPriority?: boolean;
+  treeCanopyMetrics?: TreeCanopyMetrics;
+  targetGapPct?: number;
+  plantableRowSqm?: number;
+  marginalPlantingCost?: number;
+  isParksEligible?: boolean;
+  isWatershedEligible?: boolean;
+  isResilienceEligible?: boolean;
+  popDensity?: number;
 }
 
 export interface CoolingCenterRanking {
@@ -44,6 +62,7 @@ export interface CoolingCenterRanking {
   popDensity?: number;
   distToFacilityMeters?: number;
   distToTransitMeters?: number;
+  treeCanopyPct?: number;
   formulaBreakdown?: {
     heat: number;
     svi: number;
@@ -66,6 +85,30 @@ export interface RankingScenarioPreset {
   name: string;
   description: string;
   weights: FormulaWeights;
+}
+
+export interface DepartmentBudget {
+  id: 'parks' | 'watershed' | 'resilience';
+  name: string;
+  totalCap: number; // Parks $40k, Watershed $50k, Resilience $30k
+  allocated: number;
+  remaining: number;
+  eligibilityCriterion: string;
+}
+
+export interface GreeningProjectAllocation {
+  id: string;
+  tractGeoId: string;
+  tractName: string;
+  neighborhood: string;
+  totalCost: number; // $1,500
+  contributions: {
+    parks: number;
+    watershed: number;
+    resilience: number;
+  };
+  eligibleDepartments: Array<'parks' | 'watershed' | 'resilience'>;
+  timestamp: string;
 }
 
 export interface StationHeatRecord {
@@ -220,6 +263,14 @@ export interface CouncilMemoData {
     volunteerDeployments: number;
     shelterCapacity: number;
   };
+  canopyMetrics?: {
+    avgCanopyPct: number;
+    avgCanopyDeficitPct: number;
+    tractsBelowCohortMedian: number;
+    recommendedPlantingCount: number;
+    multiDeptFundAllocated: number;
+    multiDeptFundTotal: number;
+  };
   actionItems: string[];
   signedBy: string;
 }
@@ -230,6 +281,7 @@ export type MetricLayerType =
   | 'heat'
   | 'integratedRisk'
   | 'canopy'
+  | 'canopyDeficit'
   | 'svi'
   | 'poverty'
   | 'noVehicle'

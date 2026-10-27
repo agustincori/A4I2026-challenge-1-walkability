@@ -44,11 +44,20 @@ export default {
           '0%': { opacity: '0', transform: 'translateY(-8px)' },
           '100%': { opacity: '1', transform: 'translateY(0)' },
         },
+        bivariatePulse: {
+          '0%, 100%': {
+            boxShadow: '0 0 0 0 rgba(244, 63, 94, 0.7), 0 0 14px rgba(245, 158, 11, 0.6)',
+          },
+          '50%': {
+            boxShadow: '0 0 0 8px rgba(244, 63, 94, 0), 0 0 24px rgba(245, 158, 11, 0.95)',
+          },
+        },
       },
       animation: {
         'fade-in': 'fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'scale-in': 'scaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         'slide-down': 'slideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'bivariate-pulse': 'bivariatePulse 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },
