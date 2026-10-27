@@ -1,5 +1,48 @@
 # Data plane
 
+This directory owns the offline data lifecycle independently of the online
+[agent](../agent/). Run all commands below from the repository root.
+
+```text
+data_plane/
+  pipelines/    Importable Python workflows: train, tune, audit, promote/rollback
+  sql/          Versioned preparation, validation, evaluation, and inference SQL
+  tests/        Cloud-independent unit and structural regression tests
+  notebooks/    Exploration and maintainer-only snapshot publication
+  scripts/      Seed-data loading CLI
+  docs/         Dataset schema and pipeline walkthrough
+  data/         Small reference inputs only; no credentials or training exports
+```
+
+### Ownership and integration boundaries
+
+- The data plane owns source quality, features, experiment lineage, evaluation and model release.
+  The agent owns request validation, conversations, online tools and deployment.
+- Neither runtime imports the other. The integration surface is BigQuery: versioned models,
+  feature names/types, cleaning rules and the parameterized
+  [explanation query](sql/explain_prediction.sql). Data-plane tests must not require ADK, Gemini,
+  agent dependencies or Google Cloud credentials.
+- Workflow modules use package-relative imports; invoke them with `python3 -m
+  data_plane.pipelines.<workflow>`, not by executing their file paths. No `sys.path` modifications
+  or dependency on the caller's working directory are needed for Python imports or SQL lookup.
+- Candidate workflows are separate from explicit promotion/rollback. Directory organization
+  does not add quality approvals or change serving models.
+- Preserve executed source paths and hashes in historical registry events: old events describe
+  the old layout and must not be rewritten. New runs capture this layout.
+- Models, feature tables, snapshots and logs stay in BigQuery, not the repository. Credentials
+  stay in the authenticated CLI environment. No training code belongs in the agent's image.
+
+Reference: [dataset schema](docs/BIGQUERY_SCHEMA.md) and
+[pipeline walkthrough](docs/PIPELINE_TRAINING_AGENTS.html).
+
+### Command migration
+
+The previous top-level `scripts/`, `sql/`, `notebooks/` and `data/` directories have moved here.
+Replace `python3 scripts/<workflow>.py` with `python3 -m
+data_plane.pipelines.<workflow>`, `bash scripts/load.sh` with
+`bash data_plane/scripts/load.sh`, and SQL/notebook paths with `data_plane/sql/` and
+`data_plane/notebooks/`. There are intentionally no duplicate entrypoints at the old paths.
+
 ## Versioned BQML candidates and training history
 
 The candidate runner requires Python 3.10+, `bq`, `git`, and an authenticated Cloud CLI. It uses
@@ -40,7 +83,7 @@ and apply an explicit retention policy before running large experiments.
 Each reading is assigned to its nearest valid tract centroid with a stable GEOID tie-breaker.
 That is an approximation, not polygon containment, and has no maximum-distance cutoff; the run
 records the maximum matching distance. Invalid Census values receive documented fixed fallbacks
-from [clean_tracts.sql](../data_plane/sql/clean_tracts.sql), reused by training and explain-prediction.
+from [clean_tracts.sql](sql/clean_tracts.sql), reused by training and explain-prediction.
 
 Cells of 0.02 degrees are assigned deterministically to a roughly 20% holdout using a normalized
 hash modulo five. The realized fraction depends on where observations cluster. Cells never occur
@@ -196,7 +239,7 @@ Once a candidate model has been audited and approved through the review process,
 using `promote_candidate.py`:
 
 ```bash
-# Plan-only dry run (no writes, verifies candidate exists and passes contract)
+# Plan only: prints the action without Cloud queries or writes.
 python3 -m data_plane.pipelines.promote_candidate --candidate-run 20261027_164544_b1e872144cc1
 
 # Execute promotion to production
@@ -204,8 +247,8 @@ python3 -m data_plane.pipelines.promote_candidate --candidate-run 20261027_16454
 ```
 
 ### Safety and verification guarantees:
-1. **Candidate Verification:** Runs a smoke `ML.EXPLAIN_PREDICT` check on the candidate model to
-   ensure it accepts the 8 required features and yields 3 finite attributions before touching production.
+1. **Candidate Lookup:** Requires a completed candidate event and reads model metadata.
+   Plan-only mode does not perform that lookup or validate quality.
 2. **Active Model Backup:** Automatically copies the active `heat_offset_model` to a timestamped backup
    (`heat_offset_model_backup_<timestamp>_<suffix>`) before overwriting it.
 3. **Atomic Promotion:** Copies the candidate model to `heat_offset_model`.
@@ -220,10 +263,10 @@ backup or candidate model:
 
 ```bash
 # Dry run rollback
-python3 -m data_plane.pipelines.promote_candidate --rollback-model heat_offset_model_backup_20261027_170000_1234abcd
+python3 -m data_plane.pipelines.promote_candidate --rollback qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.heat_offset_model_backup_20261027_170000_1234abcd
 
 # Execute rollback
-python3 -m data_plane.pipelines.promote_candidate --rollback-model heat_offset_model_backup_20261027_170000_1234abcd --execute
+python3 -m data_plane.pipelines.promote_candidate --rollback qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.heat_offset_model_backup_20261027_170000_1234abcd --execute
 ```
 
 This creates a safety backup of the current model and logs a `ROLLED_BACK` event into `model_training_events`.

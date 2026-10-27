@@ -2,6 +2,13 @@
 
 **Agents for Impact 2026**
 
+### Team implementation layout
+
+The [data plane](data_plane/README.md) owns loading, notebooks, SQL, model training,
+evaluation and experiment history. The [agent](agent/) owns the online ADK tools and
+conversation runtime. Run data workflows as `python3 -m data_plane.pipelines.<workflow>`
+from the repository root; the data-plane guide lists the commands and integration contract.
+
 ---
 
 ## Why this one matters
@@ -528,7 +535,7 @@ fast, which is exactly why it's worth reading what it did.
 3. **My Notebooks** → **Import** → source **URL**, and paste this:
 
    ```
-   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/data_plane/notebooks/c1_01_load_explore.ipynb
+   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/notebooks/c1_01_load_explore.ipynb
    ```
 
    *(If your team modifies the notebook later, get your own copy's raw URL by opening the file
@@ -709,16 +716,21 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 data_plane/notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
 data_plane/notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
 data_plane/scripts/load.sh                   Headless fallback if Colab is unavailable.
-data/                             A short README. Seed data, if any.
-agent/                            A one-page README. Your agent goes here.
+data_plane/pipelines/             Training, tuning, audit and model-release workflows.
+data_plane/sql/                   Versioned SQL and inference handoff.
+data_plane/tests/                 Independent data-plane tests.
+data_plane/docs/                  Dataset inventory and pipeline walkthrough.
+data_plane/data/                  Small seed/reference files only.
+agent/                            Online ADK agent and tools; independent of data-plane code.
 ```
 
 `c1_90_publish_snapshot.ipynb` is for ROI maintainers: it regenerates the Cloud Storage snapshot
 that `data_plane/scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
 have write access to our bucket. That is expected, and you never need it.
 
-`agent/` is empty on purpose. We built the on-ramp—data, loading, validation, sample queries.
-We didn't build the vehicle. The design decisions in your agent are what you'll be judged on.
+The original template supplied the on-ramp: loading, validation and sample queries.
+This team's implementation separates that offline data plane from the online agent.
+The design decisions in your agent are what you'll be judged on.
 
 ---
 
