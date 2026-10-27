@@ -193,7 +193,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           <div class="font-bold text-slate-900">${tract.neighborhood}</div>
           <div class="text-[10px] text-slate-500 font-mono">Tract GEOID: ${tract.geoId}</div>
           <div class="text-slate-700 mt-1">Thermal Offset: <b style="color:${color};">${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
-          <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore ? (tract.sviScore * 100).toFixed(0) + 'th %ile' : 'N/A'}</b></div>
+          <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore !== undefined ? tract.sviScore.toFixed(2) : 'N/A'}</b></div>
           <div class="text-slate-700">Poverty: <b>${tract.povertyRatePct}%</b> | No Car: <b>${tract.noVehicleRatePct}%</b></div>
           ${tract.seniorsLivingAlonePct !== undefined ? `<div class="text-slate-700">Seniors Alone: <b>${tract.seniorsLivingAlonePct}%</b> | Disability: <b>${tract.disabilityRatePct ?? 14}%</b></div>` : ''}
           ${isWellness ? '<div class="text-rose-700 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🛡️ Senior & Disability Wellness Priority Zone</div>' : ''}
@@ -237,17 +237,13 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       if (tract.hasCoolingCenter) {
         const coolingIcon = L.divIcon({
           html: `
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <div style="display:flex;align-items:center;gap:3px;padding:3px 8px;border-radius:9999px;border:2px solid #38bdf8;background:#0369a1;box-shadow:0 4px 12px rgba(0,0,0,0.5);color:#ffffff;font-size:11px;font-weight:700;white-space:nowrap;">
-                <span style="font-size:13px;">🏛️</span>
-                <span style="font-size:10px;font-family:ui-monospace,monospace;letter-spacing:-0.2px;">Cooling Site</span>
-              </div>
-              <div style="position:absolute;bottom:-5px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:4px solid transparent;border-right:4px solid transparent;border-top:5px solid #38bdf8;"></div>
+            <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;border:2px solid #38bdf8;background:#0369a1;box-shadow:0 3px 10px rgba(0,0,0,0.5);font-size:13px;cursor:pointer;">
+              🏛️
             </div>
           `,
           className: 'candidate-cooling-pin',
-          iconSize: [95, 28],
-          iconAnchor: [47, 28],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
         });
 
         const coolingMarker = L.marker([tract.latitude, tract.longitude], {
@@ -283,26 +279,19 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       dispatchedAssets.forEach((asset) => {
         const isHydration = asset.type === 'hydration';
         const isWellness = asset.type === 'wellness';
-        const vehicleIcon = '🚚';
         const payloadIcon = isHydration ? '💧' : isWellness ? '🚑' : '🚌';
-        const shortLabel = isHydration ? 'Hydration' : isWellness ? 'Wellness' : 'Cooling Bus';
         const badgeColor = isHydration ? '#f59e0b' : isWellness ? '#6366f1' : '#06b6d4';
         const badgeBg = isHydration ? '#78350f' : isWellness ? '#312e81' : '#164e63';
 
         const customIcon = L.divIcon({
           html: `
-            <div style="position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;">
-              <div style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:9999px;border:2px solid ${badgeColor};background:${badgeBg};box-shadow:0 4px 14px rgba(0,0,0,0.7);color:#ffffff;font-size:11px;font-weight:700;white-space:nowrap;">
-                <span title="Mobile Truck/Fleet Carrier" style="font-size:12px;">${vehicleIcon}</span>
-                <span title="Mission Payload" style="font-size:12px;">${payloadIcon}</span>
-                <span style="font-size:10px;font-family:ui-monospace,monospace;letter-spacing:-0.2px;">${shortLabel}</span>
-              </div>
-              <div style="position:absolute;bottom:-6px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:6px solid ${badgeColor};"></div>
+            <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;border:2px solid ${badgeColor};background:${badgeBg};box-shadow:0 3px 10px rgba(0,0,0,0.6);font-size:13px;cursor:pointer;">
+              ${payloadIcon}
             </div>
           `,
           className: 'custom-asset-pin',
-          iconSize: [110, 30],
-          iconAnchor: [55, 30],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
         });
 
         const marker = L.marker([asset.lat, asset.lng], { 
@@ -863,11 +852,11 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                   </button>
                 </div>
                 <div className="text-base font-bold text-white font-mono">
-                  {selectedTract.sviScore !== undefined ? `${(selectedTract.sviScore * 100).toFixed(0)}th %ile` : 'High'}
+                  {selectedTract.sviScore !== undefined ? selectedTract.sviScore.toFixed(2) : '0.85'}
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-[10px] text-slate-400">
-                    {sviRankInfo ? `#${sviRankInfo.rank} of ${sviRankInfo.total}` : 'Composite'}
+                    {sviRankInfo ? `#${sviRankInfo.rank} of ${sviRankInfo.total}` : 'Composite Score'}
                   </span>
                   {activeMetric === 'svi' && (
                     <span className="text-[9px] font-bold text-purple-300">Active</span>

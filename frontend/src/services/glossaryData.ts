@@ -15,11 +15,11 @@ export const GLOSSARY_ITEMS: GlossaryItem[] = [
     term: 'CDC SVI (Social Vulnerability Index)',
     category: 'Vulnerability & Demographics',
     shortDefinition:
-      'A percentile-ranked composite index (0.000 to 1.000) created by the CDC and ATSDR measuring relative community vulnerability to natural hazards and public health emergencies.',
+      'A standardized 0.00 to 1.00 composite index score created by the CDC and ATSDR measuring relative community vulnerability to natural hazards and public health emergencies.',
     detailedExplanation:
-      'The Centers for Disease Control and Prevention / Agency for Toxic Substances and Disease Registry (CDC/ATSDR) Social Vulnerability Index synthesizes 16 census-derived indicators across four structural themes: Socioeconomic Status, Household Characteristics, Racial & Ethnic Minority Status, and Housing Type & Transportation. Tracts scoring 0.75 or higher represent the most vulnerable quartile in Georgia. In heat disaster planning, high-SVI communities suffer from compounding vulnerabilities including lower central air conditioning penetration, higher baseline chronic illness rates, and reduced financial cushion for energy bills.',
+      'The Centers for Disease Control and Prevention / Agency for Toxic Substances and Disease Registry (CDC/ATSDR) Social Vulnerability Index synthesizes 16 census-derived indicators across four structural themes: Socioeconomic Status, Household Characteristics, Racial & Ethnic Minority Status, and Housing Type & Transportation. Tracts are scored as a standard 0.00 to 1.00 index score (e.g., 0.85 indicates high vulnerability, where 0.00 is least vulnerable and 1.00 is most vulnerable). Tracts scoring 0.75 or higher represent the most vulnerable quartile in Georgia. In heat disaster planning, high-SVI communities suffer from compounding vulnerabilities including lower central air conditioning penetration, higher baseline chronic illness rates, and reduced financial cushion for energy bills.',
     formulaOrStandard:
-      'SVI = Percentile Rank of tract cumulative sum across 16 census variables relative to all Georgia tracts (0.000 = lowest vulnerability, 1.000 = highest vulnerability).',
+      'SVI Score = Standardized 0.00 to 1.00 composite score (0.00 = lowest vulnerability, 1.00 = highest vulnerability). Scores ≥ 0.75 designate high-vulnerability tracts.',
     dataSources: [
       'CDC/ATSDR Social Vulnerability Index (2020/2022)',
       'U.S. Census Bureau American Community Survey (ACS) 5-Year Estimates',

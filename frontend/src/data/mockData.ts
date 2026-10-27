@@ -11,6 +11,8 @@ export const CITYWIDE_BENCHMARKS = {
   citywideMedianAge: 33.6,
   citywideMedianIncome: 69164,
   citywideAvgCanopyPct: 36.5,
+  citywideMedianSviScore: 0.52,
+  citywideP75SviScore: 0.75,
 };
 
 // 109 Real Atlanta Census Tracts directly imported from BigQuery table:

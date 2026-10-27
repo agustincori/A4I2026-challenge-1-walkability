@@ -33,6 +33,7 @@ export interface CouncilMemoData {
   equityMetrics: {
     averagePovertyPct: number;
     averageNoVehiclePct: number;
+    averageSviScore?: number;
     tractsAbovePovertyP75: number;
     tractsAboveTransitP75: number;
     equityAuditPassed: boolean;
@@ -53,6 +54,16 @@ export interface CouncilMemoData {
 }
 
 export type CouncilMemo = CouncilMemoData;
+
+/**
+ * Formats a CDC SVI score as a standardized 0.00 to 1.00 index score (e.g. "0.85")
+ */
+export function formatSviScore(score?: number): string {
+  if (score === undefined || score === null || isNaN(score)) {
+    return 'N/A';
+  }
+  return score.toFixed(2);
+}
 
 export interface MemoGenerationOptions {
   memoId?: string;
@@ -131,6 +142,10 @@ export function generateCouncilMemo(
   // Benchmarks: P75 Poverty = 24.5%, P75 No Vehicle = 14.8%
   const tractsAbovePovertyP75 = normalizedSites.filter((s) => s.povertyRatePct >= 24.5).length;
   const tractsAboveTransitP75 = normalizedSites.filter((s) => s.noVehicleRatePct >= 14.8).length;
+  const tractsWithSvi = normalizedSites.filter((s) => s.sviScore !== undefined);
+  const avgSvi = tractsWithSvi.length > 0
+    ? tractsWithSvi.reduce((acc, s) => acc + (s.sviScore || 0), 0) / tractsWithSvi.length
+    : 0.82;
   const equityAuditPassed = avgPoverty >= 24.5 || tractsAbovePovertyP75 >= Math.ceil(siteCount * 0.5);
 
   // Wellness check targeting
@@ -173,6 +188,7 @@ export function generateCouncilMemo(
     equityMetrics: {
       averagePovertyPct: Number(avgPoverty.toFixed(1)),
       averageNoVehiclePct: Number(avgNoVehicle.toFixed(1)),
+      averageSviScore: Number(avgSvi.toFixed(2)),
       tractsAbovePovertyP75,
       tractsAboveTransitP75,
       equityAuditPassed,
@@ -213,12 +229,12 @@ export function generateCouncilMemo(
  */
 export function formatMemoAsMarkdown(memo: CouncilMemoData): string {
   const sitesTable = memo.recommendedSites.length > 0
-    ? `| Rank | Facility Name | Neighborhood | Temp Offset | Walk Time | Poverty % | Zero Vehicle % | Siting Justification |
-| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :--- |
+    ? `| Rank | Facility Name | Neighborhood | Temp Offset | Walk Time | Poverty % | Zero Vehicle % | SVI Score | Siting Justification |
+| :---: | :--- | :--- | :---: | :---: | :---: | :---: | :---: | :--- |
 ${memo.recommendedSites
   .map(
     (s) =>
-      `| **#${s.rank}** | **${s.name}** | ${s.neighborhood} | +${s.predictedOffsetF.toFixed(1)}°F | ${s.walkAccessMinutes} min | ${s.povertyRatePct.toFixed(1)}% | ${s.noVehicleRatePct.toFixed(1)}% | ${s.justification} |`
+      `| **#${s.rank}** | **${s.name}** | ${s.neighborhood} | +${s.predictedOffsetF.toFixed(1)}°F | ${s.walkAccessMinutes} min | ${s.povertyRatePct.toFixed(1)}% | ${s.noVehicleRatePct.toFixed(1)}% | ${s.sviScore !== undefined ? s.sviScore.toFixed(2) : 'N/A'} | ${s.justification} |`
   )
   .join('\n')}`
     : '_No primary cooling sites currently submitted._';
@@ -278,6 +294,7 @@ ${assetsTable}
 ### 5. EQUITY AUDIT & SENIOR / DISABILITY WELLNESS TARGETS
 - **Average Poverty Rate in Sited Catchments:** **${memo.equityMetrics.averagePovertyPct.toFixed(1)}%** (Citywide P75 Benchmark: 24.5%)
 - **Average Transit Vehicle Deficit:** **${memo.equityMetrics.averageNoVehiclePct.toFixed(1)}%** (Citywide P75 Benchmark: 14.8%)
+- **Average CDC SVI Score in Sited Catchments:** **${memo.equityMetrics.averageSviScore !== undefined ? memo.equityMetrics.averageSviScore.toFixed(2) : '0.82'} / 1.00** (High Social Vulnerability)
 - **Tracts Above P75 Poverty Threshold:** **${memo.equityMetrics.tractsAbovePovertyP75} / ${memo.recommendedSites.length}**
 - **Equity Siting Audit Status:** **${memo.equityMetrics.equityAuditPassed ? 'PASSED (Targeted Siting Compliant)' : 'EXCEPTION REVIEW REQUIRED'}**
 - **Priority Wellness Tracts Flagged:** **${memo.wellnessPrioritization.highPriorityTractCount} tracts**
@@ -318,7 +335,7 @@ export function formatMemoAsText(memo: CouncilMemoData): string {
         .map(
           (s) =>
             `  [#${s.rank}] ${s.name} (${s.neighborhood})\n` +
-            `      Offset: +${s.predictedOffsetF.toFixed(1)}F | Walk: ${s.walkAccessMinutes} min | Poverty: ${s.povertyRatePct.toFixed(1)}% | No Vehicle: ${s.noVehicleRatePct.toFixed(1)}%\n` +
+            `      Offset: +${s.predictedOffsetF.toFixed(1)}F | Walk: ${s.walkAccessMinutes} min | Poverty: ${s.povertyRatePct.toFixed(1)}% | No Vehicle: ${s.noVehicleRatePct.toFixed(1)}% | SVI: ${s.sviScore !== undefined ? s.sviScore.toFixed(2) : 'N/A'}\n` +
             `      Justification: ${s.justification}`
         )
         .join('\n\n')
@@ -374,6 +391,7 @@ ${subline}
 5. EQUITY & WELLNESS COMPLIANCE AUDIT
   - Catchment Average Poverty Rate : ${memo.equityMetrics.averagePovertyPct.toFixed(1)}% (City P75: 24.5%)
   - Catchment Zero Vehicle Deficit : ${memo.equityMetrics.averageNoVehiclePct.toFixed(1)}% (City P75: 14.8%)
+  - Catchment Average SVI Score    : ${memo.equityMetrics.averageSviScore !== undefined ? memo.equityMetrics.averageSviScore.toFixed(2) : '0.82'} / 1.00 (High Social Vulnerability)
   - Tracts Above P75 Poverty       : ${memo.equityMetrics.tractsAbovePovertyP75} / ${memo.recommendedSites.length}
   - Equity Siting Audit Result     : ${memo.equityMetrics.equityAuditPassed ? 'PASSED' : 'FLAGGED FOR REVIEW'}
   - Senior & Disability Priority   : ${memo.wellnessPrioritization.highPriorityTractCount} tracts

@@ -23,46 +23,58 @@ export interface MetricOption {
   label: string;
   unit: string;
   description: string;
+  format?: (raw: number, tract: CensusTract) => string;
 }
 
-export const METRIC_OPTIONS: MetricOption[] = [
-  {
+export type MetricConfig = MetricOption;
+
+export const METRIC_CONFIGS: Record<MetricLayer, MetricConfig> = {
+  heat: {
     id: 'heat',
     label: 'Microclimate Offset',
     unit: '°F',
     description: 'Predicted ambient temperature differential above regional baseline',
+    format: (raw) => (raw > 0 ? `+${raw.toFixed(1)}°F` : `${raw.toFixed(1)}°F`),
   },
-  {
+  canopy: {
     id: 'canopy',
     label: 'Tree Canopy',
     unit: '%',
     description: 'Urban vegetative canopy coverage mitigating pedestrian thermal load',
+    format: (raw) => `${raw.toFixed(1)}%`,
   },
-  {
+  svi: {
     id: 'svi',
     label: 'Social Vulnerability (SVI)',
-    unit: '%ile',
-    description: 'CDC overall social vulnerability percentile index (0.0 to 1.0)',
+    unit: 'score',
+    description: 'CDC overall social vulnerability index (0.00 to 1.00)',
+    format: (raw) => raw.toFixed(2),
   },
-  {
+  poverty: {
     id: 'poverty',
     label: 'Poverty Rate',
     unit: '%',
     description: 'Percentage of population living below the federal poverty line',
+    format: (raw) => `${raw.toFixed(1)}%`,
   },
-  {
+  noVehicle: {
     id: 'noVehicle',
     label: 'Zero-Vehicle Households',
     unit: '%',
     description: 'Households without access to a private vehicle (transit dependent)',
+    format: (raw) => `${raw.toFixed(1)}%`,
   },
-  {
+  seniors: {
     id: 'seniors',
     label: 'Senior Vulnerability',
     unit: '% / yrs',
     description: 'Elderly population density or median age indicating thermal sensitivity',
+    format: (raw, tract) =>
+      tract.seniorsLivingAlonePct !== undefined ? `${raw.toFixed(1)}%` : `${raw.toFixed(1)} yrs`,
   },
-];
+};
+
+export const METRIC_OPTIONS: MetricOption[] = Object.values(METRIC_CONFIGS);
 
 /**
  * Calculates hex color code for a census tract according to the specified metric layer.
@@ -156,7 +168,7 @@ export function getMetricValue(metric: MetricLayer, tract: CensusTract): MetricV
 
     case 'svi': {
       const raw = tract.sviScore ?? 0;
-      const formatted = tract.sviScore !== undefined ? `${(raw * 100).toFixed(0)}th %ile` : 'N/A';
+      const formatted = tract.sviScore !== undefined ? raw.toFixed(2) : 'N/A';
       return { raw, formatted };
     }
 
@@ -221,11 +233,11 @@ export function getLegendConfig(metric: MetricLayer): LegendConfig {
       return {
         title: 'CDC Social Vulnerability Index (SVI)',
         items: [
-          { color: '#b91c1c', label: '≥ 80th %ile (Extreme Vulnerability)' },
-          { color: '#ef4444', label: '60th – 79th %ile (High)' },
-          { color: '#f97316', label: '40th – 59th %ile (Moderate)' },
-          { color: '#38bdf8', label: '20th – 39th %ile (Low-Moderate)' },
-          { color: '#10b981', label: '< 20th %ile (Low Vulnerability)' },
+          { color: '#b91c1c', label: '≥ 0.80 (Very High Vulnerability)' },
+          { color: '#ef4444', label: '0.60 – 0.79 (High Vulnerability)' },
+          { color: '#f97316', label: '0.40 – 0.59 (Moderate Vulnerability)' },
+          { color: '#38bdf8', label: '0.20 – 0.39 (Low Vulnerability)' },
+          { color: '#10b981', label: '< 0.20 (Very Low Vulnerability)' },
         ],
       };
 
@@ -286,6 +298,7 @@ export interface UseMetricChoroplethReturn {
   getLegendConfig: (metric?: MetricLayer) => LegendConfig;
   legendConfig: LegendConfig;
   metricOptions: MetricOption[];
+  metricConfigs: Record<MetricLayer, MetricConfig>;
 }
 
 /**
@@ -341,6 +354,7 @@ export function useMetricChoropleth(
     getLegendConfig: resolveLegendConfig,
     legendConfig,
     metricOptions: METRIC_OPTIONS,
+    metricConfigs: METRIC_CONFIGS,
   };
 }
 

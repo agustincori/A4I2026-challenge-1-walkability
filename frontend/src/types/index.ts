@@ -177,6 +177,7 @@ export interface CouncilMemoData {
   equityMetrics: {
     averagePovertyPct: number;
     averageNoVehiclePct: number;
+    averageSviScore?: number;
     tractsAbovePovertyP75: number;
     tractsAboveTransitP75: number;
     equityAuditPassed: boolean;
