@@ -18,5 +18,12 @@ export default defineConfig({
   preview: {
     port: 8080,
     host: true,
+    proxy: {
+      '/api/cloudrun': {
+        target: 'https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api\/cloudrun/, ''),
+      },
+    },
   },
 });
