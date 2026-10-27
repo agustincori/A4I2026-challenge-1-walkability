@@ -86,7 +86,7 @@ steps:
         fi
 
         image_ref="$${IMAGE_URI%:*}@$${image_digest}"
-        revision_tag="ci-$${BUILD_ID}"
+        revision_tag="ci-$${BUILD_ID:0:12}"
         if [[ "$$ALLOW_UNAUTHENTICATED" == "true" ]]; then
           access_flag="--allow-unauthenticated"
         else
