@@ -123,6 +123,37 @@ Run local tests without Cloud access:
 python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
 ```
 
+## Improving a candidate without tuning on the holdout
+
+Run a bounded ridge-regression experiment against the preserved features from a validated run:
+
+```bash
+python3 scripts/tune_candidate.py --parent-run 20261027_163945_a1f7fcb70be3
+python3 scripts/tune_candidate.py --parent-run 20261027_163945_a1f7fcb70be3 --execute
+```
+
+This reuses the parent data/outer split, snapshots its prepared feature table, and trains nine
+inner models: L2 strengths 0, 1000, and 10000 across three spatial folds drawn **only from outer
+training rows**. Each fold's target anchor is computed solely from that fold's fitting rows.
+The configuration with lowest equal-fold mean MSE is recorded before the selected model is fit
+on all outer training rows and scored once against the original outer holdout. The eight-feature
+agent contract remains unchanged; no heat aggregates, SVI indices, or risk scores become inputs.
+
+The original holdout was already inspected during development, so its score is not a new,
+independent certification. Adjacent spatial cells can still be correlated, and this experiment
+does not add new physical environment signals. It can reduce coefficient variance, not invent
+missing information. Results use `EXPERIMENT_COMPLETED`, not a validated/promoted production
+status; even failed-quality experiments retain metrics, fold results, code, and job statistics.
+Inspect that status as well as `VALIDATED_CANDIDATE` when comparing experiments. All intermediate
+models/tables are retained and incur storage; the runner never changes the active model or agent.
+
+The first ridge experiment (`20261027_164544_b1e872144cc1`) selected L2=1000. On the same
+3,218-row outer holdout its MAE improved from 1.4984 to 1.4626 F and MSE from 3.6317 to 3.3254,
+but R2 remained -0.0112 and MSE still exceeded the zero-offset baseline (3.2956). This is a
+measured improvement, not evidence that the model is ready for production. The next meaningful
+step is independently sourced physical-environment features (for example licensed canopy or
+impervious-surface data) and new/buffered spatial validation, not repeated tuning on this holdout.
+
 ## Loading the seed data
 
 Headless alternatives to the notebook, for when a Colab Enterprise runtime is slow or

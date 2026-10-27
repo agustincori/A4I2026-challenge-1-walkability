@@ -19,7 +19,8 @@ FEATURES = (
     "median_age", "housing_units", "median_year_structure_built",
 )
 FILES = (
-    "scripts/train_candidate.py", "sql/clean_tracts.sql", "sql/prepare_features.sql",
+    "scripts/train_candidate.py", "scripts/tune_candidate.py",
+    "sql/clean_tracts.sql", "sql/prepare_features.sql",
     "sql/train_model.sql", "sql/evaluate_model.sql", "sql/explain_prediction.sql",
 )
 
