@@ -49,6 +49,16 @@ class TestMergedAgent(unittest.TestCase):
         )
         self.assertIn("strictly scoped to the City of Atlanta", agent.instruction)
         self.assertIn("Never blend or directly compare predictions", agent.instruction)
+        self.assertIn(
+            '"We stripped the demographic variable from the model inputs and audited the outcome. '
+            'Heat is driven by the physical and built environment—pavement, building vintage, '
+            'and canopy deficit—not race. Our model predicts microclimate heat strictly using '
+            'physical and economic vulnerability features, while our equity audit tool checks '
+            'after the fact that public cooling investments land where they are needed most."',
+            agent.instruction,
+        )
+        self.assertIn("Economic tract features may still be prediction inputs", agent.instruction)
+        self.assertIn("predictive associations rather than causal proof", agent.instruction)
         self.client.query.assert_not_called()
 
     def test_build_with_configuration_does_not_create_bigquery_client(self) -> None:
