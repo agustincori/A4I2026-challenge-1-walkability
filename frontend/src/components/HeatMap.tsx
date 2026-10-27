@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
-import { CensusTract } from '../types';
-import { Flame, Users, Navigation, AlertTriangle, Sparkles, Building, Info, Search, Crosshair, Trees, ShieldAlert, X } from 'lucide-react';
+import { CensusTract, DispatchedAsset } from '../types';
+import { Flame, Users, Navigation, AlertTriangle, Sparkles, Building, Info, Search, Crosshair, Trees, ShieldAlert, X, Truck } from 'lucide-react';
 
 interface HeatMapProps {
   tracts: CensusTract[];
@@ -9,6 +9,7 @@ interface HeatMapProps {
   onSelectTract: (tract: CensusTract) => void;
   onAskAgentAboutTract: (tract: CensusTract) => void;
   forecastBaselineF: number;
+  dispatchedAssets?: DispatchedAsset[];
 }
 
 export const HeatMap: React.FC<HeatMapProps> = ({
@@ -17,6 +18,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   onSelectTract,
   onAskAgentAboutTract,
   forecastBaselineF,
+  dispatchedAssets = [],
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -28,6 +30,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   const [minPovertyFilter, setMinPovertyFilter] = useState<number>(0);
   const [showWalkBuffers, setShowWalkBuffers] = useState<boolean>(true);
   const [onlyCandidates, setOnlyCandidates] = useState<boolean>(false);
+  const [showDispatchedAssets, setShowDispatchedAssets] = useState<boolean>(true);
 
   // Filtered tracts for search autocomplete
   const searchResults = useMemo(() => {
@@ -152,7 +155,58 @@ export const HeatMap: React.FC<HeatMapProps> = ({
         layerGroupRef.current?.addLayer(buffer);
       }
     });
-  }, [tracts, selectedTract, minOffsetFilter, minPovertyFilter, showWalkBuffers, onlyCandidates, onSelectTract]);
+
+    // Render active mobile dispatched assets (Resource Mover)
+    if (showDispatchedAssets && dispatchedAssets && dispatchedAssets.length > 0) {
+      dispatchedAssets.forEach((asset) => {
+        const iconEmoji = asset.type === 'hydration' ? '💧' : asset.type === 'wellness' ? '🚑' : '🚌';
+        const colorClass =
+          asset.type === 'hydration'
+            ? 'background:#d97706;'
+            : asset.type === 'wellness'
+            ? 'background:#4f46e5;'
+            : 'background:#0891b2;';
+
+        const customIcon = L.divIcon({
+          html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;border:2px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.6);font-size:14px;cursor:pointer;${colorClass}">${iconEmoji}</div>`,
+          className: 'custom-asset-pin',
+          iconSize: [30, 30],
+          iconAnchor: [15, 15],
+        });
+
+        const marker = L.marker([asset.lat, asset.lng], { icon: customIcon });
+        marker.bindTooltip(
+          `<div style="font-family:sans-serif;font-size:12px;padding:2px;">
+            <b style="color:#ffffff;">${asset.name}</b><br/>
+            <span style="color:#94a3b8;">${asset.locationName}</span><br/>
+            <span style="color:#34d399;">+${asset.protectedPopulation.toLocaleString()} residents protected</span>
+          </div>`,
+          { direction: 'top', offset: [0, -15] }
+        );
+        layerGroupRef.current?.addLayer(marker);
+      });
+    }
+  }, [
+    tracts,
+    selectedTract,
+    minOffsetFilter,
+    minPovertyFilter,
+    showWalkBuffers,
+    onlyCandidates,
+    showDispatchedAssets,
+    dispatchedAssets,
+    onSelectTract,
+  ]);
+
+  // Sync map center when selectedTract changes from external interactions
+  useEffect(() => {
+    if (selectedTract && mapInstanceRef.current) {
+      mapInstanceRef.current.panTo([selectedTract.latitude, selectedTract.longitude], {
+        animate: true,
+        duration: 0.8,
+      });
+    }
+  }, [selectedTract]);
 
   return (
     <div className="relative w-full h-[calc(100vh-8.5rem)] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col md:flex-row">
@@ -256,25 +310,40 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               />
             </div>
 
-            <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showWalkBuffers}
-                  onChange={(e) => setShowWalkBuffers(e.target.checked)}
-                  className="rounded accent-sky-500 text-sky-500"
-                />
-                <span>10-min Walk Buffers</span>
-              </label>
+            <div className="flex flex-col gap-1.5 pt-1">
+              <div className="flex items-center justify-between">
+                <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showWalkBuffers}
+                    onChange={(e) => setShowWalkBuffers(e.target.checked)}
+                    className="rounded accent-sky-500 text-sky-500"
+                  />
+                  <span>10-min Walk Buffers</span>
+                </label>
 
-              <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
+                <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={onlyCandidates}
+                    onChange={(e) => setOnlyCandidates(e.target.checked)}
+                    className="rounded accent-rose-500 text-rose-500"
+                  />
+                  <span>Siting Sites Only</span>
+                </label>
+              </div>
+
+              <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer pt-0.5">
                 <input
                   type="checkbox"
-                  checked={onlyCandidates}
-                  onChange={(e) => setOnlyCandidates(e.target.checked)}
-                  className="rounded accent-rose-500 text-rose-500"
+                  checked={showDispatchedAssets}
+                  onChange={(e) => setShowDispatchedAssets(e.target.checked)}
+                  className="rounded accent-emerald-500 text-emerald-500"
                 />
-                <span>Siting Sites Only</span>
+                <span className="flex items-center gap-1 text-emerald-300">
+                  <Truck className="w-3 h-3 text-emerald-400" />
+                  <span>Mobile Assets ({dispatchedAssets.length})</span>
+                </span>
               </label>
             </div>
           </div>

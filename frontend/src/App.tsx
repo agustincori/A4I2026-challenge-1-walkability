@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { Navbar } from './components/Navbar';
 import { HeatMap } from './components/HeatMap';
+import { DecisionsAndDispatch } from './components/DecisionsAndDispatch';
 import { CoolingCenterRankings } from './components/CoolingCenterRankings';
 import { EquityAuditDashboard } from './components/EquityAuditDashboard';
 import { HistoricalTrends } from './components/HistoricalTrends';
 import { AdvisorChat } from './components/AdvisorChat';
 import { ExplainabilityModal } from './components/ExplainabilityModal';
-import { MOCK_CENSUS_TRACTS, MOCK_COOLING_CENTER_RANKINGS } from './data/mockData';
-import { CensusTract, CoolingCenterRanking } from './types';
+import { 
+  MOCK_CENSUS_TRACTS, 
+  MOCK_COOLING_CENTER_RANKINGS,
+  INITIAL_PLANNER_DECISIONS,
+  INITIAL_DISPATCHED_ASSETS,
+  INITIAL_HEAT_ALERTS
+} from './data/mockData';
+import { CensusTract, CoolingCenterRanking, PlannerDecision, DispatchedAsset, AssetType, HeatAlert } from './types';
 import { agentApi, CLOUD_RUN_URL } from './services/agentApi';
 
 export const App: React.FC = () => {
@@ -20,6 +27,11 @@ export const App: React.FC = () => {
   const [selectedTract, setSelectedTract] = useState<CensusTract | null>(MOCK_CENSUS_TRACTS[0]);
   const [explainTract, setExplainTract] = useState<CensusTract | null>(null);
   const [advisorPrompt, setAdvisorPrompt] = useState<string | undefined>(undefined);
+
+  // New synthesized state from feat/frontend-rev
+  const [plannerDecisions, setPlannerDecisions] = useState<PlannerDecision[]>(INITIAL_PLANNER_DECISIONS);
+  const [dispatchedAssets, setDispatchedAssets] = useState<DispatchedAsset[]>(INITIAL_DISPATCHED_ASSETS);
+  const [heatAlerts] = useState<HeatAlert[]>(INITIAL_HEAT_ALERTS);
 
   // Ping health of deployed Cloud Run service
   const verifyAgentHealth = async () => {
@@ -52,12 +64,105 @@ export const App: React.FC = () => {
     setActiveTab('equity');
   };
 
-  const handleDraftCouncilProposal = (selected: CoolingCenterRanking[]) => {
-    const tractIds = selected.map((s) => s.tractId).join(', ');
+  const handleDraftCouncilProposal = (selected?: CoolingCenterRanking[]) => {
+    const targets = selected && selected.length > 0 ? selected : MOCK_COOLING_CENTER_RANKINGS.slice(0, 3);
+    const tractIds = targets.map((s) => s.tractId).join(', ');
     const prompt = `Draft a formal municipal council proposal for Atlanta City Council recommending cooling centers in tracts ${tractIds}. Include thermal offsets, poverty rates, and equity justification.`;
     setAdvisorPrompt(prompt);
     setActiveTab('advisor');
   };
+
+  const handleExecuteDecision = (decision: PlannerDecision) => {
+    // Mark decision as executed
+    setPlannerDecisions((prev) =>
+      prev.map((d) => (d.id === decision.id ? { ...d, status: 'executed' } : d))
+    );
+
+    if (decision.actionType === 'draft_council') {
+      handleDraftCouncilProposal();
+      return;
+    }
+
+    // Map decision to asset type
+    const assetType: AssetType =
+      decision.actionType === 'deploy_hydration'
+        ? 'hydration'
+        : decision.actionType === 'deploy_wellness'
+        ? 'wellness'
+        : 'bus';
+
+    const assetName =
+      assetType === 'hydration'
+        ? `Hydration Trailer #${dispatchedAssets.length + 1}`
+        : assetType === 'wellness'
+        ? `Mobile Wellness Van #${dispatchedAssets.length + 1}`
+        : `MARTA Climate Shelter Bus #${dispatchedAssets.length + 1}`;
+
+    const newAsset: DispatchedAsset = {
+      id: `disp-${Date.now()}`,
+      type: assetType,
+      name: assetName,
+      locationName: decision.locationName || 'Atlanta Target Zone',
+      lat: decision.lat || 33.749,
+      lng: decision.lng || -84.388,
+      tractId: decision.tractId,
+      dispatchedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'on-site',
+      protectedPopulation: decision.impactPopulation,
+    };
+
+    setDispatchedAssets((prev) => [newAsset, ...prev]);
+
+    // Focus on tract if provided
+    if (decision.tractId) {
+      const tract = MOCK_CENSUS_TRACTS.find((t) => t.geoId === decision.tractId);
+      if (tract) setSelectedTract(tract);
+    }
+  };
+
+  const handleDeployAsset = (
+    type: AssetType,
+    locationName: string,
+    lat: number,
+    lng: number,
+    tractId?: string
+  ) => {
+    const assetName =
+      type === 'hydration'
+        ? `Hydration Trailer #${dispatchedAssets.length + 1}`
+        : type === 'wellness'
+        ? `Mobile Wellness Van #${dispatchedAssets.length + 1}`
+        : `MARTA Climate Shelter Bus #${dispatchedAssets.length + 1}`;
+
+    const newAsset: DispatchedAsset = {
+      id: `disp-${Date.now()}`,
+      type,
+      name: assetName,
+      locationName,
+      lat,
+      lng,
+      tractId,
+      dispatchedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      status: 'on-site',
+      protectedPopulation: 2200,
+    };
+
+    setDispatchedAssets((prev) => [newAsset, ...prev]);
+  };
+
+  const handleRecallAsset = (id: string) => {
+    setDispatchedAssets((prev) => prev.filter((a) => a.id !== id));
+  };
+
+  const handleSelectTractForMap = (tractId: string) => {
+    const tract = MOCK_CENSUS_TRACTS.find((t) => t.geoId === tractId);
+    if (tract) {
+      setSelectedTract(tract);
+      setActiveTab('map');
+    }
+  };
+
+  const pendingDecisionsCount = plannerDecisions.filter((d) => d.status === 'pending').length;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans">
@@ -70,6 +175,9 @@ export const App: React.FC = () => {
         setUseMockMode={setUseMockMode}
         onRefreshHealth={verifyAgentHealth}
         cloudRunUrl={CLOUD_RUN_URL}
+        alerts={heatAlerts}
+        baselineTempF={forecastBaselineF}
+        pendingDecisionsCount={pendingDecisionsCount}
       />
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
@@ -80,6 +188,20 @@ export const App: React.FC = () => {
             onSelectTract={(t) => setSelectedTract(t)}
             onAskAgentAboutTract={handleAskAgentAboutTract}
             forecastBaselineF={forecastBaselineF}
+            dispatchedAssets={dispatchedAssets}
+          />
+        )}
+
+        {activeTab === 'decisions' && (
+          <DecisionsAndDispatch
+            decisions={plannerDecisions}
+            dispatchedAssets={dispatchedAssets}
+            onExecuteDecision={handleExecuteDecision}
+            onDeployAsset={handleDeployAsset}
+            onRecallAsset={handleRecallAsset}
+            onSelectTractForMap={handleSelectTractForMap}
+            onDraftCouncilProposal={() => handleDraftCouncilProposal()}
+            allTracts={MOCK_CENSUS_TRACTS}
           />
         )}
 
@@ -119,3 +241,4 @@ export const App: React.FC = () => {
   );
 };
 export default App;
+

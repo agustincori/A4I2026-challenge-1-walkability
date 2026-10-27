@@ -81,3 +81,44 @@ export interface ChatMessage {
   model?: string;
   latencyMs?: number;
 }
+
+export type AssetType = 'hydration' | 'wellness' | 'bus';
+
+export interface DispatchedAsset {
+  id: string;
+  type: AssetType;
+  name: string;
+  locationName: string;
+  lat: number;
+  lng: number;
+  tractId?: string;
+  dispatchedAt: string;
+  status: 'en-route' | 'on-site';
+  protectedPopulation: number;
+}
+
+export interface PlannerDecision {
+  id: string;
+  title: string;
+  description: string;
+  category: 'Immediate' | 'Mobile Surge' | 'Vulnerability' | 'Transit Desert';
+  dueTime: string;
+  actionLabel: string;
+  actionType: 'draft_council' | 'deploy_hydration' | 'deploy_wellness' | 'stage_bus';
+  tractId?: string;
+  locationName?: string;
+  lat?: number;
+  lng?: number;
+  impactPopulation: number;
+  status: 'pending' | 'executed';
+}
+
+export interface HeatAlert {
+  id: string;
+  title: string;
+  zone: string;
+  severity: 'warning' | 'advisory' | 'spike';
+  description: string;
+  recommendation: string;
+}
+
