@@ -814,3 +814,19 @@ been solved at another table.
 To report a problem with the data or the notebook, run the **diagnostic cell** at the bottom of
 the notebook and share what it prints. One block, everything a coach needs, beats a screenshot
 every time.
+
+## Frontend starter
+
+A minimal React chat interface for the Atlanta Heat Advisor lives in [`frontend/`](frontend/).
+Run it locally with:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+By default, the UI sends requests to the deployed agent documented in
+[`agent/README.md`](agent/README.md). To use another ADK service, set
+`VITE_AGENT_API_URL` to its base URL before starting Vite. The interface uses the ADK session
+and `/run` APIs; the service must allow browser requests from the frontend origin.
