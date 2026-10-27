@@ -36,6 +36,8 @@ class StructureTests(unittest.TestCase):
             ("audit_candidate", ["--parent-run", parent]),
             ("promote_candidate", ["--candidate-run", parent]),
             ("audit_physical_features", ["--feature-run", parent]),
+            ("audit_ranking", ["--source-run", parent, "--candidate-run", parent]),
+            ("audit_tree_planting", []),
         ):
             with self.subTest(workflow=workflow):
                 result = subprocess.run(

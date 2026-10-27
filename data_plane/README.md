@@ -77,6 +77,82 @@ does not imply broad serving coverage: 208 eligible tract rows lack a usable mat
 The report documents current source reads and query lineage, not immutable source
 snapshots or an approved feature contract.
 
+### Read-only ranking and spatial sensitivity audit
+
+```bash
+python3 -m data_plane.pipelines.audit_ranking \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --source-run 20261027_163945_a1f7fcb70be3 \
+  --candidate-run 20261027_164544_b1e872144cc1 \
+  --candidate-run 20261027_165503_b3dad3b996e2 \
+  --execute --output ranking_audit.json
+```
+
+Omit `--execute` for a credential-free plan. The optional report path must be new.
+The workflow validates completed model lineage, predicts on identical original
+holdout readings, aligns fitting anchors, checks completeness/finite predictions
+and model etags, and aggregates tract errors. Support rules are the draft 30 readings
+per tract, at least 10 eligible tracts and top-5. Below those counts the ranking is
+inconclusive. Shortlist ties use GEOID; Spearman uses average tied ranks.
+
+The [retained 2026-10-27 report](docs/ranking_audit_20261027.json) evaluated 3,218
+readings in 13 spatial cells, with 21 eligible tracts and seven excluded for low
+reading counts:
+
+| Metric on supported cohort | Tuned candidate | Buffered candidate |
+|---|---|---|
+| Measured top-5 recovered | 3 / 5 | 3 / 5 |
+| Spearman | 0.568 | 0.581 |
+| NDCG@5, linear ordinal relevance | 0.687 | 0.687 |
+| Tract-mean absolute error | 1.031 F | 1.020 F |
+| Observation MAE | 1.475 F | 1.462 F |
+| Observation MSE | 3.367 F² | 3.173 F² |
+
+Both use the same zero-offset baseline: MAE 1.597 F, MSE 3.356 F² on the supported
+cohort. These numbers differ from earlier model evaluations because the cohort and,
+for the buffered candidate, label anchor have been harmonized explicitly.
+
+The two predicted top-5 lists are identical. Their first-ranked tract, `13121007900`,
+has measured mean offset -1.260 F, versus predictions +1.663 F (tuned) and +1.364 F
+(buffered). Its reading-level MAE is 2.923 F / 2.624 F, respectively. This is a
+specific development error worth investigating, not evidence that the full city
+ranking is reliable.
+
+When each evaluation cell is omitted without refitting, supported tracts range
+from 16 to 21. Spearman ranges from 0.425–0.665 (tuned) and 0.442–0.650 (buffered);
+top-5 overlap with the measured shortlist ranges 2–3 and stays at 3, respectively.
+The eligible cohort changes in these perturbations: these ranges are **not**
+confidence intervals or spatial cross-validation. They evaluate sampling
+sensitivity, not independent generalization.
+
+No acceptance verdict or promotion is produced. This is a previously inspected
+campaign holdout, ranks are based on observed-point means rather than serving
+centroids, and no vulnerability-weighted policy score is validated.
+
+### Ten-year tree-planting scenarios
+
+The [scenario design](docs/TREE_PLANTING_SCENARIO.md) addresses cumulative avoided
+human ambient-heat exposure per lifecycle dollar over ten years from planting.
+It is a proposal, not an estimated cooling effect. Audit the new inputs read-only:
+
+```bash
+python3 -m data_plane.pipelines.audit_tree_planting \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --execute --output planting_audit.json
+```
+
+Omit `--execute` for plan only. Source provenance, marginal-cost units, site feasibility,
+growth/survival, causal cooling response and hourly exposure remain unverified.
+The report deliberately emits no relief-per-dollar value or recommendation.
+Neither current canopy nor a heat-model attribution establishes the benefit of planting.
+
+The [retained 2026-10-27 audit](docs/planting_audit_20261027.json) found 109 unique,
+well-formed GEOIDs, no missing/non-finite values in the six profiled fields, and
+56 matches among 264 agent-eligible tracts (21.2%). Declared marginal cost ranges
+300–1,500 and declared plantable area 593.34–25,000, but units/methodology are not
+verified; no table description or labels document them. These checks do not prove
+the fields are measured rather than synthetic.
+
 ### Command migration
 
 The previous top-level `scripts/`, `sql/`, `notebooks/` and `data/` directories have moved here.

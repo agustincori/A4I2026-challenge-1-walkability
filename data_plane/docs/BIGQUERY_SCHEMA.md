@@ -7,7 +7,7 @@
 | Google Cloud project | `qwiklabs-gcp-03-1578f96a5a7a` |
 | BigQuery dataset | `a4i_climate` |
 | Location | `US` |
-| Core data and analysis tables | 7 |
+| Core data and analysis tables | 8 |
 
 Fully qualified table names use this format:
 
@@ -15,7 +15,7 @@ Fully qualified table names use this format:
 qwiklabs-gcp-03-1578f96a5a.a4i_climate.<table_name>
 ```
 
-The seven core data and analysis table schemas below were read from the dataset's BigQuery
+The eight core data and analysis table schemas below were read from the dataset's BigQuery
 `INFORMATION_SCHEMA.COLUMNS`. The training workflows also create retained, run-specific artifacts,
 so the dataset's total table count grows as experiments are run. BigQuery ML models are separate
 resources and are not included in the table count. Column modes are omitted from the core-table
@@ -78,6 +78,28 @@ Tract-level heat and social-vulnerability features with an additional tree-canop
 
 `tree_canopy_pct` is available in this analysis table; it is not part of the current eight-feature
 BQML training/agent contract.
+
+### `atlanta_tree_planting_optimization`
+
+Schema inspected on 2026-10-27. Includes all 24 columns listed for
+`atlanta_canopy_heat_svi_modeling` above, plus:
+
+| Column | Type |
+|---|---|
+| `dist_to_facility` | `FLOAT64` |
+| `dist_to_transit` | `FLOAT64` |
+| `norm_dist_facility` | `FLOAT64` |
+| `norm_dist_transit` | `FLOAT64` |
+| `lst_temp` | `FLOAT64` |
+| `plantable_row_sqm` | `FLOAT64` |
+| `marginal_planting_cost` | `FLOAT64` |
+
+109 unique GEOIDs; 56 match the 264 tracts eligible under the agent ranking filter.
+Names do not establish units, provenance or whether fields are measured/estimated/
+synthetic. Cost denominator, currency, price year, LST units and area methodology
+remain unverified. No cooling benefit or cost-effectiveness is inferred from this
+table. See the [audit evidence](planting_audit_20261027.json) and
+[ten-year scenario design](TREE_PLANTING_SCENARIO.md).
 
 ### `atlanta_tract_heat_svi_full`
 

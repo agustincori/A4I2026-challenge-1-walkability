@@ -87,3 +87,20 @@ After verification:
 
 Use the [read-only audit workflow](../pipelines/audit_physical_features.py) to
 refresh quality and join coverage. Its report cannot approve feature admission.
+
+## Current development audit
+
+The [ranking audit](../pipelines/audit_ranking.py) implements the draft minimum
+support rules, tied-rank Spearman, top-5 overlap and NDCG with linear nonnegative
+ordinal relevance (average measured rank minus one). Shortlist ties use GEOID.
+It reports per-tract errors and approximate p90, plus evaluation sensitivity when
+each spatial cell is omitted in turn. Constant observed/predicted tract means make
+the ranking inconclusive; insufficient support never silently reduces top-k.
+
+This is **not** refitted spatial CV, a bootstrap confidence interval, an approved
+gate or a test of the vulnerability-weighted policy score. Cohort membership can
+change after omitting a cell; counts and shortlist IDs are retained for review.
+Models must have completed registry lineage to the same original feature run.
+Predictions are shifted by their recorded fitting anchor to the original evaluation
+anchor, so buffered and unbuffered errors use identical labels. Do not compare their
+previous ML.EVALUATE metrics as though their anchors were identical.
