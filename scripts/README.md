@@ -1,32 +1,129 @@
 # scripts/
 
-## Validate and train the BQML offset model
+## Versioned BQML candidates and training history
 
-The SQL scripts in `sql/` use the Atlanta project settings (`qwiklabs-gcp-03-1578f96a5a7a`,
-`a4i_climate`, location `US`):
+The candidate runner requires Python 3.10+, `bq`, `git`, and an authenticated Cloud CLI. It uses
+the standard library, so no additional Python packages or downloaded service-account keys are
+needed. It reads environment variables, not dotenv files; export the settings first:
 
 ```bash
-bq query --location=US --use_legacy_sql=false < sql/normalize_city_label.sql
-bq query --location=US --use_legacy_sql=false < sql/validate_data.sql
-bq query --location=US --use_legacy_sql=false < sql/train_model.sql
-bq query --location=US --use_legacy_sql=false < sql/evaluate_model.sql
+export GOOGLE_CLOUD_PROJECT=qwiklabs-gcp-03-1578f96a5a7a
+export BQ_DATASET=a4i_climate
+export BQ_LOCATION=US
+
+python3 scripts/train_candidate.py            # Plan only; no BigQuery calls or writes.
+python3 scripts/train_candidate.py --execute  # Creates and tests a versioned candidate.
 ```
 
-The label-normalization script updates only NULL/blank `city` values in the existing Atlanta
-snapshot; it is idempotent. `validate_data.sql` then checks the four-table schemas, the recorded
-row counts, city-label coverage, and a live four-table integration row. Future loads through
-`scripts/load.sh` fill missing labels automatically.
+This workflow is scoped to the Atlanta dataset. It never replaces `heat_offset_model`, updates
+source tables, changes agent configuration, or promotes a candidate. Each execution gets a UTC
+timestamp plus random suffix and creates:
 
-`train_model.sql` uses `CREATE OR REPLACE MODEL` and will replace the existing model when
-executed. It computes the target as street temperature minus the Atlanta campaign mean, maps each
-reading to its nearest tract, replaces invalid Census sentinel values, and reserves spatial grid
-cells for evaluation. The evaluation script checks the model feature count and verifies that
-`median_income` statistics are free of negative sentinel values.
+- Read-only `heat_snapshot_<run_id>` and `tract_snapshot_<run_id>` at the same point in time.
+- `training_data_<run_id>` with the cleaned features, raw temperatures, target, geographic
+  assignments, imputation flags, baseline anchor, spatial cells, and evaluation split.
+- `heat_offset_model_<run_id>`, using exactly the eight features expected by the agent.
+- Append-only rows in `model_training_events`, partitioned by date and clustered by run/stage.
+  These retain the Git commit and dirty status, the exact source files and their combined SHA-256,
+  configuration, SQL and parameters, submitted job IDs, stage results, metrics, and errors.
+  Successful stages also persist job timestamps, processed/billed bytes, slot time, and available
+  BQML training statistics; model metadata is retained after training.
+  A local dirty working tree is allowed because its actual training code is stored, not just HEAD.
 
-The prediction caller must apply the same feature fallbacks as training. In particular,
-`median_income` values below zero must be replaced with `65000.0`; `COALESCE` alone does not
-remove Census sentinel values. Neither the label update nor the model rebuild has been run
-automatically.
+The runner uses `CREATE`, never `CREATE OR REPLACE`, for run artifacts. Immutability is a workflow
+convention except for the read-only source snapshots; use IAM if you need enforced restrictions.
+Nothing expires automatically: snapshots and feature tables consume storage. Keep validated runs
+and apply an explicit retention policy before running large experiments.
+
+### Data and validation choices
+
+Each reading is assigned to its nearest valid tract centroid with a stable GEOID tie-breaker.
+That is an approximation, not polygon containment, and has no maximum-distance cutoff; the run
+records the maximum matching distance. Invalid Census values receive documented fixed fallbacks
+from [clean_tracts.sql](../sql/clean_tracts.sql), reused by training and explain-prediction.
+
+Cells of 0.02 degrees are assigned deterministically to a roughly 20% holdout using a normalized
+hash modulo five. The realized fraction depends on where observations cluster. Cells never occur
+on both sides, but no spatial buffer is enforced, so adjacent cells can still be correlated.
+The offset is temperature minus the **training-only campaign mean**, also applied unchanged to
+evaluation rows. This prevents evaluation temperatures from determining the baseline. Its anchor
+can differ slightly from the full campaign mean; both are recorded. Temperature, identifiers,
+imputation flags, and split metadata are explicitly excluded from the model feature list.
+
+Checks require one feature row per source reading, nonempty training/evaluation splits, no shared
+cells, clean income values, the exact feature contract, finite metrics, and a real
+`ML.EXPLAIN_PREDICT` response with three finite feature attributions. A candidate must not have worse
+holdout MAE than a zero-offset (training-mean) predictor. R2 >= 0.98 blocks acceptance for leakage
+review, but a lower R2 does not prove there is no leakage. This single campaign cannot establish
+temporal generalization or causal intervention effects.
+
+The legacy active model is not used as a quality baseline: it may have seen the held-out readings,
+and its income statistics contain a Census sentinel. Its metadata is recorded before the run and
+its etag checked afterward to confirm it was not changed during training. Operational failures and
+quality-gate failures are recorded as `FAILED`, with artifacts preserved for investigation. The
+final `VALIDATED_CANDIDATE` status is not a production approval. Negative holdout R2 and worse
+MSE than baseline are explicitly preserved as quality warnings, even if the MAE gate passes;
+every candidate still requires promotion review.
+
+Missing source city labels are reported and retained in raw snapshots, not silently rewritten;
+the candidate uses the known Atlanta-only dataset without filtering this nullable field.
+For explicitly authorized source repair, run `sql/normalize_city_label.sql` before the strict
+snapshot regression checks in `sql/validate_data.sql`. Future loads through `scripts/load.sh`
+fill missing labels automatically. These are separate from candidate execution.
+
+### Inspect training history
+
+```sql
+SELECT run_id, event_time, stage, state, candidate_model, payload
+FROM `qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.model_training_events`
+WHERE event_time >= TIMESTAMP_SUB(CURRENT_TIMESTAMP(), INTERVAL 7 DAY)
+ORDER BY event_time DESC
+LIMIT 50;
+```
+
+For a compact experiment comparison (metrics from different snapshots/splits are not directly
+comparable):
+
+```sql
+SELECT
+  run_id,
+  candidate_model,
+  JSON_VALUE(payload, '$.metrics.mean_absolute_error') AS holdout_mae_f,
+  JSON_VALUE(payload, '$.metrics.mean_squared_error') AS holdout_mse,
+  JSON_VALUE(payload, '$.metrics.r2_score') AS holdout_r2,
+  JSON_QUERY(payload, '$.quality_warnings') AS quality_warnings
+FROM `qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.model_training_events`
+WHERE stage = 'run' AND state = 'VALIDATED_CANDIDATE'
+ORDER BY event_time DESC;
+```
+
+All jobs carry a `training_run` label; submitted IDs also live in registry events for failed or
+interrupted jobs. Inspect job details in BigQuery or `bq show --job` for processed/billed bytes,
+slot time, errors, and training configuration. Key statistics are also copied into successful
+stage events so the registry does not depend on BigQuery job-history retention.
+`--maximum-bytes-billed` defaults to 1 GB per query;
+this is not a total budget or a cap on separately priced BQML training/storage costs.
+Interruption does not automatically cancel an already-submitted job; inspect its recorded ID.
+
+### Agent-lane handoff
+
+`sql/train_model.sql`, `sql/evaluate_model.sql`, `sql/prepare_features.sql`, and
+`sql/explain_prediction.sql` are templates, not standalone `bq` commands. The runner resolves
+their identifiers and records the exact executed SQL. The explain SQL and parameters are available
+in the `explain` / `SUBMITTED` event; its successful result is in `explain` / `SUCCEEDED`.
+For serving, the agent lane should use the candidate model explicitly and the same cleaning
+contract on live demographics. Coordinates must be validated against supported coverage before
+inference; nearest-tract lookup alone does not enforce that coverage. Nothing rewires the agent.
+Its old `COALESCE(median_income, ...)` still needs the shared negative-value handling, and ranking
+still needs per-site explanations before the full application can be called synchronized.
+
+Run local tests without Cloud access:
+
+```bash
+python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+```
+
+## Loading the seed data
 
 Headless alternatives to the notebook, for when a Colab Enterprise runtime is slow or
 unavailable.
