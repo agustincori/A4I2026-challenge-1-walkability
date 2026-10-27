@@ -2547,8 +2547,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 2667,
     "povertyRatePct": 57.7,
     "noVehicleRatePct": 47.2,
-    "compositeScore": 4.23,
-    "sitingJustification": "High composite risk (score 63.5): offset of +4.61\u00b0F with 57.7% poverty, 47.2% vehicle deficit, and only 33.0% tree canopy.",
+    "compositeScore": 84.6,
+    "integratedRiskScore": 84.6,
+    "sviScore": 0.85,
+    "popDensity": 7240,
+    "distToFacilityMeters": 2200,
+    "distToTransitMeters": 1100,
+    "formulaBreakdown": {
+      "heat": 23.1,
+      "svi": 21.2,
+      "density": 16.1,
+      "facility": 13.2,
+      "transit": 11.0
+    },
+    "sitingJustification": "High composite risk (score 84.6): offset of +4.61°F with 57.7% poverty, 47.2% vehicle deficit, and 0.85 SVI.",
     "walkAccessMinutes": 9
   },
   {
@@ -2562,8 +2574,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 3697,
     "povertyRatePct": 48.1,
     "noVehicleRatePct": 11.5,
-    "compositeScore": 4.21,
-    "sitingJustification": "High composite risk (score 63.17): offset of +4.77\u00b0F with 48.1% poverty, 11.5% vehicle deficit, and only 39.8% tree canopy.",
+    "compositeScore": 79.5,
+    "integratedRiskScore": 79.5,
+    "sviScore": 0.86,
+    "popDensity": 5890,
+    "distToFacilityMeters": 2100,
+    "distToTransitMeters": 850,
+    "formulaBreakdown": {
+      "heat": 23.8,
+      "svi": 21.5,
+      "density": 13.1,
+      "facility": 12.6,
+      "transit": 8.5
+    },
+    "sitingJustification": "High composite risk (score 79.5): offset of +4.77°F with 48.1% poverty, 11.5% vehicle deficit, and 0.86 SVI.",
     "walkAccessMinutes": 11
   },
   {
@@ -2577,8 +2601,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 2034,
     "povertyRatePct": 37.8,
     "noVehicleRatePct": 22.0,
-    "compositeScore": 4.1,
-    "sitingJustification": "High composite risk (score 61.46): offset of +4.2\u00b0F with 37.8% poverty, 22.0% vehicle deficit, and only 38.9% tree canopy.",
+    "compositeScore": 75.7,
+    "integratedRiskScore": 75.7,
+    "sviScore": 0.81,
+    "popDensity": 6120,
+    "distToFacilityMeters": 1950,
+    "distToTransitMeters": 920,
+    "formulaBreakdown": {
+      "heat": 21.0,
+      "svi": 20.2,
+      "density": 13.6,
+      "facility": 11.7,
+      "transit": 9.2
+    },
+    "sitingJustification": "High composite risk (score 75.7): offset of +4.2°F with 37.8% poverty, 22.0% vehicle deficit, and 0.81 SVI.",
     "walkAccessMinutes": 7
   },
   {
@@ -2592,8 +2628,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 1550,
     "povertyRatePct": 38.1,
     "noVehicleRatePct": 25.7,
-    "compositeScore": 4.05,
-    "sitingJustification": "High composite risk (score 60.7): offset of +4.75\u00b0F with 38.1% poverty, 25.7% vehicle deficit, and only 33.9% tree canopy.",
+    "compositeScore": 73.6,
+    "integratedRiskScore": 73.6,
+    "sviScore": 0.73,
+    "popDensity": 4850,
+    "distToFacilityMeters": 1950,
+    "distToTransitMeters": 910,
+    "formulaBreakdown": {
+      "heat": 23.8,
+      "svi": 18.2,
+      "density": 10.8,
+      "facility": 11.7,
+      "transit": 9.1
+    },
+    "sitingJustification": "High composite risk (score 73.6): offset of +4.75°F with 38.1% poverty, 25.7% vehicle deficit, and 0.73 SVI.",
     "walkAccessMinutes": 9
   },
   {
@@ -2607,8 +2655,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 1528,
     "povertyRatePct": 29.1,
     "noVehicleRatePct": 17.0,
-    "compositeScore": 4.02,
-    "sitingJustification": "High composite risk (score 60.25): offset of +3.01\u00b0F with 29.1% poverty, 17.0% vehicle deficit, and only 46.3% tree canopy.",
+    "compositeScore": 71.6,
+    "integratedRiskScore": 71.6,
+    "sviScore": 0.80,
+    "popDensity": 8420,
+    "distToFacilityMeters": 2400,
+    "distToTransitMeters": 350,
+    "formulaBreakdown": {
+      "heat": 15.0,
+      "svi": 20.0,
+      "density": 18.7,
+      "facility": 14.4,
+      "transit": 3.5
+    },
+    "sitingJustification": "High composite risk (score 71.6): offset of +3.01°F with 29.1% poverty, 17.0% vehicle deficit, and 0.80 SVI.",
     "walkAccessMinutes": 11
   },
   {
@@ -2622,8 +2682,20 @@ export const MOCK_COOLING_CENTER_RANKINGS: CoolingCenterRanking[] = [
     "population": 3140,
     "povertyRatePct": 36.1,
     "noVehicleRatePct": 20.9,
-    "compositeScore": 3.82,
-    "sitingJustification": "High composite risk (score 57.37): offset of +4.58\u00b0F with 36.1% poverty, 20.9% vehicle deficit, and only 38.2% tree canopy.",
+    "compositeScore": 68.4,
+    "integratedRiskScore": 68.4,
+    "sviScore": 0.79,
+    "popDensity": 4200,
+    "distToFacilityMeters": 1650,
+    "distToTransitMeters": 650,
+    "formulaBreakdown": {
+      "heat": 22.9,
+      "svi": 19.8,
+      "density": 9.3,
+      "facility": 9.9,
+      "transit": 6.5
+    },
+    "sitingJustification": "High composite risk (score 68.4): offset of +4.58°F with 36.1% poverty, 20.9% vehicle deficit, and 0.79 SVI.",
     "walkAccessMinutes": 7
   }
 ];

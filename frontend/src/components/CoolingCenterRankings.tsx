@@ -1,6 +1,21 @@
-import React, { useState } from 'react';
-import { CoolingCenterRanking } from '../types';
-import { Award, Thermometer, ShieldAlert, Footprints, FileText, CheckCircle2, ChevronRight, Sliders } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { CoolingCenterRanking, FormulaWeights, RankingScenarioPreset } from '../types';
+import { recalculateRankings, RANKING_PRESETS, EQUALIZED_BASELINE } from '../services/riskService';
+import { 
+  Award, 
+  Thermometer, 
+  ShieldAlert, 
+  Footprints, 
+  FileText, 
+  CheckCircle2, 
+  ChevronRight, 
+  Sliders,
+  Flame,
+  Users,
+  Building2,
+  Bus,
+  RotateCcw
+} from 'lucide-react';
 
 interface CoolingCenterRankingsProps {
   rankings: CoolingCenterRanking[];
@@ -20,14 +35,45 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
   onDraftCouncilProposal,
 }) => {
   const [fundingSlots, setFundingSlots] = useState<number>(3);
-  const [showFormulaDetails, setShowFormulaDetails] = useState<boolean>(false);
+  const [showFormulaDetails, setShowFormulaDetails] = useState<boolean>(true);
+  const [weights, setWeights] = useState<FormulaWeights>(EQUALIZED_BASELINE.weights);
+  const [activePresetId, setActivePresetId] = useState<string>(EQUALIZED_BASELINE.id);
 
-  const selectedCandidates = rankings.slice(0, fundingSlots);
+  // Switch between predefined scenarios
+  const handleSelectPreset = (preset: RankingScenarioPreset) => {
+    setActivePresetId(preset.id);
+    setWeights({ ...preset.weights });
+  };
+
+  // Live adjustments via interactive sliders
+  const handleWeightChange = (key: keyof FormulaWeights, valuePct: number) => {
+    setWeights((prev) => ({
+      ...prev,
+      [key]: valuePct / 100,
+    }));
+    setActivePresetId('custom');
+  };
+
+  const handleResetToBaseline = () => {
+    setActivePresetId(EQUALIZED_BASELINE.id);
+    setWeights({ ...EQUALIZED_BASELINE.weights });
+  };
+
+  // Recalculate rankings dynamically based on custom weights and baseline temperature
+  const rankedCandidates = useMemo(() => {
+    return recalculateRankings(rankings, weights, forecastBaselineF);
+  }, [rankings, weights, forecastBaselineF]);
+
+  const selectedCandidates = rankedCandidates.slice(0, fundingSlots);
+
+  const totalWeightPct = Math.round(
+    (weights.heat + weights.svi + weights.density + weights.facility + weights.transit) * 100
+  );
 
   return (
     <div className="space-y-6">
-      {/* Top Banner: Siting Optimizer Controls */}
-      <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 shadow-xl">
+      {/* Top Banner: Siting Optimizer Controls & Multi-Criteria Scenario Engine */}
+      <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 shadow-xl space-y-5">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
             <div className="flex items-center space-x-2">
@@ -39,7 +85,7 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
               </h2>
             </div>
             <p className="text-xs text-slate-400 mt-1 max-w-2xl">
-              Multi-objective prioritization fusing BigQuery ML spatial heat offsets with Census poverty and vehicle deprivation.
+              Multi-criteria prioritization fusing BigQuery ML spatial thermal offsets, CDC social vulnerability, population density, facility deficits, and transit access.
             </p>
           </div>
 
@@ -54,7 +100,7 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
                     key={n}
                     type="button"
                     onClick={() => setFundingSlots(n)}
-                    className={`px-3 py-1 rounded-md text-xs font-semibold font-mono transition-all ${
+                    className={`px-3 py-1 rounded-md text-xs font-semibold font-mono transition-all cursor-pointer ${
                       fundingSlots === n
                         ? 'bg-rose-600 text-white shadow'
                         : 'bg-slate-800 text-slate-400 hover:text-white'
@@ -85,39 +131,232 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
           </div>
         </div>
 
-        {/* Formula Toggle Details */}
-        <div className="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs text-slate-400">
-          <button
-            onClick={() => setShowFormulaDetails(!showFormulaDetails)}
-            className="flex items-center space-x-1 text-slate-300 hover:text-white"
-          >
-            <Sliders className="w-3.5 h-3.5 text-slate-400" />
-            <span>Composite Siting Score Formula: <b>0.4 × Offset + 0.3 × Poverty + 0.3 × Carless</b></span>
-          </button>
-          <span className="text-slate-500 font-mono text-[11px]">Calibrated for Atlanta Heat Watch 2026</span>
+        {/* Scenario Presets Selector */}
+        <div className="pt-3 border-t border-slate-800/80">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+            <div className="flex items-center space-x-2">
+              <Sliders className="w-4 h-4 text-indigo-400" />
+              <span className="text-xs font-bold text-slate-200 uppercase tracking-wide">
+                Scenario Presets:
+              </span>
+            </div>
+            {activePresetId === 'custom' && (
+              <button
+                type="button"
+                onClick={handleResetToBaseline}
+                className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-white hover:underline cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset to Equalized Baseline</span>
+              </button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            {RANKING_PRESETS.map((preset) => {
+              const isSelected = activePresetId === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => handleSelectPreset(preset)}
+                  className={`text-left p-2.5 rounded-xl border transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-indigo-950/50 border-indigo-500 text-white shadow-md shadow-indigo-950/40 ring-1 ring-indigo-500/50'
+                      : 'bg-slate-950/50 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-900/60'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-xs leading-tight">{preset.name}</span>
+                    {isSelected && (
+                      <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-500/40">
+                        Active
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-1 line-clamp-2 leading-relaxed">
+                    {preset.description}
+                  </p>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {showFormulaDetails && (
-          <div className="mt-3 p-3 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 space-y-1">
-            <p className="font-semibold text-rose-300">Objective Function Rationale:</p>
-            <p>
-              • <b>Thermal Exposure (40%):</b> Direct microclimate offset (°F) predicted by BQML <code className="text-amber-400">heat_offset_model</code>.
-            </p>
-            <p>
-              • <b>Economic Vulnerability (30%):</b> Tract poverty rate reflects household inability to afford residential AC utility burdens.
-            </p>
-            <p>
-              • <b>Mobility & Transit Deprivation (30%):</b> Share of carless households determining reliance on 10-minute pedestrian walk access to public cooling facilities.
-            </p>
+        {/* Interactive Multi-Criteria Weight Sliders */}
+        <div className="pt-3 border-t border-slate-800/80 space-y-3">
+          <div className="flex items-center justify-between">
+            <button
+              type="button"
+              onClick={() => setShowFormulaDetails(!showFormulaDetails)}
+              className="flex items-center space-x-1.5 text-xs text-slate-300 hover:text-white cursor-pointer"
+            >
+              <Sliders className="w-3.5 h-3.5 text-slate-400" />
+              <span>
+                Multi-Criteria Weights Tuning{' '}
+                <strong className="text-slate-400 font-normal">
+                  ({showFormulaDetails ? 'Hide Controls' : 'Show Controls'})
+                </strong>
+              </span>
+            </button>
+            <div className="flex items-center space-x-2 text-xs">
+              <span className="text-slate-400">Total Weight:</span>
+              <span
+                className={`font-mono font-bold px-2 py-0.5 rounded text-xs ${
+                  totalWeightPct === 100
+                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                    : 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                }`}
+              >
+                {totalWeightPct}%
+              </span>
+            </div>
           </div>
-        )}
+
+          {showFormulaDetails && (
+            <div className="bg-slate-950/70 p-4 rounded-xl border border-slate-800 space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                {/* 1. Heat Exposure */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 font-semibold text-rose-300">
+                      <Flame className="w-3.5 h-3.5 text-rose-400" />
+                      <span>Heat Exposure</span>
+                    </span>
+                    <span className="font-mono font-bold text-rose-400">
+                      {Math.round(weights.heat * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={Math.round(weights.heat * 100)}
+                    onChange={(e) => handleWeightChange('heat', parseFloat(e.target.value))}
+                    className="w-full accent-rose-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 block">NOAA microclimate delta</span>
+                </div>
+
+                {/* 2. CDC SVI */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 font-semibold text-purple-300">
+                      <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+                      <span>CDC SVI (Equity)</span>
+                    </span>
+                    <span className="font-mono font-bold text-purple-400">
+                      {Math.round(weights.svi * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={Math.round(weights.svi * 100)}
+                    onChange={(e) => handleWeightChange('svi', parseFloat(e.target.value))}
+                    className="w-full accent-purple-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Social Vulnerability Index</span>
+                </div>
+
+                {/* 3. Pop Density */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 font-semibold text-amber-300">
+                      <Users className="w-3.5 h-3.5 text-amber-400" />
+                      <span>Population Density</span>
+                    </span>
+                    <span className="font-mono font-bold text-amber-400">
+                      {Math.round(weights.density * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={Math.round(weights.density * 100)}
+                    onChange={(e) => handleWeightChange('density', parseFloat(e.target.value))}
+                    className="w-full accent-amber-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Residential concentration</span>
+                </div>
+
+                {/* 4. Facility Distance */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 font-semibold text-sky-300">
+                      <Building2 className="w-3.5 h-3.5 text-sky-400" />
+                      <span>Facility Distance</span>
+                    </span>
+                    <span className="font-mono font-bold text-sky-400">
+                      {Math.round(weights.facility * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={Math.round(weights.facility * 100)}
+                    onChange={(e) => handleWeightChange('facility', parseFloat(e.target.value))}
+                    className="w-full accent-sky-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 block">Cooling deficit / desert</span>
+                </div>
+
+                {/* 5. Transit Distance */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1 font-semibold text-emerald-300">
+                      <Bus className="w-3.5 h-3.5 text-emerald-400" />
+                      <span>Transit Distance</span>
+                    </span>
+                    <span className="font-mono font-bold text-emerald-400">
+                      {Math.round(weights.transit * 100)}%
+                    </span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="60"
+                    step="5"
+                    value={Math.round(weights.transit * 100)}
+                    onChange={(e) => handleWeightChange('transit', parseFloat(e.target.value))}
+                    className="w-full accent-emerald-500 h-1.5 bg-slate-800 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-slate-500 block">MARTA connectivity gap</span>
+                </div>
+              </div>
+
+              {totalWeightPct !== 100 && (
+                <div className="text-[11px] text-amber-300/90 pt-2 border-t border-slate-800 flex items-center justify-between">
+                  <span>
+                    Weights currently sum to {totalWeightPct}%. The engine automatically normalizes all factors proportionally to sum to 100.0%.
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleResetToBaseline}
+                    className="text-amber-400 hover:text-white underline ml-2 shrink-0 cursor-pointer"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Ranked Candidate Cards Table */}
       <div className="grid grid-cols-1 gap-4">
-        {rankings.map((site) => {
+        {rankedCandidates.map((site) => {
           const isFunded = site.rank <= fundingSlots;
-          const localizedTemp = (forecastBaselineF + site.predictedOffsetF).toFixed(1);
+          const localizedTemp = site.localizedTempF ?? Number((forecastBaselineF + site.predictedOffsetF).toFixed(1));
+          const integratedRisk = site.integratedRiskScore ?? site.compositeScore;
 
           return (
             <div
@@ -182,17 +421,40 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
                   </div>
 
                   <div className="text-right pl-3 border-l border-slate-800">
-                    <div className="text-xs text-slate-400">Poverty / Carless</div>
-                    <div className="text-sm font-mono font-bold text-slate-200">
-                      {site.povertyRatePct}% / {site.noVehicleRatePct}%
+                    <div className="text-xs text-slate-400">Integrated Risk</div>
+                    <div className="text-xl font-mono font-bold text-indigo-400">
+                      {integratedRisk.toFixed(1)}
+                      <span className="text-xs text-slate-400 font-normal">/100</span>
                     </div>
-                    <div className="text-[10px] text-emerald-400 font-mono">
-                      Score: {site.compositeScore.toFixed(2)}
+                    <div className="text-[10px] text-slate-400 font-mono">
+                      Poverty: {site.povertyRatePct}% · Carless: {site.noVehicleRatePct}%
                     </div>
                   </div>
 
                   <ChevronRight className="w-5 h-5 text-slate-600 hidden lg:block" />
                 </div>
+              </div>
+
+              {/* Dynamic Formula Breakdown Chips */}
+              <div className="flex flex-wrap items-center gap-1.5 mt-3 pt-2.5 border-t border-slate-800/60 text-xs">
+                <span className="text-[10px] text-slate-400 uppercase font-mono tracking-wider mr-1">
+                  Formula Breakdown:
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-rose-500/15 text-rose-300 border border-rose-500/30">
+                  🔥 Heat: {site.formulaBreakdown?.heat ?? (site.predictedOffsetF * 5).toFixed(1)} pts
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                  🛡️ SVI: {site.formulaBreakdown?.svi ?? ((site.sviScore ?? 0.8) * 25).toFixed(1)} pts
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                  👥 Density: {site.formulaBreakdown?.density ?? '14.0'} pts
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-sky-500/15 text-sky-300 border border-sky-500/30">
+                  🏛️ Facility Dist: {site.formulaBreakdown?.facility ?? '12.5'} pts
+                </span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
+                  🚌 Transit Dist: {site.formulaBreakdown?.transit ?? '10.0'} pts
+                </span>
               </div>
             </div>
           );
@@ -214,14 +476,14 @@ export const CoolingCenterRankings: React.FC<CoolingCenterRankingsProps> = ({
         <div className="flex items-center space-x-2 w-full sm:w-auto">
           <button
             onClick={() => onAuditRecommendations(selectedCandidates)}
-            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow transition-all flex items-center justify-center space-x-1.5"
+            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <ShieldAlert className="w-3.5 h-3.5" />
             <span>Audit Equity on Top {fundingSlots}</span>
           </button>
           <button
             onClick={() => onDraftCouncilProposal(selectedCandidates)}
-            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow transition-all flex items-center justify-center space-x-1.5"
+            className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold shadow transition-all flex items-center justify-center space-x-1.5 cursor-pointer"
           >
             <FileText className="w-3.5 h-3.5" />
             <span>Draft Council Resolution</span>

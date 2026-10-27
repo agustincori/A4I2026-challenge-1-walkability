@@ -193,6 +193,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           <div class="font-bold text-slate-900">${tract.neighborhood}</div>
           <div class="text-[10px] text-slate-500 font-mono">Tract GEOID: ${tract.geoId}</div>
           <div class="text-slate-700 mt-1">Thermal Offset: <b style="color:${color};">${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
+          <div class="text-slate-700">Integrated Risk: <b>${tract.integratedRiskScore !== undefined ? tract.integratedRiskScore.toFixed(1) + '/100' : 'N/A'}</b></div>
           <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore !== undefined ? tract.sviScore.toFixed(2) : 'N/A'}</b></div>
           <div class="text-slate-700">Poverty: <b>${tract.povertyRatePct}%</b> | No Car: <b>${tract.noVehicleRatePct}%</b></div>
           ${tract.seniorsLivingAlonePct !== undefined ? `<div class="text-slate-700">Seniors Alone: <b>${tract.seniorsLivingAlonePct}%</b> | Disability: <b>${tract.disabilityRatePct ?? 14}%</b></div>` : ''}
@@ -260,6 +261,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
             <div class="text-[10px] text-sky-600 font-bold uppercase mt-0.5">Priority Cooling Site Candidate</div>
             <div class="text-slate-700 text-[11px] mt-1">Facility Type: <b>${tract.coolingCenterType || 'Recreation Center'}</b></div>
             <div class="text-slate-700 text-[11px]">Walk Access Score: <b>${tract.walkScore}/100</b></div>
+            <div class="text-slate-700 text-[11px]">Integrated Risk: <b>${tract.integratedRiskScore !== undefined ? tract.integratedRiskScore.toFixed(1) + '/100' : 'N/A'}</b></div>
             <div class="text-rose-600 text-[11px]">Thermal Offset: <b>${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
             <div class="text-sky-700 text-[10px] italic mt-1 font-semibold">👉 Click site to inspect full dossier</div>
           </div>`,
@@ -369,6 +371,34 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     <div className="relative w-full h-[calc(100vh-8.5rem)] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col md:flex-row">
       {/* Top Search & Filter Bar */}
       <div className="absolute top-4 left-4 z-[400] w-72 sm:w-84 space-y-2">
+        {/* Direct Risk Mode Switcher */}
+        <div className="bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-1 flex items-center gap-1">
+          <button
+            type="button"
+            onClick={() => setActiveMetric('heat')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+              activeMetric === 'heat'
+                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+            }`}
+          >
+            <span>🌡️</span>
+            <span className="truncate">Predicted Heat Offset (°F)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMetric('integratedRisk')}
+            className={`flex-1 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[11px] transition-all cursor-pointer ${
+              activeMetric === 'integratedRisk'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950/60'
+                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+            }`}
+          >
+            <span>🛡️</span>
+            <span className="truncate">Multi-Criteria Integrated Risk (0-100)</span>
+          </button>
+        </div>
+
         {/* Landmark / Neighborhood Search */}
         <div className="relative bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-1.5">
           <div className="flex items-center px-2 py-1 space-x-2">
@@ -735,6 +765,73 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                 >
                   {selectedTract.predictedOffsetF > 0 ? `+${selectedTract.predictedOffsetF}°F` : `${selectedTract.predictedOffsetF}°F`}
                 </span>
+              </div>
+            </div>
+
+            {/* Multi-Criteria Integrated Risk Score Card (Interactive Layer Switcher) */}
+            <div
+              onClick={() => setActiveMetric('integratedRisk')}
+              className={`p-3 rounded-xl border transition-all cursor-pointer relative ${
+                activeMetric === 'integratedRisk'
+                  ? 'bg-indigo-950/40 border-indigo-500 ring-2 ring-indigo-500/50 shadow-lg shadow-indigo-950/50'
+                  : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex justify-between items-center text-xs">
+                <div className="flex items-center gap-1.5">
+                  <ShieldAlert className="w-4 h-4 text-indigo-400" />
+                  <span className="font-semibold text-slate-200">Integrated Risk Score</span>
+                  {activeMetric === 'integratedRisk' && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-indigo-500/30 text-indigo-300 border border-indigo-500/40">
+                      Active Map Layer
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openGlossary('multi-criteria-formula');
+                  }}
+                  className="text-slate-400 hover:text-white p-1 rounded"
+                  title="View Integrated Risk Formula in Glossary"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
+              </div>
+
+              <div className="flex justify-between items-baseline mt-2">
+                <div>
+                  <span className="text-[11px] text-slate-400">Integrated Index: </span>
+                  <span className="font-mono text-indigo-400 text-lg font-bold">
+                    {selectedTract.integratedRiskScore !== undefined ? selectedTract.integratedRiskScore.toFixed(1) : 'N/A'}
+                  </span>
+                  <span className="text-xs text-slate-400 font-mono"> / 100</span>
+                </div>
+                {selectedTract.integratedRiskScore !== undefined && (
+                  <span
+                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                      selectedTract.integratedRiskScore >= 80
+                        ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                        : selectedTract.integratedRiskScore >= 60
+                        ? 'bg-orange-500/20 text-orange-300 border border-orange-500/40'
+                        : selectedTract.integratedRiskScore >= 40
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                    }`}
+                  >
+                    {selectedTract.integratedRiskScore >= 80
+                      ? 'Critical'
+                      : selectedTract.integratedRiskScore >= 60
+                      ? 'High'
+                      : selectedTract.integratedRiskScore >= 40
+                      ? 'Moderate'
+                      : 'Low'}
+                  </span>
+                )}
+              </div>
+              <div className="text-[10px] text-slate-400 mt-1">
+                25% Heat · 25% SVI · 20% Density · 15% Facility · 15% Transit • Click to color map
               </div>
             </div>
 

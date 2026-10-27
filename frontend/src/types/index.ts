@@ -39,6 +39,33 @@ export interface CoolingCenterRanking {
   compositeScore: number;
   sitingJustification: string;
   walkAccessMinutes: number;
+  integratedRiskScore?: number;
+  sviScore?: number;
+  popDensity?: number;
+  distToFacilityMeters?: number;
+  distToTransitMeters?: number;
+  formulaBreakdown?: {
+    heat: number;
+    svi: number;
+    density: number;
+    facility: number;
+    transit: number;
+  };
+}
+
+export interface FormulaWeights {
+  heat: number;      // default 0.25 (25%)
+  svi: number;       // default 0.25 (25%)
+  density: number;   // default 0.20 (20%)
+  facility: number;  // default 0.15 (15%)
+  transit: number;   // default 0.15 (15%)
+}
+
+export interface RankingScenarioPreset {
+  id: string;
+  name: string;
+  description: string;
+  weights: FormulaWeights;
 }
 
 export interface StationHeatRecord {
@@ -199,4 +226,14 @@ export interface CouncilMemoData {
 
 export type CouncilMemo = CouncilMemoData;
 
-export type MetricLayer = 'heat' | 'canopy' | 'svi' | 'poverty' | 'noVehicle' | 'seniors';
+export type MetricLayerType =
+  | 'heat'
+  | 'integratedRisk'
+  | 'canopy'
+  | 'svi'
+  | 'poverty'
+  | 'noVehicle'
+  | 'seniors';
+
+export type MetricLayer = MetricLayerType;
+

@@ -1,7 +1,16 @@
 import { useState, useMemo, useCallback } from 'react';
 import { CensusTract } from '../types';
 
-export type MetricLayer = 'heat' | 'canopy' | 'svi' | 'poverty' | 'noVehicle' | 'seniors';
+export type MetricLayerType =
+  | 'heat'
+  | 'integratedRisk'
+  | 'canopy'
+  | 'svi'
+  | 'poverty'
+  | 'noVehicle'
+  | 'seniors';
+
+export type MetricLayer = MetricLayerType;
 
 export interface LegendItem {
   color: string;
@@ -19,7 +28,7 @@ export interface MetricValue {
 }
 
 export interface MetricOption {
-  id: MetricLayer;
+  id: MetricLayerType;
   label: string;
   unit: string;
   description: string;
@@ -28,13 +37,21 @@ export interface MetricOption {
 
 export type MetricConfig = MetricOption;
 
-export const METRIC_CONFIGS: Record<MetricLayer, MetricConfig> = {
+export const METRIC_CONFIGS: Record<MetricLayerType, MetricConfig> = {
   heat: {
     id: 'heat',
     label: 'Microclimate Offset',
     unit: '°F',
     description: 'Predicted ambient temperature differential above regional baseline',
     format: (raw) => (raw > 0 ? `+${raw.toFixed(1)}°F` : `${raw.toFixed(1)}°F`),
+  },
+  integratedRisk: {
+    id: 'integratedRisk',
+    label: 'Integrated Risk Score',
+    unit: '/100',
+    description:
+      'Multi-criteria composite: 25% Heat, 25% SVI, 20% Density, 15% Facility Distance, 15% Transit Distance',
+    format: (val) => val.toFixed(1),
   },
   canopy: {
     id: 'canopy',
@@ -88,6 +105,15 @@ export function getColor(metric: MetricLayer, tract: CensusTract): string {
       if (offset >= 1.0) return '#eab308'; // Amber medium (+1.0°F to +2.4°F)
       if (offset >= -0.5) return '#38bdf8'; // Sky baseline (-0.5°F to +0.9°F)
       return '#22c55e'; // Green cool (< -0.5°F)
+    }
+
+    case 'integratedRisk': {
+      const val = tract.integratedRiskScore ?? 0;
+      if (val >= 80) return '#e11d48'; // Critical Risk - Rose/Crimson
+      if (val >= 60) return '#ea580c'; // High Risk - Orange
+      if (val >= 40) return '#d97706'; // Moderate Risk - Amber
+      if (val >= 20) return '#0284c7'; // Low-Moderate Risk - Sky
+      return '#059669'; // Low Risk - Emerald
     }
 
     case 'canopy': {
@@ -160,6 +186,12 @@ export function getMetricValue(metric: MetricLayer, tract: CensusTract): MetricV
       return { raw, formatted };
     }
 
+    case 'integratedRisk': {
+      const raw = tract.integratedRiskScore ?? 0;
+      const formatted = raw.toFixed(1);
+      return { raw, formatted };
+    }
+
     case 'canopy': {
       const raw = tract.treeCanopyPct ?? 0;
       const formatted = `${raw.toFixed(1)}%`;
@@ -214,6 +246,18 @@ export function getLegendConfig(metric: MetricLayer): LegendConfig {
           { color: '#eab308', label: '+1.0°F to +2.4°F (Elevated)' },
           { color: '#38bdf8', label: '-0.5°F to +0.9°F (Baseline)' },
           { color: '#22c55e', label: '< -0.5°F (Cool / Vegetated)' },
+        ],
+      };
+
+    case 'integratedRisk':
+      return {
+        title: 'Integrated Risk Score',
+        items: [
+          { color: '#e11d48', label: '≥ 80 (Critical Risk)' },
+          { color: '#ea580c', label: '60 – 79 (High Risk)' },
+          { color: '#d97706', label: '40 – 59 (Moderate Risk)' },
+          { color: '#0284c7', label: '20 – 39 (Low-Moderate Risk)' },
+          { color: '#059669', label: '< 20 (Low Risk)' },
         ],
       };
 

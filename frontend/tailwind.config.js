@@ -23,6 +23,12 @@ export default {
           high: '#f97316',
           extreme: '#ef4444',
           critical: '#991b1b',
+        },
+        risk: {
+          low: '#10b981',
+          moderate: '#f59e0b',
+          high: '#f97316',
+          critical: '#f43f5e',
         }
       },
       keyframes: {

@@ -28,6 +28,116 @@
   background: rgba(100, 116, 139, 1);
 }
 
+@layer components {
+  /* Risk Level Badges */
+  .badge-risk-critical,
+  .risk-badge-critical {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-950/60 text-rose-300 border border-rose-500/40;
+  }
+  .badge-risk-high,
+  .risk-badge-high {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-orange-950/60 text-orange-300 border border-orange-500/40;
+  }
+  .badge-risk-moderate,
+  .risk-badge-moderate {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-500/40;
+  }
+  .badge-risk-low,
+  .risk-badge-low {
+    @apply inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-300 border border-emerald-500/40;
+  }
+
+  /* Risk Mode Toggle Switch Pills (heat vs integratedRisk) */
+  .risk-toggle-group {
+    @apply inline-flex p-1 rounded-xl bg-slate-900 border border-slate-800 gap-1 select-none shadow-inner;
+  }
+  .risk-toggle-pill {
+    @apply px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 cursor-pointer flex items-center gap-1.5 select-none;
+  }
+  .risk-toggle-pill-inactive {
+    @apply text-slate-400 hover:text-slate-200 hover:bg-slate-800/40;
+  }
+  .risk-toggle-pill-active-heat {
+    @apply bg-rose-950/60 text-rose-200 border border-rose-500/50 shadow-md shadow-rose-950/50;
+  }
+  .risk-toggle-pill-active-risk {
+    @apply bg-indigo-950/60 text-indigo-200 border border-indigo-500/50 shadow-md shadow-indigo-950/50;
+  }
+
+  /* Interactive Range Sliders: Custom styled track & thumb */
+  .custom-range-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    background: transparent;
+    cursor: pointer;
+    width: 100%;
+  }
+  .custom-range-slider::-webkit-slider-runnable-track {
+    height: 6px;
+    background: #1e293b;
+    border-radius: 9999px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+  }
+  .custom-range-slider::-moz-range-track {
+    height: 6px;
+    background: #1e293b;
+    border-radius: 9999px;
+    border: 1px solid rgba(51, 65, 85, 0.6);
+  }
+  .custom-range-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: #f8fafc;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    cursor: pointer;
+    margin-top: -5px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .custom-range-slider:hover::-webkit-slider-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(0, 0, 0, 0.7);
+  }
+  .custom-range-slider::-moz-range-thumb {
+    width: 16px;
+    height: 16px;
+    border-radius: 9999px;
+    background: #f8fafc;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.6);
+    border: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .custom-range-slider:hover::-moz-range-thumb {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 2px 8px rgba(0, 0, 0, 0.7);
+  }
+
+  /* Slider Thumb Glow Overrides by Accent Color */
+  .custom-range-slider.accent-rose-500:hover::-webkit-slider-thumb,
+  .slider-rose:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 12px rgba(244, 63, 94, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .custom-range-slider.accent-amber-500:hover::-webkit-slider-thumb,
+  .slider-amber:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .custom-range-slider.accent-indigo-500:hover::-webkit-slider-thumb,
+  .slider-indigo:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 12px rgba(99, 102, 241, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .custom-range-slider.accent-sky-500:hover::-webkit-slider-thumb,
+  .slider-sky:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 12px rgba(14, 165, 233, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+  .custom-range-slider.accent-emerald-500:hover::-webkit-slider-thumb,
+  .slider-emerald:hover::-webkit-slider-thumb {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.85), 0 2px 6px rgba(0, 0, 0, 0.6);
+  }
+}
+
 @layer utilities {
   /* Subtle dark mode scrollbars for modal and panel overflow containers */
   .modal-scroll-container {
