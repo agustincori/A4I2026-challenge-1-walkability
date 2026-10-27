@@ -79,9 +79,16 @@ adk web --port 8080 .
 
 ---
 
-## 4. Integration with Front-End Lane
+## 4. Live Cloud Run Deployment & Front-End Integration
 
-The ADK server exposes standard REST and streaming endpoints:
-- `POST /run`: Execute a query and receive assistant responses.
-- `GET /apps/agent/sessions`: Manage interactive conversation sessions.
-- Interactive Web UI: Available at the root path of the deployed service.
+### Live Endpoints
+- **Web UI:** [https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app)
+- **Health Check:** `GET /health` -> `{"status":"ok"}`
+- **List Agents:** `GET /list-apps` -> `["agent"]`
+- **Agent Run API:** `POST /run` (JSON body with user query)
+- **Streaming API:** `POST /run_sse` (Server-sent events for streaming UI)
+
+### Local Dev Alternative
+```bash
+adk web --port 8080 .
+```
