@@ -19,11 +19,20 @@ All competition submission deliverables, presentation decks, video walkthrough s
 
 ### 📊 Pitch Deck & Presentation Materials
 
-* **[2-Slide Executive Pitch Deck (Atlanta_Heat_Resilience_2_Slide_Deck.pptx)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx)**  
-  Official widescreen PowerPoint presentation designed for judging review:
-  * **Slide 1:** Executive Hook, Municipal Scenario, Top 5 Capabilities & Siting Placement Recommendation Table (Sweet Auburn, Peoplestown, Mechanicsville).
-  * **Slide 2:** Full-Stack Architecture Tour, Defended Decisions Audit, Honest Limitations & Multi-Clock Strategic Roadmap.
+* **[Official Team Pitch Deck (ATL-6_Atlanta_Heat_Resilience_Official_Deck.pptx)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/ATL-6_Atlanta_Heat_Resilience_Official_Deck.pptx)**  
+  Official widescreen PowerPoint presentation built directly on the **[ATL-6 Google Slides Hackathon Template](https://docs.google.com/presentation/d/13VJkZz-cx96Kr-NMMPFtYkJ9WUIlWUDkTUrlRBmauVw/edit)**:
+  * **Slide 1:** Official Competition Instructions & Checklist.
+  * **Slide 2:** Team ID (`ATL-6`) & Project Title Banner.
+  * **Slide 3:** Our Team Member Roster, Filming Availability & Project Sharing.
+  * **Slide 4:** Real-World Challenge, Airport Forecast Fallacy, Transit Deprivation & Municipal Persona (Dana).
+  * **Slide 5:** Our Agent — Gemini 2.5 Flash, 800m Isochrone Siting Table & 100% Equity Clearance Audit.
+  * **Slide 6:** Curated Data Ecosystem — NOAA Heat Watch, BQML Offset, CDC SVI & Model Explainability.
+  * **Slide 7:** Technical Blueprint — Decoupled Cloud Run Architecture, Tool Specs & 3-Clock Roadmap.
+  * *Embedded Speaker Notes:* Complete 3-minute timed demonstration script & judging criteria notes embedded on every slide.
   * *Direct download portal:* **[Download Deck (download_ppt.html)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/download_ppt.html)**
+
+* **[2-Slide Executive Pitch Deck (Atlanta_Heat_Resilience_2_Slide_Deck.pptx)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx)**  
+  Executive 2-slide condensed variant designed for high-density review. Also provided in legacy `.ppt` format.
 
 * **[Interactive Web Slides & PDF Export (pitch_deck_2_slides.html)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/pitch_deck_2_slides.html)**  
   Browser-based slide deck viewer requiring zero local software. Features keyboard navigation (`←`/`→`) and a print stylesheet allowing instant 1-click export to high-resolution vector PDF.
