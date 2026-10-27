@@ -56,6 +56,11 @@ To ensure zero downtime and robust demonstration resilience:
 
 ## 4. Local Development & Deployment
 
+### Standalone Interactive HTML Application (Zero-Dependency)
+For immediate evaluation, offline demos, and council meetings without requiring Node.js or build steps:
+- Open `index.html` or `atlanta_heat_resilience_dashboard.html` in any modern web browser.
+- Includes complete interactive cartography, animated dispatch routes, decisions needed triage board, active emergency heat alerts, live resource mover simulator, BigQuery historical trends, and Cloud Run ADK agent chatbot integration.
+
 ### Quick Start:
 ```bash
 # Enter frontend directory
