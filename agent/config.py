@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import os
+import re
 from dataclasses import dataclass, field
 
 
@@ -165,6 +166,30 @@ class AgentConfig:
     mcp_toolbox_url: str | None = field(
         default_factory=lambda: os.environ.get("MCP_TOOLBOX_URL")
     )
+    query_timeout_seconds: int = field(
+        default_factory=lambda: int(os.environ.get("BQ_QUERY_TIMEOUT_SECONDS", "60"))
+    )
+    maximum_bytes_billed: int = field(
+        default_factory=lambda: int(os.environ.get("BQ_MAXIMUM_BYTES_BILLED", "1000000000"))
+    )
+
+    def __post_init__(self) -> None:
+        identifiers = {
+            "BQ_DATASET": self.dataset_id,
+            "BQML_MODEL": self.bqml_model_name,
+            "PLANNING_BQML_MODEL": self.planning_bqml_model_name,
+        }
+        for name, value in identifiers.items():
+            if not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", value):
+                raise ValueError(f"{name} must be a simple BigQuery identifier.")
+        if self.project_id and not re.fullmatch(r"[A-Za-z0-9_-]+", self.project_id):
+            raise ValueError("Google Cloud project must be a simple project identifier.")
+        for name, value in (
+            ("BQ_QUERY_TIMEOUT_SECONDS", self.query_timeout_seconds),
+            ("BQ_MAXIMUM_BYTES_BILLED", self.maximum_bytes_billed),
+        ):
+            if type(value) is not int or value <= 0:
+                raise ValueError(f"{name} must be a positive integer.")
 
 
 def get_config() -> AgentConfig:

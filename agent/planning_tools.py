@@ -150,6 +150,36 @@ class HeatResilienceRuntime:
             self._city_meta = None
             self._resolved_model_fqn = None
 
+    def query_rows(
+        self, sql: str, job_config: bigquery.QueryJobConfig | None = None
+    ) -> list[Any]:
+        """Execute with shared cost/deadline limits and no application-level retries."""
+        job_config = job_config or bigquery.QueryJobConfig()
+        job_config.maximum_bytes_billed = self.config.maximum_bytes_billed
+        job_config.job_timeout_ms = self.config.query_timeout_seconds * 1000
+        job = None
+        try:
+            job = self.client.query(
+                sql, job_config=job_config, timeout=self.config.query_timeout_seconds
+            )
+            rows = list(job.result(timeout=self.config.query_timeout_seconds))
+            logger.info(
+                "BigQuery query completed job_id=%s bytes_billed=%s rows=%s",
+                job.job_id, job.total_bytes_billed, len(rows),
+            )
+            return rows
+        except TimeoutError:
+            logger.exception("BigQuery query exceeded its deadline")
+            if job is not None:
+                try:
+                    job.cancel()
+                except GoogleAPICallError:
+                    logger.exception("Failed to cancel timed-out BigQuery job")
+            raise
+        except GoogleAPICallError:
+            logger.exception("BigQuery query failed")
+            raise
+
     def get_city_metadata(self) -> CityCampaignMetadata:
         """Fetch and cache the bounding box and baseline temperature for the loaded city."""
         if self._city_meta is not None:
@@ -175,7 +205,7 @@ class HeatResilienceRuntime:
               AND latitude IS NOT NULL
               AND longitude IS NOT NULL
             """
-            rows = list(self.client.query(sql).result())
+            rows = self.query_rows(sql)
             if not rows or not rows[0]["total_observations"]:
                 raise RuntimeError(
                     f"Table `{self.dataset_fqn}.heat_observations` is empty or missing. "
@@ -230,7 +260,7 @@ class HeatResilienceRuntime:
             train_sql = build_bqml_training_sql(
                 self.dataset_fqn, self.config.planning_bqml_model_name
             )
-            self.client.query(train_sql).result()
+            self.query_rows(train_sql)
             self._resolved_model_fqn = preferred_fqn
             return preferred_fqn
 
@@ -483,13 +513,14 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
         - `nearby_observed_readings`: Summary of any empirical street traverse points within 500m.
     """
     if (
-        not isinstance(latitude, (int, float))
-        or not isinstance(longitude, (int, float))
+        type(latitude) not in (int, float)
+        or type(longitude) not in (int, float)
         or math.isnan(latitude)
         or math.isnan(longitude)
         or not (-90.0 <= float(latitude) <= 90.0)
         or not (-180.0 <= float(longitude) <= 180.0)
     ):
+        logger.warning("predict_and_explain_location rejected invalid coordinates")
         return {
             "status": "INVALID_INPUT",
             "error_code": "INVALID_COORDINATES",
@@ -664,7 +695,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
             ]
         )
 
-        rows = list(runtime.client.query(sql, job_config=job_config).result())
+        rows = runtime.query_rows(sql, job_config)
         if not rows:
             return {
                 "status": "NO_PREDICTION",
@@ -790,14 +821,34 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
         - `sites`: Ranked list of candidate sites with coordinates, `predicted_heat_offset_f`,
           formatted `ML.EXPLAIN_PREDICT` attributions, demographics, and recommended intervention.
     """
-    clamped_n = max(1, min(int(top_n or 5), 20))
-    raw_mode = (mode or "budget_cycle").strip().lower()
+    if type(top_n) is not int or not 1 <= top_n <= 20:
+        logger.warning("rank_cooling_sites rejected invalid top_n")
+        return {
+            "status": "INVALID_INPUT",
+            "error_code": "INVALID_LIMIT",
+            "message": "top_n must be an integer between 1 and 20.",
+        }
+    if not isinstance(mode, str):
+        logger.warning("rank_cooling_sites rejected invalid mode")
+        return {
+            "status": "INVALID_INPUT",
+            "error_code": "INVALID_MODE",
+            "message": "mode must be today, budget_cycle, or decade.",
+        }
+    raw_mode = mode.strip().lower()
     if raw_mode in {"today", "emergency", "dispatch", "hydration", "tomorrow"}:
         normalized_mode = "today"
     elif raw_mode in {"decade", "forestry", "trees", "canopy", "sustainability", "pavement"}:
         normalized_mode = "decade"
-    else:
+    elif raw_mode == "budget_cycle":
         normalized_mode = "budget_cycle"
+    else:
+        logger.warning("rank_cooling_sites rejected unsupported mode")
+        return {
+            "status": "INVALID_INPUT",
+            "error_code": "INVALID_MODE",
+            "message": "mode must be today, budget_cycle, or decade (documented aliases are accepted).",
+        }
 
     runtime = get_runtime()
 
@@ -927,11 +978,11 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
                 bigquery.ScalarQueryParameter("max_lon", "FLOAT64", city_meta.max_lon + pad),
                 bigquery.ScalarQueryParameter("center_lat", "FLOAT64", city_meta.center_lat),
                 bigquery.ScalarQueryParameter("center_lon", "FLOAT64", city_meta.center_lon),
-                bigquery.ScalarQueryParameter("top_n", "INT64", clamped_n),
+                bigquery.ScalarQueryParameter("top_n", "INT64", top_n),
             ]
         )
 
-        rows = list(runtime.client.query(sql, job_config=job_config).result())
+        rows = runtime.query_rows(sql, job_config)
         sites: list[dict[str, Any]] = []
         tract_ids: list[str] = []
 
@@ -1044,17 +1095,32 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
         - `equity_verdict`: Classification and transparent narrative explaining whether the
           recommendations landed in high-need neighborhoods or missed them.
     """
-    if not tract_ids or not isinstance(tract_ids, list):
+    if not tract_ids or not isinstance(tract_ids, list) or len(tract_ids) > 100:
+        logger.warning("audit_recommendations_equity rejected invalid tract list")
         return {
             "status": "INVALID_INPUT",
             "error_code": "EMPTY_TRACT_LIST",
             "message": (
-                "Provide a non-empty list of Census tract `geo_id` strings to audit "
+                "Provide between 1 and 100 Census tract `geo_id` strings to audit "
                 "(e.g., from `rank_cooling_sites`)."
             ),
         }
 
-    # Normalize tract IDs to 11-character zero-padded strings (handles AL/AK/AZ/AR/CA/CO/CT leading 0s)
+    if any(
+        not isinstance(tid, str)
+        or not tid.strip().isascii()
+        or not tid.strip().isdigit()
+        or not 1 <= len(tid.strip()) <= 11
+        for tid in tract_ids
+    ):
+        logger.warning("audit_recommendations_equity rejected invalid GEOID")
+        return {
+            "status": "INVALID_INPUT",
+            "error_code": "INVALID_TRACT_ID",
+            "message": "Tract IDs must contain 1 to 11 ASCII digits; leading zeros may be omitted.",
+        }
+
+    # Preserve the existing leading-zero normalization for Census GEOIDs.
     normalized_ids = list(
         dict.fromkeys(str(tid).strip().zfill(11) for tid in tract_ids if str(tid).strip())
     )
@@ -1112,7 +1178,7 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
             ]
         )
 
-        rows = list(runtime.client.query(sql, job_config=job_config).result())
+        rows = runtime.query_rows(sql, job_config)
         if not rows:
             return {
                 "status": "ERROR",
@@ -1271,10 +1337,11 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
         - `yearly_breakdown`: Year-by-year table of hot days and summer peak temperatures.
     """
     if (
-        not isinstance(threshold_f, (int, float))
+        type(threshold_f) not in (int, float)
         or math.isnan(threshold_f)
         or not (40.0 <= float(threshold_f) <= 135.0)
     ):
+        logger.warning("get_station_heat_frequency rejected invalid threshold")
         return {
             "status": "INVALID_INPUT",
             "error_code": "INVALID_THRESHOLD",
@@ -1342,7 +1409,7 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
             ]
         )
 
-        rows = list(runtime.client.query(sql, job_config=job_config).result())
+        rows = runtime.query_rows(sql, job_config)
         if not rows:
             return {
                 "status": "ERROR",

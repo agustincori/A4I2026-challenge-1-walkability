@@ -83,6 +83,8 @@ Both toolsets share a lazily created BigQuery client configured by
 | `BBOX_PAD_DEGREES` | `0.03` | Planning prediction bounds padding |
 | `EXPLAIN_TOP_K` | `4` | Planning attribution count |
 | `MCP_TOOLBOX_URL` | unset | Optional MCP Toolbox endpoint |
+| `BQ_QUERY_TIMEOUT_SECONDS` | `60` | Submission timeout, result-wait timeout, and server job timeout |
+| `BQ_MAXIMUM_BYTES_BILLED` | `1000000000` | Per-query billing ceiling (1 GB decimal) |
 
 **Keep the two model names distinct.** Their labels and input features differ.
 Planning tools only resolve their configured model; they never discover an
@@ -93,6 +95,53 @@ Do not treat outputs from the two model families as interchangeable.
 
 Setting `MCP_TOOLBOX_URL` adds Toolbox tools to the agent. Connection or tool
 loading errors propagate rather than silently disabling a configured integration.
+
+### Tool implementation and data-lane contract
+
+The serving reference is the `data-lane` branch at `831a7f7`. The integration
+boundary is BigQuery, not Python imports from the training pipeline:
+
+- The data plane owns training, spatial evaluation, candidate approval, promotion,
+  and rollback. Atlanta tools read the configured active `BQML_MODEL`; they never
+  train, discover, or promote a candidate. For production, also set
+  `AUTO_BOOTSTRAP_BQML=false` to prevent the separate planning tools from training.
+- [`sql/clean_tracts.sql`](./sql/clean_tracts.sql) mirrors that branch's
+  `data_plane/sql/clean_tracts.sql`. Prediction and Atlanta ranking reuse the same
+  sentinel handling, fixed imputations, valid-coordinate filtering, and
+  reference-year rule. Inference supplies the current UTC time as `reference_time`.
+  Update this serving copy and its contract tests when the training contract changes.
+- The Atlanta model consumes exactly eight features: latitude, longitude, income,
+  poverty rate, no-vehicle rate, median age, housing units, and structure vintage.
+  Canopy/SVI analysis tables are not additional prediction inputs.
+- [`HeatResilienceRuntime.query_rows`](./planning_tools.py) is the execution boundary
+  for both toolsets, including metadata and optional planning bootstrap queries.
+  It applies cost and deadline limits, logs job ID/billed bytes/row count, and
+  attempts cancellation after a result timeout. Cancellation is best-effort;
+  submission and result waits have separate deadlines, not one end-to-end deadline.
+  Query failures are logged and propagated; existing planning tools translate
+  failures into their error responses. No application-level retry loop is added.
+- Values use typed query parameters. Configured resource identifiers are validated
+  separately, since SQL identifiers cannot be query parameters.
+- Invalid Atlanta requests return `status`, `error_code`, and the existing `error`
+  field. Successful prediction responses add model/contract provenance and scientific
+  limitations without removing existing fields. The model name identifies the active
+  resource, not an immutable model version.
+
+Intentional validation changes: Atlanta coordinates must be finite and inside the
+documented metro rectangle (latitude 33.55-34.02, longitude -84.60 to -84.15).
+This rectangle is a coarse scope guard, not a municipal polygon or proof of model
+support at every point. Rankings accept integer limits 1-20; unknown criteria/modes
+are rejected rather than ignored. Planning mode aliases remain accepted. Equity
+audits accept at most 100 IDs; Atlanta audits deduplicate IDs and reject incomplete
+matches instead of reporting a complete audit for a partial selection.
+
+Atlanta `pure_heat` rankings now order by heat offset; the default keeps the
+existing composite score. Station history includes observed years with zero
+threshold exceedances and computes summer averages over all June-August readings,
+not just hot days. Years with no observations are not synthesized.
+The legacy `predicted_surface_temp_f` field is retained for compatibility, but is
+only baseline-plus-offset arithmetic, not a surface-temperature measurement.
+The default 102 F baseline is a scenario assumption, not a fetched forecast.
 
 ---
 

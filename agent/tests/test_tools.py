@@ -26,10 +26,13 @@ class FakeRow(dict):
 class FakeQueryJob:
     """Emulates a BigQuery QueryJob returning an iterable of `FakeRow` objects."""
 
+    job_id = "offline-test-job"
+    total_bytes_billed = 0
+
     def __init__(self, rows: list[dict[str, Any]]):
         self._rows = [FakeRow(r) for r in rows]
 
-    def result(self) -> list[FakeRow]:
+    def result(self, timeout: float | None = None) -> list[FakeRow]:
         return self._rows
 
 
