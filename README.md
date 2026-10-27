@@ -10,7 +10,8 @@
 > - 🖥️ **Interactive Web Slides / PDF Export:** [docs/pitch_deck_2_slides.html](docs/pitch_deck_2_slides.html)
 > - 📜 **3-Minute Timed Video Walkthrough Script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
 > - 📋 **2-Slide Deck Markdown Reference:** [docs/PITCH_DECK_2_SLIDES.md](docs/PITCH_DECK_2_SLIDES.md)
-> - 📑 **System Architecture & Submission Overview:** [docs/SUBMISSION_OVERVIEW.md](docs/SUBMISSION_OVERVIEW.md)
+> - 📑 **System Architecture & Technical Overview:** [docs/SUBMISSION_OVERVIEW.md](docs/SUBMISSION_OVERVIEW.md)
+> - 🏆 **Official Hackathon Submission Document:** [docs/SUBMISSION.md](docs/SUBMISSION.md)
 > - ⚠️ **Draft Status Notice:** This presentation structure and talk track is shared for table and team review. Data points and siting figures will be refreshed once final data pipeline runs conclude.
 
 ### Team implementation layout
