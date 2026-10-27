@@ -19,6 +19,7 @@ The [data plane](data_plane/README.md) owns loading, notebooks, SQL, model train
 evaluation and experiment history. The [agent](agent/) owns the online ADK tools and
 conversation runtime. Run data workflows as python3 -m data_plane.pipelines.<workflow>
 from the repository root; the data-plane guide lists the commands and integration contract.
+For a concise end-to-end map, see the [pipeline overview](docs/PIPELINE_OVERVIEW.md).
 
 ---
 
