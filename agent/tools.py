@@ -65,7 +65,7 @@ def _canopy_sql() -> str:
 
 
 def _error(code: str, message: str) -> Dict[str, Any]:
-    logger.warning("Atlanta tool rejected request: %s: %s", code, message)
+    logger.warning("Atlanta tool rejected request: %s", code)
     return {"status": "ERROR", "error_code": code, "error": message}
 
 

@@ -12,6 +12,7 @@ from typing import Any, Callable, Literal, ParamSpec, TypedDict
 
 from google.api_core import exceptions as gexc
 from google.auth.exceptions import DefaultCredentialsError, RefreshError
+from .telemetry import span
 
 logger = logging.getLogger(__name__)
 P = ParamSpec("P")
@@ -137,7 +138,7 @@ def tool_boundary(function: Callable[P, dict[str, Any]]) -> Callable[P, dict[str
     signature = inspect.signature(function)
 
     @wraps(function)
-    def wrapped(*args: P.args, **kwargs: P.kwargs) -> dict[str, Any]:
+    def execute(*args: P.args, **kwargs: P.kwargs) -> dict[str, Any]:
         try:
             try:
                 signature.bind(*args, **kwargs)
@@ -163,7 +164,13 @@ def tool_boundary(function: Callable[P, dict[str, Any]]) -> Callable[P, dict[str
             logger.warning("Tool %s has no usable evidence: %s", function.__name__, exc.code)
             return dict(exception_result(exc))
         except Exception as exc:
-            # Last-resort public boundary: log the traceback, never synthesize evidence.
-            logger.exception("Tool %s raised an exception", function.__name__)
+            logger.error("Tool %s raised %s", function.__name__, type(exc).__name__)
             return dict(exception_result(exc))
+
+    @wraps(function)
+    def wrapped(*args: P.args, **kwargs: P.kwargs) -> dict[str, Any]:
+        with span("tool", tool_name=function.__name__) as observation:
+            result = execute(*args, **kwargs)
+            observation.result(result)
+            return result
     return wrapped

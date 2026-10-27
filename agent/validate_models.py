@@ -49,7 +49,9 @@ def check_family(
             )
         return report
     except Exception as exc:
-        logging.getLogger(__name__).exception("Live validation failed for family %s", family)
+        logging.getLogger(__name__).error(
+            "Live validation failed for family %s (%s)", family, type(exc).__name__
+        )
         return dict(exception_result(exc))
 
 

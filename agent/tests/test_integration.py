@@ -31,7 +31,7 @@ class TestMergedAgent(unittest.TestCase):
         tools.set_runtime(self.runtime)
 
     def test_build_registers_only_atlanta_tools_and_preserves_identity(self) -> None:
-        agent = build_agent()
+        agent = build_agent(self.config)
 
         self.assertEqual(agent.name, "atlanta_heat_resilience_advisor")
         self.assertEqual(agent.model, self.config.gemini_model)

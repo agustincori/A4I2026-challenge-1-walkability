@@ -5,17 +5,22 @@ Built with Google Agent Development Kit (ADK), Gemini, and BigQuery ML.
 
 from typing import Any
 import inspect
-import logging
 from functools import wraps
+from collections.abc import AsyncGenerator
+from contextlib import aclosing
 
 from google.adk.agents.llm_agent import Agent
+from google.adk.agents.invocation_context import InvocationContext
+from google.adk.events import Event
+from google.adk.tools import ToolContext
+from pydantic import PrivateAttr
 from .config import AgentConfig
 from .prompts import SYSTEM_INSTRUCTION as PLANNING_SYSTEM_INSTRUCTION
 from .planning_tools import using_runtime
+from .telemetry import correlation, conversation_id, span
 from .tools import (
     CUSTOM_HEAT_TOOLS,
     HeatResilienceRuntime,
-    get_runtime,
     predict_heat_offset_and_explain,
     compare_locations_and_explain,
     compare_census_tracts,
@@ -27,7 +32,6 @@ from .tools import (
     generate_council_proposal,
 )
 
-logger = logging.getLogger(__name__)
 SYSTEM_INSTRUCTION = """
 You are the Senior Climate Resilience Advisor for the City of Atlanta's Office of Sustainability and Emergency Management.
 Your mandate is to assist municipal decision-makers (city planners, emergency directors, city council members) in allocating heat mitigation resources, siting cooling centers, and evaluating climate equity during extreme heat emergencies.
@@ -77,6 +81,45 @@ Your mandate is to assist municipal decision-makers (city planners, emergency di
 Maintain a professional, authoritative, and actionable tone suitable for presentation to the Mayor and City Council.
 """
 
+class ObservableAgent(Agent):
+    """Keep invocation state local and record lifecycle even on failure or cancellation."""
+
+    _runtime: HeatResilienceRuntime = PrivateAttr()
+
+    async def run_async(self, parent_context: InvocationContext) -> AsyncGenerator[Event, None]:
+        session = parent_context.session
+        with using_runtime(self._runtime), correlation(
+            runtime_id=self._runtime.runtime_id,
+            model_family=self._runtime.config.model_family,
+            conversation_id=conversation_id(session.app_name, session.user_id, session.id),
+            invocation_id=parent_context.invocation_id,
+        ), span("invocation") as observation:
+            observation.fields.update(
+                prompt_tokens=None, output_tokens=None, total_tokens=None,
+                cached_tokens=None, thought_tokens=None,
+                usage_status="UNAVAILABLE", cost_usd=None, cost_status="USAGE_ONLY",
+            )
+            async with aclosing(super().run_async(parent_context)) as events:
+                async for event in events:
+                    if event.error_code:
+                        observation.fields.update(status="ERROR", error_code="MODEL_ERROR")
+                    usage = event.usage_metadata
+                    if usage is not None and not event.partial:
+                        observation.fields["usage_status"] = "REPORTED"
+                        for field, value in (
+                            ("prompt_tokens", usage.prompt_token_count),
+                            ("output_tokens", usage.candidates_token_count),
+                            ("total_tokens", usage.total_token_count),
+                            ("cached_tokens", usage.cached_content_token_count),
+                            ("thought_tokens", usage.thoughts_token_count),
+                        ):
+                            if value is not None:
+                                observation.fields[field] = (
+                                    observation.fields[field] or 0
+                                ) + value
+                    yield event
+
+
 def _configured_tool(function: Any, runtime: HeatResilienceRuntime) -> Any:
     """Keep candidate selection out of the LLM schema while retaining the Python API."""
     signature = inspect.signature(function)
@@ -85,16 +128,37 @@ def _configured_tool(function: Any, runtime: HeatResilienceRuntime) -> Any:
         if "model_name" in signature.parameters else {}
     )
     @wraps(function)
-    def invoke(*args: Any, **kwargs: Any) -> Any:
-        if "model_name" in kwargs:
-            from .contracts import failure
-            logger.warning("Agent tool %s rejected a model override", function.__name__)
-            return failure("MODEL_OVERRIDE_DISABLED", "The agent's model is fixed by configuration.", "INVALID_INPUT")
-        with using_runtime(runtime):
+    def invoke(*args: Any, tool_context: ToolContext | None = None, **kwargs: Any) -> Any:
+        context_fields: dict[str, Any] = {}
+        if tool_context is not None:
+            session = tool_context.session
+            context_fields = {
+                "conversation_id": conversation_id(session.app_name, session.user_id, session.id),
+                "invocation_id": tool_context.invocation_id,
+                "tool_call_id": tool_context.function_call_id,
+            }
+        with using_runtime(runtime), correlation(
+            runtime_id=runtime.runtime_id, model_family=runtime.config.model_family,
+            **context_fields,
+        ):
+            if "model_name" in kwargs:
+                from .contracts import failure
+                with span("tool", tool_name=function.__name__) as observation:
+                    result = failure(
+                        "MODEL_OVERRIDE_DISABLED", "The agent's model is fixed by configuration.", "INVALID_INPUT"
+                    )
+                    observation.result(dict(result))
+                    return result
             return function(*args, **kwargs, **model_kwargs)
 
     invoke.__signature__ = signature.replace(  # type: ignore[attr-defined]
-        parameters=[p for name, p in signature.parameters.items() if name != "model_name"]
+        parameters=[
+            *[p for name, p in signature.parameters.items() if name != "model_name"],
+            inspect.Parameter(
+                "tool_context", inspect.Parameter.KEYWORD_ONLY,
+                default=None, annotation=ToolContext,
+            ),
+        ]
     )
     invoke.__doc__ = "\n".join(
         line for line in (function.__doc__ or "").splitlines()
@@ -105,7 +169,7 @@ def _configured_tool(function: Any, runtime: HeatResilienceRuntime) -> Any:
 
 def build_agent(config: AgentConfig | None = None) -> Agent:
     """Expose exactly one configured model family, with no fallback."""
-    runtime = HeatResilienceRuntime(config=config) if config is not None else get_runtime()
+    runtime = HeatResilienceRuntime(config=config)
     active_config = runtime.config
     atlanta_tools = [
         predict_heat_offset_and_explain,
@@ -142,13 +206,15 @@ def build_agent(config: AgentConfig | None = None) -> Agent:
 
         toolbox = ToolboxSyncClient(active_config.mcp_toolbox_url)
         tools.extend(toolbox.load_toolset())
-    return Agent(
+    agent = ObservableAgent(
         model=active_config.gemini_model,
         name="atlanta_heat_resilience_advisor",
         description="A municipal heat resilience planning assistant for the City of Atlanta.",
         instruction=instruction,
         tools=tools,
     )
+    agent._runtime = runtime
+    return agent
 
 
 root_agent = build_agent()

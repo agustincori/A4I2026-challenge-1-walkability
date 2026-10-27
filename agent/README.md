@@ -78,12 +78,20 @@ exposes. The two sets are never registered together. A missing or incompatible
 model fails explicitly; it does not select the other family.
 Each registered tool is bound to its owning runtime via a scoped context, so
 building another agent does not change nested calls' dataset/model configuration.
-The direct Python `get_runtime`/`set_runtime` compatibility hooks remain available.
+Every `build_agent()` call, including calls without configuration, creates a new
+runtime with its own immutable configuration, lazy client, lock, and metadata
+caches. It never adopts a runtime selected by another caller.
+The direct Python `get_runtime`/`set_runtime` compatibility hooks are context-local,
+not process-global. Async child tasks inherit their parent's context until they
+select another runtime; registered agent tools always bind their owning runtime.
+Use `using_runtime(runtime)` for temporary direct calls; nesting, exceptions, and
+cancellation restore the previous context.
 
 ### Configuration and Model Compatibility
 
-Both toolsets share a lazily created BigQuery client configured by
-[`config.py`](./config.py). Importing the agent does not query BigQuery.
+Tools within one agent share its lazily created BigQuery client configured by
+[`config.py`](./config.py). Different agents do not share that runtime or its
+caches. Importing the agent does not query BigQuery.
 
 | Environment variable | Default | Purpose |
 |---|---|---|
@@ -148,8 +156,9 @@ boundary is BigQuery, not Python imports from the training pipeline:
   existing payload fields. Errors include `error_code`, `category`, `error`,
   `message`, and `retryable`; categories distinguish `INVALID_INPUT`,
   `OUT_OF_BOUNDS`, `NO_DATA`, `PERMISSION`, `TIMEOUT`, `QUERY`, `CONTRACT`,
-  `UNAVAILABLE`, and `INTERNAL`. Internal/cloud exception details remain in server
-  logs, not the public message. Composite tools preserve the upstream error category.
+  `UNAVAILABLE`, and `INTERNAL`. Logs retain error codes and exception class names,
+  not provider messages/tracebacks that can contain SQL, parameters, or credentials.
+  Composite tools preserve the upstream error category.
 - Both prediction families validate fresh BigQuery model metadata before inference:
   the exact feature set, a numeric family-specific label, numeric feature types,
   and linear-regression model kind. BigQuery `StandardSqlField` metadata is used,
@@ -166,6 +175,62 @@ boundary is BigQuery, not Python imports from the training pipeline:
   not imputed. Regional trends require at least two adequately observed years;
   one year returns an explicit `INSUFFICIENT_HISTORY` direction and null trend
   values. No adequately observed years returns an error.
+
+### Correlated execution telemetry
+
+[`telemetry.py`](./telemetry.py) emits one-line JSON to stderr, captured as
+structured logs by Cloud Run without a new logging dependency or root-logger
+configuration. Telemetry is enabled at INFO independently of ADK's log level.
+Text/API conversations through the built agent produce:
+
+| Events | Safe fields |
+|---|---|
+| `invocation.started` / `invocation.finished` | Conversation hash, ADK invocation ID, runtime ID, model family, duration, execution status, reported LLM token usage |
+| `tool.started` / `tool.finished` | Tool name, ADK function-call ID, span/parent-span IDs, duration, tool status, error category/code |
+| `bigquery.started` / `bigquery.submitted` / `bigquery.finished` | Same correlation, job ID, execution project/location, duration, row count, billed/processed bytes, slot-ms, cache hit, outcome |
+
+`conversation_id` is a deterministic SHA-256 pseudonym of application, user, and
+session IDs; raw user/session IDs are not logged. The invocation ID separates
+turns in that conversation. Local span IDs distinguish parallel tools and nested
+composite-tool calls. BigQuery job labels `agent_runtime`, `agent_span`, and
+`agent_invocation` (hashed invocation ID) support joining job metadata to logs.
+Existing non-agent job labels are preserved.
+
+Invocation `OK` means execution completed, **not** that every tool found evidence.
+Inspect each tool's status/category: a query can execute successfully while its
+tool returns `NO_DATA`, and the agent can then explain the limitation successfully.
+Failures and cancelled/closed invocation streams emit terminal events and restore
+scoped context. Native `run_live` audio/video is not instrumented by this
+text/API invocation wrapper.
+
+Cost fields are **usage, not an invoice**: BigQuery reports billed bytes and
+slot-ms, while invocation summaries aggregate provider-reported prompt, output,
+total, cached, and thinking tokens across non-partial model events.
+`cost_usd` is null and `cost_status` is `USAGE_ONLY`; reservation pricing, BQML
+pricing, model pricing, and billing adjustments are not guessed. Unknown
+statistics remain null, including token counts when no usage was reported.
+Failed or cancelled jobs may expose only partial statistics; use billing export
+for monetary reconciliation and authoritative final cost.
+
+No prompts, responses, tool arguments, coordinates, tract lists, SQL, query
+parameters, credentials, or raw exception messages are emitted by these events.
+Direct Python tools have spans but no fabricated conversation identity.
+Optional remote Toolbox tools do not pass through the local tool/BigQuery
+instrumentation; their backend requires separate tracing. Third-party ADK/SDK
+logging is separate; avoid debug/payload logging in production.
+
+Example Cloud Logging filter (substitute IDs from a terminal event):
+
+```text
+resource.type="cloud_run_revision"
+resource.labels.service_name="atlanta-heat-advisor"
+jsonPayload.invocation_id="INVOCATION_ID"
+```
+
+Filter `jsonPayload.conversation_id` for multiple turns, or
+`jsonPayload.job_id` to locate a particular BigQuery job. These filters become
+available only after deploying this version; health/readiness alone does not
+verify BigQuery or Vertex permissions.
 
 Intentional validation changes: Atlanta coordinates must be finite and inside the
 documented metro rectangle (latitude 33.55-34.02, longitude -84.60 to -84.15).

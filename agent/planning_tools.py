@@ -20,6 +20,7 @@ from __future__ import annotations
 import logging
 import math
 import threading
+import uuid
 from contextlib import contextmanager
 from contextvars import ContextVar
 from collections.abc import Iterator
@@ -78,6 +79,7 @@ from .contracts import (
     Family, ToolFailure, exception_result, explained_features, required_number, tool_boundary,
     validate_model_metadata,
 )
+from .telemetry import span, emit, job_labels
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +116,7 @@ class HeatResilienceRuntime:
 
     def __init__(self, config: AgentConfig | None = None, client: bigquery.Client | None = None):
         self.config = config or get_config()
+        self.runtime_id = uuid.uuid4().hex
         self._client = client
         self._project_id: str | None = self.config.project_id
         self._city_meta: CityCampaignMetadata | None = None
@@ -165,28 +168,57 @@ class HeatResilienceRuntime:
         job_config.maximum_bytes_billed = self.config.maximum_bytes_billed
         job_config.job_timeout_ms = self.config.query_timeout_seconds * 1000
         job = None
-        try:
-            job = self.client.query(
-                sql, job_config=job_config, timeout=self.config.query_timeout_seconds
+        with span(
+            "bigquery", runtime_id=self.runtime_id, model_family=self.config.model_family,
+            project_id=self.project_id, location=self.config.location,
+        ) as observation:
+            job_config.labels = {
+                **{
+                    key: value for key, value in (job_config.labels or {}).items()
+                    if key not in {"agent_runtime", "agent_span", "agent_invocation"}
+                },
+                **job_labels(),
+            }
+            observation.fields.update(
+                job_id=None, bytes_billed=None, bytes_processed=None, slot_ms=None,
+                cache_hit=None, cost_usd=None, cost_status="USAGE_ONLY",
             )
-            rows = list(job.result(timeout=self.config.query_timeout_seconds))
-            logger.info(
-                "BigQuery query completed job_id=%s bytes_billed=%s rows=%s",
-                job.job_id, job.total_bytes_billed, len(rows),
-            )
-            return rows
-        except TimeoutError:
-            logger.exception("BigQuery query exceeded its deadline")
-            if job is not None:
-                try:
-                    job.cancel()
-                except GoogleAPICallError:
-                    logger.exception("Failed to cancel timed-out BigQuery job")
-            raise
-
-        except GoogleAPICallError:
-            logger.exception("BigQuery query failed")
-            raise
+            try:
+                job = self.client.query(
+                    sql, job_config=job_config, timeout=self.config.query_timeout_seconds
+                )
+                job_id = job.job_id if isinstance(job.job_id, str) else None
+                observation.fields["job_id"] = job_id
+                emit("bigquery.submitted", job_id=job_id)
+                rows = list(job.result(timeout=self.config.query_timeout_seconds))
+                observation.fields["row_count"] = len(rows)
+                return rows
+            except TimeoutError as exc:
+                observation.result(exception_result(exc))
+                if job is not None:
+                    try:
+                        cancelled = job.cancel()
+                        observation.fields["cancel_requested"] = (
+                            cancelled if type(cancelled) is bool else None
+                        )
+                    except GoogleAPICallError as cancel_error:
+                        emit("bigquery.cancel_failed", status="ERROR", exception_type=type(cancel_error).__name__)
+                raise
+            except Exception as exc:
+                observation.result(exception_result(exc))
+                raise
+            finally:
+                if job is not None:
+                    for field, attribute in (
+                        ("bytes_billed", "total_bytes_billed"),
+                        ("bytes_processed", "total_bytes_processed"),
+                        ("slot_ms", "slot_millis"),
+                        ("cache_hit", "cache_hit"),
+                    ):
+                        value = getattr(job, attribute, None)
+                        observation.fields[field] = (
+                            value if type(value) is (bool if field == "cache_hit" else int) else None
+                        )
 
     def validate_model(self, family: Family, model_name: str | None = None) -> dict[str, Any]:
         """Check fresh resource metadata so a promoted incompatible model fails closed."""
@@ -288,17 +320,18 @@ class HeatResilienceRuntime:
             return preferred_fqn
 
 
-# Default module-level runtime singleton
-_RUNTIME = HeatResilienceRuntime()
 _ACTIVE_RUNTIME: ContextVar[HeatResilienceRuntime | None] = ContextVar(
     "heat_resilience_runtime", default=None
 )
 
 
 def get_runtime() -> HeatResilienceRuntime:
-    """Return the active HeatResilienceRuntime singleton."""
+    """Return the scoped runtime, lazily creating one for direct Python callers."""
     active = _ACTIVE_RUNTIME.get()
-    return active if active is not None else _RUNTIME
+    if active is None:
+        active = HeatResilienceRuntime()
+        _ACTIVE_RUNTIME.set(active)
+    return active
 
 
 @contextmanager
@@ -312,9 +345,8 @@ def using_runtime(runtime: HeatResilienceRuntime) -> Iterator[None]:
 
 
 def set_runtime(runtime: HeatResilienceRuntime) -> None:
-    """Override the module-level runtime (used in unit and integration tests)."""
-    global _RUNTIME
-    _RUNTIME = runtime
+    """Select a runtime only in the current context (legacy direct Python API)."""
+    _ACTIVE_RUNTIME.set(runtime)
 
 
 def build_bqml_training_sql(dataset_fqn: str, model_name: str = "heat_planning_model") -> str:
@@ -559,7 +591,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
     try:
         city_meta = runtime.get_city_metadata()
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Failed to load city campaign metadata")
+        logger.error("Failed to load city campaign metadata (%s)", type(exc).__name__)
         return dict(exception_result(exc))
 
     pad = runtime.config.bbox_pad_degrees
@@ -800,7 +832,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
             },
         }
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Error in predict_and_explain_location(%s, %s)", lat, lon)
+        logger.error("Error in predict_and_explain_location (%s)", type(exc).__name__)
         return dict(exception_result(exc))
 
 
@@ -1084,7 +1116,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
             ),
         }
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Error in rank_cooling_sites(top_n=%s, mode=%s)", top_n, mode)
+        logger.error("Error in rank_cooling_sites (%s)", type(exc).__name__)
         return dict(exception_result(exc))
 
 
@@ -1347,7 +1379,7 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
             },
         }
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Error in audit_recommendations_equity(%s)", tract_ids)
+        logger.error("Error in audit_recommendations_equity (%s)", type(exc).__name__)
         return dict(exception_result(exc))
 
 
@@ -1586,7 +1618,7 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
             "yearly_breakdown": yearly_breakdown,
         }
     except Exception as exc:  # noqa: BLE001
-        logger.exception("Error in get_station_heat_frequency(threshold_f=%s)", threshold_f)
+        logger.error("Error in get_station_heat_frequency (%s)", type(exc).__name__)
         return dict(exception_result(exc))
 
 

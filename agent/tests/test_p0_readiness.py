@@ -94,10 +94,7 @@ class TestP0Readiness(unittest.TestCase):
     def test_atlanta_and_planning_have_disjoint_adk_tool_schemas(self) -> None:
         sets = {}
         for family, count in (("atlanta", 9), ("planning", 4)):
-            tools.set_runtime(tools.HeatResilienceRuntime(
-                replace(self.config, model_family=family), self.client
-            ))
-            agent = build_agent()
+            agent = build_agent(replace(self.config, model_family=family))
             sets[family] = {tool.__name__ for tool in agent.tools}
             self.assertEqual(len(agent.tools), count)
             self.assertIn(f"ACTIVE MODEL FAMILY: {family}", agent.instruction)
@@ -108,26 +105,28 @@ class TestP0Readiness(unittest.TestCase):
                 else:
                     properties = declaration.parameters.properties or {}
                 self.assertNotIn("model_name", properties)
+                self.assertNotIn("tool_context", properties)
                 self.assertNotIn("model_name", inspect.signature(tool).parameters)
         self.assertFalse(sets["atlanta"] & sets["planning"])
         self.client.query.assert_not_called()
         self.client.get_model.assert_not_called()
 
     def test_llm_cannot_override_the_configured_model(self) -> None:
-        tool = next(t for t in build_agent().tools if t.__name__ == "rank_cooling_center_sites")
+        tool = next(t for t in build_agent(self.config).tools if t.__name__ == "rank_cooling_center_sites")
         result = tool(model_name="heat_planning_model")
         self.assertEqual(result["error_code"], "MODEL_OVERRIDE_DISABLED")
         self.client.query.assert_not_called()
 
     def test_existing_agents_keep_their_runtime_after_another_agent_is_built(self) -> None:
-        first = build_agent()
+        with patch("agent.agent.HeatResilienceRuntime", return_value=self.runtime):
+            first = build_agent(self.config)
         other_client = MagicMock()
         other_runtime = tools.HeatResilienceRuntime(
             replace(self.config, project_id="other-project", model_family="planning"),
             other_client,
         )
         tools.set_runtime(other_runtime)
-        build_agent()
+        build_agent(other_runtime.config)
         self.client.query.return_value.result.return_value = []
         demographics = next(t for t in first.tools if t.__name__ == "get_tract_demographics")
         with self.assertLogs(level="WARNING"):

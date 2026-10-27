@@ -37,7 +37,7 @@ class TestToolContracts(unittest.TestCase):
     def test_timeout_cancels_job_and_propagates(self) -> None:
         job = self.client.query.return_value
         job.result.side_effect = TimeoutError("deadline")
-        with self.assertLogs("agent.planning_tools", level="ERROR"):
+        with self.assertLogs("agent.telemetry", level="ERROR"):
             with self.assertRaises(TimeoutError):
                 self.runtime.query_rows("SELECT 1")
         job.cancel.assert_called_once()
@@ -45,7 +45,7 @@ class TestToolContracts(unittest.TestCase):
 
     def test_query_failure_is_logged_and_not_retried(self) -> None:
         self.client.query.side_effect = BadRequest("invalid SQL")
-        with self.assertLogs("agent.planning_tools", level="ERROR"):
+        with self.assertLogs("agent.telemetry", level="ERROR"):
             with self.assertRaises(BadRequest):
                 self.runtime.query_rows("invalid")
         self.client.query.assert_called_once()
@@ -54,7 +54,7 @@ class TestToolContracts(unittest.TestCase):
         job = self.client.query.return_value
         job.result.side_effect = TimeoutError("original deadline")
         job.cancel.side_effect = BadRequest("cannot cancel")
-        with self.assertLogs("agent.planning_tools", level="ERROR"):
+        with self.assertLogs("agent.telemetry", level="ERROR"):
             with self.assertRaisesRegex(TimeoutError, "original deadline"):
                 self.runtime.query_rows("SELECT 1")
 
