@@ -815,9 +815,10 @@ To report a problem with the data or the notebook, run the **diagnostic cell** a
 the notebook and share what it prints. One block, everything a coach needs, beats a screenshot
 every time.
 
-## Frontend starter
+## Frontend dashboard
 
-A minimal React chat interface for the Atlanta Heat Advisor lives in [`frontend/`](frontend/).
+The React/TypeScript dashboard lives in [`frontend/`](frontend/). The earlier minimal
+chat files are retained, but `src/main.tsx` explicitly loads the dashboard.
 Run it locally with:
 
 ```bash
@@ -826,7 +827,19 @@ npm install
 npm run dev
 ```
 
-By default, the UI sends requests to the deployed agent documented in
-[`agent/README.md`](agent/README.md). To use another ADK service, set
-`VITE_AGENT_API_URL` to its base URL before starting Vite. The interface uses the ADK session
-and `/run` APIs; the service must allow browser requests from the frontend origin.
+During local development, Vite proxies requests to the deployed agent documented in
+[`agent/README.md`](agent/README.md). Set `AGENT_API_URL` before starting Vite to use a
+local agent. `VITE_AGENT_API_URL` overrides the browser endpoint in non-container builds.
+See [`frontend/README.md`](frontend/README.md#local-e2e-validation) for local E2E validation.
+For Cloud Run, configure `AGENT_API_URL` to the agent's HTTPS base URL and deploy from the
+repository root:
+
+```bash
+export AGENT_API_URL="https://your-agent-service-xxxxx.run.app"
+bash frontend/deploy.sh
+```
+
+The script uses `gcloud run deploy --source` to build and deploy the frontend. It also sets the
+`AGENT_API_URL` Cloud Run environment variable; Nginx proxies the UI's `/api` requests to that
+agent service. The Cloud Build/Run APIs must be enabled and your account must have permission to
+build images and deploy Cloud Run services.

@@ -2,7 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 
 const API_URL = (
   import.meta.env.VITE_AGENT_API_URL ||
-  "https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app"
+  (import.meta.env.PROD
+    ? "/api"
+    : "https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app")
 ).replace(/\/+$/, "");
 const USER_ID = "frontend-user";
 const SUGGESTIONS = [

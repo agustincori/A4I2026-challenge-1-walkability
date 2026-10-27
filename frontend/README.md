@@ -38,8 +38,12 @@ The dashboard communicates directly with the deployed ADK service at:
 
 ### Dual Engine Capability: Live Agent API + TypeScript Mock Data
 To ensure zero downtime and robust demonstration resilience:
-- **Live Agent API Mode (Default):** Directly dispatches prompts to the Cloud Run agent and renders streaming Gemini 2.5 Flash responses and tool execution traces.
+- **Live Agent API Mode (Default):** Dispatches prompts to the configured ADK agent and renders JSON responses and tool execution traces. Session, HTTP, and invalid-response errors are displayed; live mode never silently substitutes mock answers.
 - **Mock Data Layer Mode:** Provides a complete TypeScript simulation matching the BigQuery schemas (`heat_offset_model`, `tract_demographics`, `station_daily_temps`), allowing offline evaluation while backend SQL databases are provisioned.
+
+The map, rankings, equity, and trends views currently use the bundled data in
+`src/data/mockData.ts` regardless of chat mode. A connected health badge does not prove
+that Gemini or BigQuery calls succeed.
 
 ---
 
@@ -78,6 +82,17 @@ npm run dev
 ```
 The application will launch on `http://localhost:3000`.
 
+To configure the agent URL, copy `.env.example` to `.env.local` in this directory
+and fill in the base URL (without a trailing slash):
+
+```dotenv
+AGENT_API_URL=https://your-agent-service.run.app
+```
+
+`.env.local` is ignored by Git. A blank value keeps the existing deployed agent.
+Restart Vite after changing this value. This variable configures the development
+proxy; it does not grant access or change the agent's allowed origins.
+
 ### Building for Production:
 ```bash
 npm run build
@@ -88,3 +103,68 @@ Build output is generated in `frontend/dist/`.
 ```bash
 npm run preview
 ```
+
+### Local E2E validation
+
+Run the same backend container build/test stage as Cloud Build, plus data-plane tests
+and the frontend production build, from the repository root:
+
+```bash
+docker build -f agent/Dockerfile -t walkability-agent:local-e2e .
+docker run --rm walkability-agent:local-e2e \
+  python -m unittest discover -s /app/agent/tests -p 'test_*.py'
+python3 -m unittest discover -s data_plane/tests -p 'test_*.py'
+docker build -t walkability-frontend:local-e2e frontend
+```
+
+For a fully local application stack, configure ADC with access to the project containing
+the models and tables. The principal needs Vertex AI prediction and BigQuery job/data
+permissions; a successful `/health` response does not validate those permissions.
+Start the backend in one terminal (macOS Docker Desktop example):
+
+```bash
+export GOOGLE_CLOUD_PROJECT="your-project-id"
+docker run --rm --name walkability-agent-local-e2e \
+  -p 127.0.0.1:18080:8080 \
+  --mount "type=bind,source=$HOME/.config/gcloud/application_default_credentials.json,target=/var/run/google/adc.json,readonly" \
+  -e GOOGLE_APPLICATION_CREDENTIALS=/var/run/google/adc.json \
+  -e GOOGLE_GENAI_USE_VERTEXAI=TRUE \
+  -e GOOGLE_CLOUD_PROJECT \
+  -e GOOGLE_CLOUD_LOCATION=us-central1 \
+  -e AUTO_BOOTSTRAP_BQML=false \
+  walkability-agent:local-e2e \
+  adk web --host 0.0.0.0 --port 8080 \
+  --allow_origins http://127.0.0.1:5173 \
+  --allow_origins http://localhost:5173 /app
+```
+
+In another terminal, start the production dashboard and its Nginx API proxy:
+
+```bash
+docker run --rm --name walkability-frontend-local-e2e \
+  -p 127.0.0.1:5173:8080 \
+  -e AGENT_API_URL=http://host.docker.internal:18080 \
+  walkability-frontend:local-e2e
+```
+
+Open `http://127.0.0.1:5173`. Check the map and all tabs, change the forecast slider,
+then select **AI Advisor Agent** in **Live Agent API** mode and ask a historical heat
+question. Require HTTP 200 from both session creation and `/api/run`, a real
+`query_heat_history` function call and function response, and the final displayed answer.
+Confirm a follow-up reuses the session. Test **Mock Data** separately; it must not make
+session or run requests. Stop the task-owned containers with:
+
+```bash
+docker stop walkability-frontend-local-e2e walkability-agent-local-e2e
+```
+
+To test the local production dashboard against the deployed agent instead, set
+`AGENT_API_URL=https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app` when starting
+the frontend container. This is a hybrid E2E test, not a fully local backend test.
+The backend must explicitly allow the frontend origin.
+
+For Vite development against a local agent, use
+`AGENT_API_URL=http://127.0.0.1:18080 npm --prefix frontend run dev` and allow
+`http://localhost:3000` (or your chosen Vite origin) on the ADK server. Both `localhost`
+and `127.0.0.1` use Vite's `/api/cloudrun` proxy. Container builds set
+`VITE_AGENT_API_URL=/api` and use the Nginx proxy instead.
