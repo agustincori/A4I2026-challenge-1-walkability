@@ -119,7 +119,7 @@ steps:
           --format='value(status.latestCreatedRevisionName)')"
         ready="$$(gcloud run revisions describe "$$revision" \
           --project="$$PROJECT_ID" --region="$$REGION" \
-          --format='value(status.conditions[?type=Ready].status)')"
+          --format='json(status.conditions)' | python3 -c 'import json,sys; conditions=json.load(sys.stdin)["status"]["conditions"]; print(next((item.get("status", "") for item in conditions if item.get("type") == "Ready"), ""))')"
         if [[ "$$ready" != "True" ]]; then
           echo "Candidate revision $$revision is not Ready (status: $$ready)." >&2
           exit 1
