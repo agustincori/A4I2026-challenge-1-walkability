@@ -3,8 +3,16 @@ City of Atlanta Heat Resilience Planning Assistant
 Built with Google Agent Development Kit (ADK), Gemini, and BigQuery ML.
 """
 
+from typing import Any
+
 from google.adk.agents.llm_agent import Agent
+from .config import AgentConfig
+from .prompts import PLANNING_INSTRUCTION
 from .tools import (
+    CUSTOM_HEAT_TOOLS,
+    HeatResilienceRuntime,
+    get_runtime,
+    set_runtime,
     predict_heat_offset_and_explain,
     compare_locations_and_explain,
     compare_census_tracts,
@@ -57,12 +65,12 @@ Your mandate is to assist municipal decision-makers (city planners, emergency di
 Maintain a professional, authoritative, and actionable tone suitable for presentation to the Mayor and City Council.
 """
 
-root_agent = Agent(
-    model="gemini-2.5-flash",
-    name="atlanta_heat_resilience_advisor",
-    description="A municipal heat resilience planning assistant for the City of Atlanta.",
-    instruction=SYSTEM_INSTRUCTION,
-    tools=[
+def build_agent(config: AgentConfig | None = None) -> Agent:
+    """Build the Atlanta advisor with both planner toolsets and optional MCP tools."""
+    if config is not None:
+        set_runtime(HeatResilienceRuntime(config=config))
+    active_config = get_runtime().config
+    tools: list[Any] = [
         predict_heat_offset_and_explain,
         compare_locations_and_explain,
         compare_census_tracts,
@@ -70,5 +78,20 @@ root_agent = Agent(
         query_heat_history,
         get_tract_demographics,
         audit_equity,
-    ],
-)
+        *CUSTOM_HEAT_TOOLS,
+    ]
+    if active_config.mcp_toolbox_url:
+        from toolbox_core import ToolboxSyncClient
+
+        toolbox = ToolboxSyncClient(active_config.mcp_toolbox_url)
+        tools.extend(toolbox.load_toolset())
+    return Agent(
+        model=active_config.gemini_model,
+        name="atlanta_heat_resilience_advisor",
+        description="A municipal heat resilience planning assistant for the City of Atlanta.",
+        instruction=SYSTEM_INSTRUCTION + "\n" + PLANNING_INSTRUCTION,
+        tools=tools,
+    )
+
+
+root_agent = build_agent()

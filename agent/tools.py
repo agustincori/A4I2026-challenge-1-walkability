@@ -3,12 +3,37 @@ Custom BigQuery & BQML tools for Atlanta Heat Resilience Planning Assistant.
 """
 
 from typing import Dict, Any, List, Optional
-from google.cloud import bigquery
+from .planning_tools import (
+    CUSTOM_HEAT_TOOLS,
+    HeatResilienceRuntime,
+    audit_recommendations_equity,
+    bigquery,
+    format_feature_attributions,
+    get_runtime,
+    get_station_heat_frequency,
+    predict_and_explain_location,
+    rank_cooling_sites,
+    set_runtime,
+)
 
-PROJECT_ID = "qwiklabs-gcp-03-1578f96a5a7a"
-DATASET_ID = "a4i_climate"
-
-client = bigquery.Client(project=PROJECT_ID)
+__all__ = [
+    "predict_heat_offset_and_explain",
+    "compare_locations_and_explain",
+    "compare_census_tracts",
+    "rank_cooling_center_sites",
+    "query_heat_history",
+    "get_tract_demographics",
+    "audit_equity",
+    "CUSTOM_HEAT_TOOLS",
+    "HeatResilienceRuntime",
+    "audit_recommendations_equity",
+    "format_feature_attributions",
+    "get_runtime",
+    "get_station_heat_frequency",
+    "predict_and_explain_location",
+    "rank_cooling_sites",
+    "set_runtime",
+]
 
 
 def predict_heat_offset_and_explain(
@@ -32,10 +57,13 @@ def predict_heat_offset_and_explain(
     """
     if tract_id and (latitude is None or longitude is None):
         coord_query = f"""
-        SELECT tract_lat, tract_lon FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
-        WHERE geo_id = '{tract_id}' LIMIT 1
+        SELECT tract_lat, tract_lon FROM `{get_runtime().dataset_fqn}.tract_demographics`
+        WHERE geo_id = @tract_id LIMIT 1
         """
-        coord_res = list(client.query(coord_query).result())
+        coord_config = bigquery.QueryJobConfig(
+            query_parameters=[bigquery.ScalarQueryParameter("tract_id", "STRING", tract_id)]
+        )
+        coord_res = list(get_runtime().client.query(coord_query, job_config=coord_config).result())
         if coord_res:
             latitude = coord_res[0].tract_lat
             longitude = coord_res[0].tract_lon
@@ -58,7 +86,7 @@ def predict_heat_offset_and_explain(
         COALESCE(median_age, 36.0) AS median_age,
         COALESCE(housing_units, 1500.0) AS housing_units,
         CASE WHEN median_year_structure_built > 1800 THEN median_year_structure_built ELSE 1975.0 END AS median_year_structure_built
-      FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+      FROM `{get_runtime().dataset_fqn}.tract_demographics`
       ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(tract_lon, tract_lat))
       LIMIT 1
     )
@@ -67,7 +95,7 @@ def predict_heat_offset_and_explain(
       p.top_feature_attributions,
       t.*
     FROM ML.EXPLAIN_PREDICT(
-      MODEL `{PROJECT_ID}.{DATASET_ID}.heat_offset_model`,
+      MODEL `{get_runtime().dataset_fqn}.{get_runtime().config.bqml_model_name}`,
       (
         SELECT 
           @lat AS latitude,
@@ -90,7 +118,7 @@ def predict_heat_offset_and_explain(
             bigquery.ScalarQueryParameter("lon", "FLOAT64", longitude),
         ]
     )
-    results = list(client.query(sql, job_config=job_config).result())
+    results = list(get_runtime().client.query(sql, job_config=job_config).result())
     if not results:
         return {"error": "Location coordinates out of bounds or no model prediction available."}
     
@@ -189,9 +217,9 @@ def rank_cooling_center_sites(
         t.no_vehicle_rate,
         t.poverty_rate,
         p.predicted_offset_f
-      FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics` t,
+      FROM `{get_runtime().dataset_fqn}.tract_demographics` t,
       ML.PREDICT(
-        MODEL `{PROJECT_ID}.{DATASET_ID}.heat_offset_model`,
+        MODEL `{get_runtime().dataset_fqn}.{get_runtime().config.bqml_model_name}`,
         (
           SELECT 
             tract_lat AS latitude,
@@ -202,7 +230,7 @@ def rank_cooling_center_sites(
             COALESCE(median_age, 36.0) AS median_age,
             COALESCE(housing_units, 1500.0) AS housing_units,
             CASE WHEN median_year_structure_built > 1800 THEN median_year_structure_built ELSE 1975.0 END AS median_year_structure_built
-          FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+          FROM `{get_runtime().dataset_fqn}.tract_demographics`
         )
       ) p
       WHERE t.tract_lat = p.latitude AND t.tract_lon = p.longitude
@@ -227,7 +255,7 @@ def rank_cooling_center_sites(
     ORDER BY composite_vulnerability_score DESC
     LIMIT {top_n}
     """
-    rows = list(client.query(sql).result())
+    rows = list(get_runtime().client.query(sql).result())
     sites = []
     for i, r in enumerate(rows, 1):
         sites.append({
@@ -266,13 +294,13 @@ def query_heat_history(
       COUNT(DISTINCT observation_date) AS days_exceeding_threshold,
       ROUND(MAX(max_temp_f), 1) AS peak_temp_f,
       ROUND(AVG(max_temp_f), 1) AS avg_summer_max_f
-    FROM `{PROJECT_ID}.{DATASET_ID}.station_daily_temps`
+    FROM `{get_runtime().dataset_fqn}.station_daily_temps`
     WHERE max_temp_f >= {min_temp_f}
       AND EXTRACT(YEAR FROM observation_date) >= {start_year}
     GROUP BY 1
     ORDER BY 1
     """
-    rows = list(client.query(sql).result())
+    rows = list(get_runtime().client.query(sql).result())
     history = []
     for r in rows:
         history.append({
@@ -320,7 +348,7 @@ def get_tract_demographics(
           households,
           ROUND(poverty_rate * 100, 1) AS poverty_pct,
           ROUND(no_vehicle_rate * 100, 1) AS no_vehicle_pct
-        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+        FROM `{get_runtime().dataset_fqn}.tract_demographics`
         WHERE geo_id = @tract_id
         LIMIT 1
         """
@@ -344,7 +372,7 @@ def get_tract_demographics(
           households,
           ROUND(poverty_rate * 100, 1) AS poverty_pct,
           ROUND(no_vehicle_rate * 100, 1) AS no_vehicle_pct
-        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+        FROM `{get_runtime().dataset_fqn}.tract_demographics`
         ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(tract_lon, tract_lat))
         LIMIT 1
         """
@@ -357,7 +385,7 @@ def get_tract_demographics(
     else:
         return {"error": "Must provide either tract_id or latitude & longitude coordinates."}
 
-    results = list(client.query(sql, job_config=job_config).result())
+    results = list(get_runtime().client.query(sql, job_config=job_config).result())
     if not results:
         return {"error": "No demographic data found for this location or tract ID."}
     r = results[0]
@@ -447,7 +475,7 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
         AVG(no_vehicle_rate) AS city_avg_no_vehicle,
         APPROX_QUANTILES(poverty_rate, 100)[OFFSET(75)] AS p75_poverty,
         APPROX_QUANTILES(no_vehicle_rate, 100)[OFFSET(75)] AS p75_no_vehicle
-      FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+      FROM `{get_runtime().dataset_fqn}.tract_demographics`
       WHERE total_pop > 100
     ),
     selected AS (
@@ -456,7 +484,7 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
         poverty_rate,
         no_vehicle_rate,
         total_pop
-      FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
+      FROM `{get_runtime().dataset_fqn}.tract_demographics`
       WHERE geo_id IN ({tract_list_str})
     )
     SELECT
@@ -478,7 +506,7 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
     CROSS JOIN city_baseline b
     GROUP BY b.city_avg_poverty, b.city_avg_no_vehicle, b.p75_poverty, b.p75_no_vehicle
     """
-    results = list(client.query(sql).result())
+    results = list(get_runtime().client.query(sql).result())
     if not results:
         return {"error": "Unable to compute equity audit for specified tracts."}
     r = results[0]
