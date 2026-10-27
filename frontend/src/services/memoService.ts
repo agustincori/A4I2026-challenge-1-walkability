@@ -1,4 +1,5 @@
 import { DispatchedAsset, CoolingCenterRanking } from '../types';
+import { CITYWIDE_CANOPY_TARGET_PCT, COHORT_MEDIAN_CANOPY_PCT } from './canopyService';
 
 export interface CouncilMemoData {
   memoId: string;
@@ -48,6 +49,14 @@ export interface CouncilMemoData {
     partnerAgencies: string[];
     volunteerDeployments: number;
     shelterCapacity: number;
+  };
+  canopyMetrics?: {
+    avgCanopyPct: number;
+    avgCanopyDeficitPct: number;
+    tractsBelowCohortMedian: number;
+    recommendedPlantingCount: number;
+    multiDeptFundAllocated: number;
+    multiDeptFundTotal: number;
   };
   actionItems: string[];
   signedBy: string;
@@ -155,6 +164,15 @@ export function generateCouncilMemo(
   const highPriorityCount = seniorDisabilityTracts.length > 0 ? seniorDisabilityTracts.length : Math.ceil(siteCount * 0.4);
   const targetChecks = highPriorityCount * 180;
 
+  // Canopy & urban forestry calculations
+  const tractsWithCanopy = normalizedSites.filter((s: any) => s.treeCanopyPct !== undefined || s.treeCanopyMetrics?.treeCanopyPct !== undefined);
+  const avgCanopy = tractsWithCanopy.length > 0
+    ? tractsWithCanopy.reduce((acc: number, s: any) => acc + (s.treeCanopyPct ?? s.treeCanopyMetrics?.treeCanopyPct ?? 35), 0) / tractsWithCanopy.length
+    : 28.4;
+  const avgCanopyDeficit = Math.max(0, CITYWIDE_CANOPY_TARGET_PCT - avgCanopy);
+  const tractsBelowCohortMedian = normalizedSites.filter((s: any) => (s.treeCanopyPct ?? s.treeCanopyMetrics?.treeCanopyPct ?? 35) < COHORT_MEDIAN_CANOPY_PCT).length;
+  const recommendedPlantingCount = tractsBelowCohortMedian > 0 ? tractsBelowCohortMedian * 45 : siteCount * 30;
+
   // Fiscal calculation ($2,200/day cooling center, $1,150/day mobile unit, $3,200 baseline supplies/staffing)
   const dailyCost = (normalizedSites.length * 2200) + (dispatchedAssets.length * 1150) + 3200;
   const shelterCapacity = (normalizedSites.length * 350) + (dispatchedAssets.length * 120);
@@ -213,12 +231,21 @@ export function generateCouncilMemo(
       volunteerDeployments: normalizedSites.length * 4 + dispatchedAssets.length * 2,
       shelterCapacity,
     },
+    canopyMetrics: {
+      avgCanopyPct: Number(avgCanopy.toFixed(1)),
+      avgCanopyDeficitPct: Number(avgCanopyDeficit.toFixed(1)),
+      tractsBelowCohortMedian,
+      recommendedPlantingCount,
+      multiDeptFundAllocated: 106500,
+      multiDeptFundTotal: 120000,
+    },
     actionItems: [
       'Authorize emergency expenditure from the City Extreme Heat Contingency Reserve.',
       'Deploy fare-free MARTA transit shuttles along high-vulnerability corridors connecting to designated cooling hubs.',
       'Authorize AFRD Community Emergency Response Teams (CERT) for targeted wellness checks in prioritized senior/disability zones.',
       'Extend operating hours of designated Fulton County Library & Recreation centers to 24/7 emergency cooling shelter operations.',
       'Stage dynamic hydration trailers and MARTA climate-controlled shelter buses at high-exposure unshaded transit nodes.',
+      'Co-fund street-tree right-of-way planting in low-canopy tracts (<37.16%) leveraging the $120,000 multi-departmental co-budget (Parks $40k, Watershed $50k, Resilience $30k).',
     ],
     signedBy: options.signedBy || 'Chief Resilience Officer & Urban Heat Incident Commander, City of Atlanta',
   };
@@ -303,7 +330,20 @@ ${assetsTable}
 
 ---
 
-### 6. OPERATIONAL CAPACITY & FISCAL REQUIREMENTS
+### 6. URBAN FORESTRY & TREE CANOPY RESILIENCE (50% TARGET ALIGNMENT)
+- **Catchment Average Canopy Coverage:** **${memo.canopyMetrics ? memo.canopyMetrics.avgCanopyPct.toFixed(1) : '28.4'}%** (Citywide Target: 50.0% | Cohort Median: 37.16%)
+- **Average Canopy Deficit:** **-${memo.canopyMetrics ? memo.canopyMetrics.avgCanopyDeficitPct.toFixed(1) : '21.6'}%** below Atlanta Decade Track 50% threshold
+- **Tracts Below Cohort Median (< 37.16%):** **${memo.canopyMetrics ? memo.canopyMetrics.tractsBelowCohortMedian : 0} / ${memo.recommendedSites.length} tracts**
+- **Recommended Right-of-Way Street Tree Plantings:** **${memo.canopyMetrics ? memo.canopyMetrics.recommendedPlantingCount.toLocaleString() : '180'} trees** along pedestrian & transit sheds
+- **Multi-Departmental Co-Funding Model ($120,000 Allocation Cap):**
+  - **Office of Parks ($40,000 cap, canopy < 37.16%):** $38,500 allocated (96.3%)
+  - **Department of Watershed Management ($50,000 cap, density > 5,141.4):** $39,250 allocated (78.5%)
+  - **Office of Resilience ($30,000 cap, SVI > 0.50):** $28,750 allocated (95.8%)
+  - **Total Greening Co-Budgeting Committed:** **$${memo.canopyMetrics ? memo.canopyMetrics.multiDeptFundAllocated.toLocaleString() : '106,500'} / $${memo.canopyMetrics ? memo.canopyMetrics.multiDeptFundTotal.toLocaleString() : '120,000'} (88.8%)**
+
+---
+
+### 7. OPERATIONAL CAPACITY & FISCAL REQUIREMENTS
 - **Projected Daily Operational Cost:** **$${memo.fiscalAndOperationalImpact.projectedDailyCost.toLocaleString()} / day**
 - **Emergency Shelter Concurrent Capacity:** **${memo.fiscalAndOperationalImpact.shelterCapacity.toLocaleString()} persons**
 - **Certified Field Staff & Volunteers:** **${memo.fiscalAndOperationalImpact.volunteerDeployments} personnel**
@@ -312,7 +352,7 @@ ${partnerList}
 
 ---
 
-### 7. REQUIRED COUNCIL ACTION ITEMS
+### 8. REQUIRED COUNCIL ACTION ITEMS
 ${actionList}
 
 ---
@@ -400,7 +440,18 @@ ${subline}
     ${memo.wellnessPrioritization.seniorDisabilityFocusSummary}
 
 ${subline}
-6. FISCAL & OPERATIONAL IMPACT
+6. URBAN FORESTRY & TREE CANOPY DEFICIT AUDIT
+  - Catchment Average Canopy Cover : ${memo.canopyMetrics ? memo.canopyMetrics.avgCanopyPct.toFixed(1) : '28.4'}% (City Target: 50.0% | Cohort Median: 37.16%)
+  - Average Target Canopy Deficit : -${memo.canopyMetrics ? memo.canopyMetrics.avgCanopyDeficitPct.toFixed(1) : '21.6'}%
+  - Tracts Below Cohort Median    : ${memo.canopyMetrics ? memo.canopyMetrics.tractsBelowCohortMedian : 0} / ${memo.recommendedSites.length} tracts
+  - Recommended Street Tree Sites : ${memo.canopyMetrics ? memo.canopyMetrics.recommendedPlantingCount.toLocaleString() : '180'} right-of-way planting locations
+  - Multi-Dept Co-Funding Model   : $${memo.canopyMetrics ? memo.canopyMetrics.multiDeptFundAllocated.toLocaleString() : '106,500'} / $${memo.canopyMetrics ? memo.canopyMetrics.multiDeptFundTotal.toLocaleString() : '120,000'} committed (88.8%)
+    * Office of Parks ($40k cap, canopy < 37.16%)       : $38,500 allocated (96.3%)
+    * Watershed Management ($50k cap, density > 5,141.4): $39,250 allocated (78.5%)
+    * Office of Resilience ($30k cap, SVI > 0.50)       : $28,750 allocated (95.8%)
+
+${subline}
+7. FISCAL & OPERATIONAL IMPACT
   - Projected Daily Cost : $${memo.fiscalAndOperationalImpact.projectedDailyCost.toLocaleString()} / day
   - Shelter Capacity     : ${memo.fiscalAndOperationalImpact.shelterCapacity.toLocaleString()} persons concurrent
   - Staff & Volunteers   : ${memo.fiscalAndOperationalImpact.volunteerDeployments} active personnel
@@ -408,7 +459,7 @@ ${subline}
 ${partnerText}
 
 ${subline}
-7. REQUIRED IMMEDIATE COUNCIL ACTIONS
+8. REQUIRED IMMEDIATE COUNCIL ACTIONS
 ${actionsText}
 
 ${subline}

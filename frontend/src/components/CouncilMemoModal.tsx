@@ -8,7 +8,8 @@ import {
   Printer, 
   ShieldAlert, 
   Users, 
-  DollarSign
+  DollarSign,
+  Trees
 } from 'lucide-react';
 import { useUI } from '../context/UIContext';
 import { useModalDismiss } from '../hooks/useModalDismiss';
@@ -319,10 +320,59 @@ export const CouncilMemoModal: React.FC = () => {
             </div>
           </section>
 
-          {/* Section 6: Recommended Council Actions */}
+          {/* Section 6: Urban Forestry & Tree Canopy Resilience */}
+          {memo.canopyMetrics && (
+            <section className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+                <span className="text-emerald-400">§ 6.</span> Urban Forestry & Tree Canopy Resilience (50% Target Alignment)
+              </h4>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold">
+                    <Trees className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Average Canopy Cover</span>
+                  </div>
+                  <div className="text-base font-bold text-emerald-300 font-mono">
+                    {memo.canopyMetrics.avgCanopyPct.toFixed(1)}%
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Deficit: -{memo.canopyMetrics.avgCanopyDeficitPct.toFixed(1)}% below the 50.0% Atlanta Decade Track target.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold">
+                    <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Deficit Tracts & Plantings</span>
+                  </div>
+                  <div className="text-base font-bold text-amber-300 font-mono">
+                    {memo.canopyMetrics.tractsBelowCohortMedian} Deficit Tracts
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Recommended {memo.canopyMetrics.recommendedPlantingCount.toLocaleString()} right-of-way street trees below 37.16% cohort median.
+                  </p>
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-slate-400 text-[10px] uppercase font-bold">
+                    <DollarSign className="w-3.5 h-3.5 text-indigo-400" />
+                    <span>Multi-Dept Co-Funding</span>
+                  </div>
+                  <div className="text-base font-bold text-indigo-300 font-mono">
+                    ${memo.canopyMetrics.multiDeptFundAllocated.toLocaleString()} / ${memo.canopyMetrics.multiDeptFundTotal.toLocaleString()}
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    Parks ($38.5k), Watershed ($39.25k), and Resilience ($28.75k) cost-sharing model.
+                  </p>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {/* Section 7: Recommended Council Actions */}
           <section className="space-y-2">
             <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="text-rose-400">§ 6.</span> Recommended Legislative Council Actions
+              <span className="text-rose-400">§ {memo.canopyMetrics ? '7.' : '6.'}</span> Recommended Legislative Council Actions
             </h4>
             <div className="p-3.5 rounded-xl bg-slate-950/60 border border-slate-800 space-y-2 text-xs">
               {memo.actionItems.map((action, idx) => (
