@@ -45,7 +45,11 @@ To ensure zero downtime and robust demonstration resilience:
 
 ## 3. Key Components & Architecture
 
-- `src/components/HeatMap.tsx`: High-performance Leaflet mapping engine plotting census tracts with dynamic heat offset color ramps (Green $\le 0^\circ\text{F}$ to Red $\ge +4^\circ\text{F}$) and 800-meter walk buffers.
+- `src/components/HeatMap.tsx`: High-performance Leaflet mapping engine plotting 109 Atlanta census tracts with dynamic heat offset color ramps (Green $\le 0^\circ\text{F}$ to Red $\ge +4^\circ\text{F}$), 800-meter walk buffers, landmark/tract search, and real-time mobile dispatched asset markers.
+- `src/components/DecisionsAndDispatch.tsx`: Synthesized Planner Action Deck featuring:
+  - **Decisions Needed Triage**: Prioritized municipal actions (FY25 Council Siting Memo, Bankhead Hydration Surge, Thomasville Senior Outreach, Campbellton Cooling Bus Relay).
+  - **Resource Mover (Municipal Asset Allocator)**: Real-time inventory (Potable Hydration Trailers, Mobile Wellness Vans, MARTA Climate Shelter Buses) with instant field dispatch onto the Leaflet map and live protected population counters.
+- `src/components/HeatAlertBanner.tsx`: High-visibility National Weather Service Stage 3 Heat Advisory ticker and modal with emergency directives and hotspot telemetry.
 - `src/components/CoolingCenterRankings.tsx`: Siting optimizer table with interactive citywide baseline forecast slider (85°F to 105°F), automatically computing localized microclimate temperatures.
 - `src/components/EquityAuditDashboard.tsx`: Compliance audit module proving 100% of top recommendations land in tracts exceeding top-quartile vulnerability, with 1-click export of City Council Legislative Resolution Memoranda.
 - `src/components/HistoricalTrends.tsx`: Multi-year station temperature bar chart tracking severe heat trends from 2018 to 2024.
@@ -55,6 +59,11 @@ To ensure zero downtime and robust demonstration resilience:
 ---
 
 ## 4. Local Development & Deployment
+
+### Standalone Interactive HTML Application (Zero-Dependency)
+For immediate evaluation, offline demos, and council meetings without requiring Node.js or build steps:
+- Open `index.html` or `atlanta_heat_resilience_dashboard.html` in any modern web browser.
+- Includes complete interactive cartography, animated dispatch routes, decisions needed triage board, active emergency heat alerts, live resource mover simulator, BigQuery historical trends, and Cloud Run ADK agent chatbot integration.
 
 ### Quick Start:
 ```bash

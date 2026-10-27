@@ -1,5 +1,7 @@
 import React from 'react';
 import { Flame, Activity, RefreshCw, Database } from 'lucide-react';
+import { HeatAlert } from '../types';
+import { HeatAlertBanner } from './HeatAlertBanner';
 
 interface NavbarProps {
   activeTab: string;
@@ -10,6 +12,9 @@ interface NavbarProps {
   setUseMockMode: (val: boolean) => void;
   onRefreshHealth: () => void;
   cloudRunUrl: string;
+  alerts: HeatAlert[];
+  baselineTempF: number;
+  pendingDecisionsCount?: number;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
@@ -21,9 +26,18 @@ export const Navbar: React.FC<NavbarProps> = ({
   setUseMockMode,
   onRefreshHealth,
   cloudRunUrl,
+  alerts,
+  baselineTempF,
+  pendingDecisionsCount = 0,
 }) => {
   const tabs = [
     { id: 'map', label: 'Map & Walkability', icon: '🗺️' },
+    { 
+      id: 'decisions', 
+      label: 'Decisions & Dispatch', 
+      icon: '⚡',
+      badge: pendingDecisionsCount > 0 ? pendingDecisionsCount : undefined 
+    },
     { id: 'siting', label: 'Siting & Recommendations', icon: '🎯' },
     { id: 'equity', label: 'Equity Audit', icon: '⚖️' },
     { id: 'history', label: 'Climate & Trends', icon: '📈' },
@@ -32,6 +46,9 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <header className="border-b border-slate-800 bg-slate-950/90 backdrop-blur sticky top-0 z-50">
+      {/* Top Heat Alert Ticker Banner */}
+      <HeatAlertBanner alerts={alerts} baselineTempF={baselineTempF} />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo & City Title */}
@@ -128,6 +145,11 @@ export const Navbar: React.FC<NavbarProps> = ({
             >
               <span>{tab.icon}</span>
               <span>{tab.label}</span>
+              {tab.badge !== undefined && (
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
+                  {tab.badge}
+                </span>
+              )}
             </button>
           ))}
         </div>
@@ -135,3 +157,4 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
+

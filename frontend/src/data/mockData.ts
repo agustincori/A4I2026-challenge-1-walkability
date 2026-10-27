@@ -1,4 +1,4 @@
-import { CensusTract, CoolingCenterRanking, StationHeatRecord, FeatureAttribution, EquityAuditSummary } from '../types';
+import { CensusTract, CoolingCenterRanking, StationHeatRecord, FeatureAttribution, EquityAuditSummary, PlannerDecision, HeatAlert, DispatchedAsset } from '../types';
 
 export const CITYWIDE_BENCHMARKS = {
   city: 'Atlanta, GA',
@@ -2397,3 +2397,129 @@ export const MOCK_EQUITY_AUDIT: EquityAuditSummary = {
   justificationNotes:
     '100% of top recommended cooling center tracts exceed the Atlanta 75th percentile for poverty (24.5%) and no-vehicle rate (14.8%). The intervention rigorously counteracts historic environmental disparities by directing resources to highest-need neighborhoods.'
 };
+
+export const INITIAL_HEAT_ALERTS: HeatAlert[] = [
+  {
+    id: 'alert-1',
+    title: 'Alert #1: NWS Excessive Heat Warning',
+    zone: 'Metro Atlanta Regional',
+    severity: 'warning',
+    description: 'Heat index forecasted to reach 106°F between 1:00 PM and 7:00 PM EDT. High humidity exacerbating heat strain.',
+    recommendation: 'Advise outdoor workers and vulnerable residents to seek air-conditioned spaces. Activate Tier 3 cooling centers.'
+  },
+  {
+    id: 'alert-2',
+    title: 'Alert #2: Peoplestown / 4th & Marsalis Microclimate Spike',
+    zone: 'Tract 13121005502 (+0.57°F)',
+    severity: 'spike',
+    description: 'Extreme asphalt surface heat recorded. Urban canopy deficit of 28% amplifying pedestrian thermal stress.',
+    recommendation: 'Deploy mobile shade canopy and hydration hydration trailers along priority pedestrian walkways.'
+  },
+  {
+    id: 'alert-3',
+    title: 'Alert #3: Transit Stop Exposure Warning',
+    zone: 'Bankhead / Donald Lee Hollowell Pkwy',
+    severity: 'warning',
+    description: 'Bus stops along Donald Lee Hollowell Pkwy report average unshaded wait times of 34 minutes in 104°F heat.',
+    recommendation: 'Hydration trailer dispatch and MARTA emergency air-conditioned cooling bus staging recommended.'
+  },
+  {
+    id: 'alert-4',
+    title: 'Alert #4: Senior Housing Thermal Vulnerability Advisory',
+    zone: 'Thomasville Heights (Tract 13121006802)',
+    severity: 'advisory',
+    description: 'Historic housing stock built pre-1970 with low HVAC penetration; microclimate offset +1.26°F.',
+    recommendation: 'Authorize wellness outreach teams for door-to-door check-ins on elderly residents living alone.'
+  }
+];
+
+export const INITIAL_PLANNER_DECISIONS: PlannerDecision[] = [
+  {
+    id: 'dec-1',
+    title: 'Council Siting Memo Approval (FY25)',
+    description: 'Site 3 permanent centers: Thomasville Heights, Bankhead, Campbellton Rd to serve 74.5% avg poverty and 54.8% no-car rate.',
+    category: 'Immediate',
+    dueTime: 'Due Today',
+    actionLabel: 'Draft Council Memo',
+    actionType: 'draft_council',
+    tractId: '13121006802',
+    locationName: 'Thomasville Heights Rec Center',
+    lat: 33.7042,
+    lng: -84.3609,
+    impactPopulation: 9711,
+    status: 'pending'
+  },
+  {
+    id: 'dec-2',
+    title: 'Mobile Hydration Surge on Bankhead Corridor',
+    description: 'MARTA bus stop queues along Donald Lee Hollowell Pkwy exceed 35 min with zero shade structures under 104°F heat.',
+    category: 'Mobile Surge',
+    dueTime: 'Next 30 Min',
+    actionLabel: 'Dispatch Hydration Units',
+    actionType: 'deploy_hydration',
+    tractId: '13121007808',
+    locationName: 'Bankhead Transit Hub',
+    lat: 33.7516,
+    lng: -84.4998,
+    impactPopulation: 3728,
+    status: 'pending'
+  },
+  {
+    id: 'dec-3',
+    title: 'Senior Vulnerability Wellness Check',
+    description: 'Historic housing stock with limited HVAC cooling. Predicted microclimate delta +1.26°F above city baseline.',
+    category: 'Vulnerability',
+    dueTime: 'Within 1 Hour',
+    actionLabel: 'Deploy Wellness Teams',
+    actionType: 'deploy_wellness',
+    tractId: '13121006802',
+    locationName: 'Thomasville Heights Community Center',
+    lat: 33.7042,
+    lng: -84.3609,
+    impactPopulation: 2040,
+    status: 'pending'
+  },
+  {
+    id: 'dec-4',
+    title: 'MARTA Cooling Bus Transit Desert Relay',
+    description: 'High-density transfer node with 56.4% zero-vehicle households relying heavily on pedestrian transit in extreme heat.',
+    category: 'Transit Desert',
+    dueTime: 'Within 2 Hours',
+    actionLabel: 'Stage Cooling Buses',
+    actionType: 'stage_bus',
+    tractId: '13121007603',
+    locationName: 'Campbellton Plaza Transit Node',
+    lat: 33.7065,
+    lng: -84.4404,
+    impactPopulation: 2840,
+    status: 'pending'
+  }
+];
+
+export const INITIAL_DISPATCHED_ASSETS: DispatchedAsset[] = [
+  {
+    id: 'disp-1',
+    type: 'hydration',
+    name: 'Hydration Station Trailer #1',
+    locationName: 'MLK Jr Dr & Ashby St',
+    lat: 33.754,
+    lng: -84.418,
+    tractId: '13121002500',
+    dispatchedAt: '12:45 PM',
+    status: 'on-site',
+    protectedPopulation: 2400
+  },
+  {
+    id: 'disp-2',
+    type: 'wellness',
+    name: 'Mobile Wellness Van #1',
+    locationName: 'Peoplestown Recreation Field',
+    lat: 33.731,
+    lng: -84.388,
+    tractId: '13121005502',
+    dispatchedAt: '1:10 PM',
+    status: 'on-site',
+    protectedPopulation: 1850
+  }
+];
+
