@@ -4,7 +4,12 @@ export const CLOUD_RUN_URL = 'https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.a
 
 // Detect whether to use relative proxy in dev or direct Cloud Run URL
 const getBaseUrl = () => {
-  if (typeof window !== 'undefined' && window.location.hostname === 'localhost') {
+  if (typeof window !== 'undefined') {
+    // If hosted directly on Cloud Run, use root relative path
+    if (window.location.origin === CLOUD_RUN_URL) {
+      return '';
+    }
+    // Route through Vite proxy to avoid CORS origins restrictions
     return '/api/cloudrun';
   }
   return CLOUD_RUN_URL;
