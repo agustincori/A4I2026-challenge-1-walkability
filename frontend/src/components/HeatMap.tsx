@@ -15,7 +15,10 @@ import {
   X, 
   Truck,
   HeartHandshake,
-  Check
+  Check,
+  ChevronDown,
+  ChevronUp,
+  SlidersHorizontal
 } from 'lucide-react';
 import { useMetricChoropleth } from '../hooks/useMetricChoropleth';
 import { useUI } from '../context/UIContext';
@@ -69,8 +72,21 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   const [showDispatchedAssets, setShowDispatchedAssets] = useState<boolean>(true);
   const [canopyFilter, setCanopyFilter] = useState<'all' | 'belowMedian' | 'critical'>('all');
   const [bivariateLens, setBivariateLens] = useState<boolean>(false);
+  const [isFiltersMinimized, setIsFiltersMinimized] = useState<boolean>(false);
   const [selectedAsset, setSelectedAsset] = useState<DispatchedAsset | null>(null);
   const [dispatchFeedback, setDispatchFeedback] = useState<string | null>(null);
+
+  // Count active filters differing from defaults
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (minOffsetFilter > -3) count++;
+    if (minPovertyFilter > 0) count++;
+    if (onlyCandidates) count++;
+    if (onlyWellnessPriority) count++;
+    if (canopyFilter !== 'all') count++;
+    if (bivariateLens) count++;
+    return count;
+  }, [minOffsetFilter, minPovertyFilter, onlyCandidates, onlyWellnessPriority, canopyFilter, bivariateLens]);
 
   // Helper to determine whether a tract meets Senior & Disability wellness priority criteria
   const isWellnessPriority = (t: CensusTract): boolean => {
@@ -559,12 +575,68 @@ export const HeatMap: React.FC<HeatMapProps> = ({
         </div>
 
         {/* Spatial Heat & Walk Filters Panel */}
-        <div className="bg-slate-900/90 backdrop-blur border border-slate-700/70 p-3 rounded-xl shadow-xl hidden sm:block max-h-[75vh] overflow-y-auto modal-scroll-container">
-          <div className="flex items-center space-x-2 mb-2 pb-1 border-b border-slate-800">
-            <Flame className="w-4 h-4 text-rose-400" />
-            <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Spatial Heat & Walk Filters</h4>
+        <div
+          className={`bg-slate-900/90 backdrop-blur border border-slate-700/70 rounded-xl shadow-xl hidden sm:block transition-all duration-200 ${
+            isFiltersMinimized ? 'p-2.5' : 'p-3 max-h-[60vh] overflow-y-auto modal-scroll-container'
+          }`}
+        >
+          {/* Panel Header & Minimize/Expand Controls */}
+          <div className={`flex items-center justify-between ${!isFiltersMinimized ? 'mb-2 pb-1.5 border-b border-slate-800' : ''}`}>
+            <button
+              type="button"
+              onClick={() => setIsFiltersMinimized(!isFiltersMinimized)}
+              className="flex items-center space-x-2 text-left focus:outline-none group flex-1 cursor-pointer"
+              title={isFiltersMinimized ? "Expand filters & legend" : "Minimize filters & legend"}
+            >
+              <SlidersHorizontal className="w-4 h-4 text-rose-400 group-hover:text-rose-300 transition-colors" />
+              <div className="flex items-center gap-1.5">
+                <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">
+                  Spatial Filters & Legend
+                </h4>
+                {activeFilterCount > 0 && (
+                  <span className="text-[10px] font-mono px-1.5 py-0.2 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                    {activeFilterCount} active
+                  </span>
+                )}
+              </div>
+            </button>
+            <div className="flex items-center space-x-1">
+              {activeFilterCount > 0 && !isFiltersMinimized && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMinOffsetFilter(-3);
+                    setMinPovertyFilter(0);
+                    setOnlyCandidates(false);
+                    setOnlyWellnessPriority(false);
+                    setCanopyFilter('all');
+                    setBivariateLens(false);
+                  }}
+                  className="text-[10px] text-slate-400 hover:text-rose-300 underline mr-1 px-1 transition-colors cursor-pointer"
+                  title="Reset filters to defaults"
+                >
+                  Reset
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setIsFiltersMinimized(!isFiltersMinimized)}
+                className="p-1 rounded-md text-slate-400 hover:text-white hover:bg-slate-800/80 transition-colors cursor-pointer"
+                aria-label={isFiltersMinimized ? "Expand filters" : "Minimize filters"}
+                title={isFiltersMinimized ? "Expand filters" : "Minimize filters"}
+              >
+                {isFiltersMinimized ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronUp className="w-4 h-4" />
+                )}
+              </button>
+            </div>
           </div>
-          <div className="space-y-3 text-xs">
+
+          {!isFiltersMinimized && (
+            <>
+              <div className="space-y-3 text-xs">
             <div>
               <div className="flex justify-between text-slate-300 mb-1">
                 <span>Min Offset:</span>
@@ -785,8 +857,10 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               </div>
             </div>
           </div>
-        </div>
-      </div>
+        </>
+      )}
+    </div>
+  </div>
 
       {/* Main Map Canvas */}
       <div className="flex-1 h-full relative" onClick={() => setIsSearchFocused(false)}>
