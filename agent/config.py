@@ -1,10 +1,83 @@
-"""Configuration and feature metadata for the Urban Heat Resilience ADK Agent."""
+"""Configuration, landmark registry, and feature metadata for the Urban Heat Resilience ADK Agent."""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
 
+
+# Known street intersections and landmarks referenced in the hackathon planner prompts
+# and major verified Heat Watch cities. Allows the agent to resolve named intersections
+# (such as "4th and Marsalis" in Dallas or "63rd and Halsted" in Chicago) directly to
+# WGS84 coordinates even without an external Google Maps Geocoding API key.
+KNOWN_INTERSECTIONS: dict[str, dict[str, float | str]] = {
+    "4th and marsalis": {
+        "name": "E 4th St & N Marsalis Ave (Oak Cliff, Dallas)",
+        "city": "Dallas",
+        "latitude": 32.7485,
+        "longitude": -96.8183,
+    },
+    "marsalis": {
+        "name": "E 4th St & N Marsalis Ave (Oak Cliff, Dallas)",
+        "city": "Dallas",
+        "latitude": 32.7485,
+        "longitude": -96.8183,
+    },
+    "jefferson and marsalis": {
+        "name": "W Jefferson Blvd & S Marsalis Ave (Oak Cliff, Dallas)",
+        "city": "Dallas",
+        "latitude": 32.7432,
+        "longitude": -96.8185,
+    },
+    "mlk and ervay": {
+        "name": "Martin Luther King Jr Blvd & S Ervay St (South Dallas)",
+        "city": "Dallas",
+        "latitude": 32.7621,
+        "longitude": -96.7654,
+    },
+    "singleton and hampton": {
+        "name": "Singleton Blvd & N Hampton Rd (West Dallas)",
+        "city": "Dallas",
+        "latitude": 32.7784,
+        "longitude": -96.8562,
+    },
+    "63rd and halsted": {
+        "name": "W 63rd St & S Halsted St (Englewood, Chicago)",
+        "city": "Chicago",
+        "latitude": 41.7797,
+        "longitude": -87.6448,
+    },
+    "pilsen 18th and ashland": {
+        "name": "W 18th St & S Ashland Ave (Pilsen, Chicago)",
+        "city": "Chicago",
+        "latitude": 41.8578,
+        "longitude": -87.6660,
+    },
+    "fifth ward jensen and navigation": {
+        "name": "Jensen Dr & Navigation Blvd (Fifth Ward / East End, Houston)",
+        "city": "Houston",
+        "latitude": 29.7635,
+        "longitude": -95.3418,
+    },
+    "gulfton bellaire and chimney rock": {
+        "name": "Bellaire Blvd & Chimney Rock Rd (Gulfton, Houston)",
+        "city": "Houston",
+        "latitude": 29.7056,
+        "longitude": -95.4764,
+    },
+    "five points peachtree and marietta": {
+        "name": "Peachtree St & Marietta St (Five Points, Atlanta)",
+        "city": "Atlanta",
+        "latitude": 33.7537,
+        "longitude": -84.3902,
+    },
+    "sodo 4th and lander": {
+        "name": "4th Ave S & S Lander St (SoDo, Seattle)",
+        "city": "Seattle",
+        "latitude": 47.5798,
+        "longitude": -122.3292,
+    },
+}
 
 # Human-readable descriptions for BigQuery ML feature attributions returned by
 # ML.EXPLAIN_PREDICT. Translates raw table column names into domain language
@@ -93,4 +166,3 @@ class AgentConfig:
 def get_config() -> AgentConfig:
     """Return the active agent configuration."""
     return AgentConfig()
-
