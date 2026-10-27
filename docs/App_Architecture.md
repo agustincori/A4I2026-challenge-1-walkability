@@ -4,8 +4,9 @@
 > **Challenge:** Agents for Impact 2026 (A4I) — Challenge 1: Community Climate Resilience (Urban Heat Track)  
 > **Target Municipality:** City of Atlanta, GA  
 > **Core Track:** 🏛️ **This Budget Cycle** (Cooling Center Siting & Infrastructure Investment) with multi-clock capabilities for ⚡ **Today** (Emergency Response) and 🌳 **This Decade** (Urban Forestry)  
-> **Live Deployed Agent:** `https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app`  
-> **Tech Stack:** Gemini 2.5 Flash • Google Agent Development Kit (ADK) • BigQuery ML (`LINEAR_REG` + `ML.EXPLAIN_PREDICT`) • Vertex AI • Google Cloud Run • React 19 + TypeScript + Leaflet GIS
+> **Live Deployed Frontend Dashboard:** [https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app)  
+> **Live Deployed Agent API:** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)  
+> **Tech Stack:** Gemini 2.5 Flash • Google Agent Development Kit (ADK) • BigQuery ML (`LINEAR_REG` + `ML.EXPLAIN_PREDICT`) • Vertex AI • Google Cloud Run • React 18 + TypeScript + Leaflet GIS
 
 ---
 
@@ -16,7 +17,7 @@ The application is structured into four decoupled layers spanning presentation, 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                   PRESENTATION PLANE                                   │
-│            React 19 + TypeScript + Vite + Tailwind CSS + Leaflet GIS Dashboard         │
+│            React 18 + TypeScript + Vite + Tailwind CSS + Leaflet GIS Dashboard         │
 │  • Microclimate Heat Sliders (85°F–105°F)          • 800m (10-min) Pedestrian Isochrones│
 │  • Landmark Geocoding ("Sweet Auburn")             • Side-by-Side Tract Comparison     │
 │  • Automated 1-Click City Council Memo Generator   • Feature Attribution Visualizer    │
@@ -47,7 +48,7 @@ The application is structured into four decoupled layers spanning presentation, 
 ### Component Breakdown
 
 1. **Executive GIS Frontend (`frontend/`)**:
-   - Modern, responsive municipal dashboard built with **React 19, TypeScript, Vite, Tailwind CSS**, and **Leaflet**.
+   - Modern, responsive municipal dashboard built with **React 18, TypeScript, Vite, Tailwind CSS**, and **Leaflet**.
    - Interactive maps rendering localized microclimate temperatures based on customizable baseline forecasts.
    - **800-meter pedestrian walk isochrones** illustrating actual 10-minute pedestrian catchments around candidate cooling facilities.
    - Street-name geocoding allowing planners to reference neighborhood landmarks ("Sweet Auburn", "Peoplestown", "Mechanicsville") without Census GEOIDs.

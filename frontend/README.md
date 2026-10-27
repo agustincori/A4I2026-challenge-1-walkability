@@ -3,7 +3,8 @@
 **Challenge:** Challenge 1 - Urban Climate Resilience & Walkability  
 **Target City:** Atlanta, GA  
 **Track:** Frontend Lane  
-**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app))
+**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app))  
+**Live Deployed Dashboard:** [https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app)  
 **Tech Stack:** React 18, TypeScript, Vite, Tailwind CSS, Leaflet
 
 ---
@@ -50,8 +51,10 @@ rankings do not create cards. Unknown demographics are shown as unavailable,
 not zero. Repeated/parallel tool responses are paired by their ADK call ID.
 
 Cards show campaign-relative offsets, tract population and vulnerability,
-model provenance when returned, and a coordinate link to OpenStreetMap in a new
-tab. These links do not route through the dashboard's mock tract map or claim
+model provenance when returned, and a coordinate search link to Google Maps in a new
+tab (no API key required). Coordinates are also visible as selectable text so
+they remain usable if an external map provider is unavailable or rate-limited.
+These links do not route through the dashboard's mock tract map or claim
 verified facilities/walking routes. The audit action sends the exact displayed
 tract IDs back to the live agent; it does not display a mock audit or change the
 ranking. Actions from messages generated in a different data mode are disabled.

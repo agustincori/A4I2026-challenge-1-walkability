@@ -7,6 +7,9 @@ import { EquityAuditDashboard } from './components/EquityAuditDashboard';
 import { HistoricalTrends } from './components/HistoricalTrends';
 import { AdvisorChat } from './components/AdvisorChat';
 import { ExplainabilityModal } from './components/ExplainabilityModal';
+import { GlossaryModal } from './components/GlossaryModal';
+import { CouncilMemoModal } from './components/CouncilMemoModal';
+import { useUI } from './context/UIContext';
 import { 
   MOCK_CENSUS_TRACTS, 
   MOCK_COOLING_CENTER_RANKINGS,
@@ -18,6 +21,7 @@ import { CensusTract, CoolingCenterRanking, PlannerDecision, DispatchedAsset, As
 import { agentApi, CLOUD_RUN_URL } from './services/agentApi';
 
 export const App: React.FC = () => {
+  const { openCouncilMemo } = useUI();
   const [activeTab, setActiveTab] = useState<string>('map');
   const [isCloudRunConnected, setIsCloudRunConnected] = useState<boolean>(false);
   const [latencyMs, setLatencyMs] = useState<number>(0);
@@ -65,11 +69,11 @@ export const App: React.FC = () => {
   };
 
   const handleDraftCouncilProposal = (selected?: CoolingCenterRanking[]) => {
-    const targets = selected && selected.length > 0 ? selected : MOCK_COOLING_CENTER_RANKINGS.slice(0, 3);
-    const tractIds = targets.map((s) => s.tractId).join(', ');
-    const prompt = `Draft a formal municipal council proposal for Atlanta City Council recommending cooling centers in tracts ${tractIds}. Include thermal offsets, poverty rates, and equity justification.`;
-    setAdvisorPrompt(prompt);
-    setActiveTab('advisor');
+    const targets = selected && selected.length > 0 ? selected : MOCK_COOLING_CENTER_RANKINGS.slice(0, 5);
+    openCouncilMemo({
+      sites: targets,
+      dispatchedAssets,
+    });
   };
 
   const handleExecuteDecision = (decision: PlannerDecision) => {
@@ -189,6 +193,9 @@ export const App: React.FC = () => {
             onAskAgentAboutTract={handleAskAgentAboutTract}
             forecastBaselineF={forecastBaselineF}
             dispatchedAssets={dispatchedAssets}
+            onRecallAsset={handleRecallAsset}
+            onSwitchToDecisions={() => setActiveTab('decisions')}
+            onDeployAsset={handleDeployAsset}
           />
         )}
 
@@ -237,6 +244,12 @@ export const App: React.FC = () => {
         onClose={() => setExplainTract(null)}
         tract={explainTract}
       />
+
+      {/* Glossary & Terminology Modal */}
+      <GlossaryModal />
+
+      {/* Official City Council Emergency Heat Memo Modal */}
+      <CouncilMemoModal />
     </div>
   );
 };

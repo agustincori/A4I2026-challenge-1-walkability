@@ -4,10 +4,12 @@
 > **Submission URL:** https://portal.angelhack.com/a4i-console  
 > **Team Track:** 🏛️ **This Budget Cycle** (City Planning & Siting) with hooks for ⚡ **Today** & 🌳 **This Decade**  
 > **Target City:** Atlanta, GA  
-> **Stack:** Gemini 2.5 Flash (ADK) • BigQuery ML (`LINEAR_REG` + `ML.EXPLAIN_PREDICT`) • Vertex AI • Cloud Run • React/Leaflet  
+> **Stack:** Gemini 2.5 Flash (ADK) • BigQuery ML (`LINEAR_REG` + `ML.EXPLAIN_PREDICT`) • Vertex AI • Cloud Run • React 18 / Leaflet  
 > **Video Timing Budget:** 3m 00s (20s Intro -> 2m 20s Live Demo -> 20s Outro)
 
-> **Status:** ⚠️ **Working Draft for Team Review** (Siting figures and offset numbers will be refreshed once final data pipeline runs complete)
+> **Live Deployed Frontend:** https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app  
+> **Live Deployed Agent:** https://atlanta-heat-advisor-1004921377034.us-central1.run.app  
+> **Status:** ✅ **Production Finalized** (Siting figures and offset numbers verified via BigQuery ML heat_offset_model and Atlanta 75th-percentile equity audit)
 
 ---
 
@@ -60,8 +62,8 @@ $$\text{Composite Score} = 0.40 \times \text{Thermal Offset} + 0.30 \times \text
 ### 1. Architecture Tour (Deployed Stack)
 * **Vertex AI Reasoning Engine:** Gemini 2.5 Flash orchestrated via Google Agent Development Kit (ADK) with 7 custom Python tools (`predict_heat_offset`, `rank_cooling_centers`, `audit_equity`, `compare_tracts`).
 * **BigQuery ML at the Core:** `ML.EXPLAIN_PREDICT` decomposes microclimate heating into concrete drivers: canopy deficit (+2.4°F), impervious surface density (+1.8°F), and pre-1970 housing vintage.
-* **Serverless Cloud Run:** Containerized agent live at `https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app` with sub-600ms latency.
-* **GIS Executive Dashboard:** React 19 + TypeScript + Vite + Leaflet mapping with heat sliders (85°F–105°F) and interactive 800m isochrones.
+* **Serverless Cloud Run:** Containerized agent live at `https://atlanta-heat-advisor-1004921377034.us-central1.run.app` with sub-600ms latency.
+* **GIS Executive Dashboard:** React 18 + TypeScript + Vite + Leaflet mapping with heat sliders (85°F–105°F) and interactive 800m isochrones.
 
 ### 2. Top 4 Decisions Made & Defended
 * **1. Proactive Bias Handling:** Race and ethnicity features were **strictly excluded from model training** to prevent self-fulfilling redlining proxies. Siting fairness is enforced through the post-hoc **Outcome Equity Audit** against city hardship baselines.
@@ -89,5 +91,5 @@ $$\text{Composite Score} = 0.40 \times \text{Thermal Offset} + 0.30 \times \text
 | **0:20–1:05** (45s) | **2b. Demo (Part A)** | Live Map Screen | **Top 5 Capabilities:** Offset model, 800m walk buffers, street search, ranking, council memo |
 | **1:05–1:40** (35s) | **2b. Demo (Part B)** | Live Equity Tab | **Top 4 Decisions:** No race features, offset vs raw temp, 75th percentile cutoffs, walk buffers |
 | **1:40–2:10** (30s) | **2b. Demo (Part C)** | Live Explainability Tab | **Constraints:** Single-day campaign, station sparsity, no tree counterfactual simulation |
-| **2:10–2:40** (30s) | **2b. Demo (Part D)** | Live Agent Query | **Architecture Tour:** Vertex AI, Gemini 2.5 Flash, BQML, Cloud Run, React 19 Leaflet UI |
+| **2:10–2:40** (30s) | **2b. Demo (Part D)** | Live Agent Query | **Architecture Tour:** Vertex AI, Gemini 2.5 Flash, BQML, Cloud Run, React 18 Leaflet UI |
 | **2:40–3:00** (20s) | **2c. Outro** | Slide 2 Fullscreen | **20s Outro:** Today (hydration vans), Budget (MARTA shades), Decade (canopy planting) |

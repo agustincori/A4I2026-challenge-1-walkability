@@ -49,8 +49,9 @@
 
 ### Slide 6: Live Full-Stack Architecture
 * **BigQuery & BQML:** Ingests NOAA GHCN station records, CDC SVI 2022, and 109 Atlanta census tracts.
-* **Serverless Agent Engine (Cloud Run):** Production Python agent runtime at `https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app` exposing `/run`, tool traces, and ML attribution.
-* **Executive Dashboard (TypeScript + React + Vite + Leaflet):**
+* **Serverless Agent Engine (Cloud Run):** Production Python ADK agent runtime at https://atlanta-heat-advisor-1004921377034.us-central1.run.app exposing /run, tool traces, and ML attribution.
+* **Live Executive GIS Dashboard (Cloud Run):** Production React 18 + TypeScript + Leaflet app live at https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app.
+* **Executive Dashboard Architecture (React 18 + TypeScript + Vite + Leaflet):**
   - "Talk in street names" instant landmark/neighborhood search.
   - Interactive baseline heat slider (85°F to 105°F).
   - Walk buffer visualization (800m).

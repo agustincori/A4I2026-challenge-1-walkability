@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 import ts from 'typescript';
+import React from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
 
 async function load(path, imports = {}) {
   const source = await readFile(new URL(path, import.meta.url), 'utf8');
   let { outputText } = ts.transpileModule(source, {
-    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020 },
+    compilerOptions: { module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2020, jsx: ts.JsxEmit.React },
   });
   for (const [specifier, target] of Object.entries(imports)) {
     outputText = outputText.replace(`'${specifier}'`, JSON.stringify(target));
@@ -26,6 +28,22 @@ const site = {
   poverty_rate_pct: 78.1, no_vehicle_rate_pct: 60.2,
 };
 const atlanta = output => [{ name: 'rank_cooling_center_sites', arguments: {}, output }];
+
+test('rendered cards link exact coordinates to Google Maps and show a provider-independent fallback', async () => {
+  const { module: { RecommendationCards } } = await load('../src/components/RecommendationCards.tsx', {
+    react: import.meta.resolve('react'),
+    'lucide-react': import.meta.resolve('lucide-react'),
+  });
+  const [ranking] = rankingEvidence(atlanta({ status: 'OK', ranked_sites: [site] }));
+  const html = renderToStaticMarkup(React.createElement(RecommendationCards, {
+    evidence: ranking, isMock: false, disabled: false, onAudit: () => {},
+  }));
+  assert.ok(html.includes('https://www.google.com/maps/search/?api=1&amp;query=33.70429%2C-84.36097'));
+  assert.ok(html.includes('33.70429, -84.36097'));
+  assert.ok(html.includes('Open in Google Maps'));
+  assert.ok(html.includes('target="_blank" rel="noopener noreferrer"'));
+  assert.ok(!html.includes('openstreetmap.org'));
+});
 
 test('Atlanta cards preserve tool values without interpreting narrative', () => {
   const [ranking] = rankingEvidence(atlanta({
