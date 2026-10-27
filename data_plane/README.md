@@ -35,6 +35,48 @@ data_plane/
 Reference: [dataset schema](docs/BIGQUERY_SCHEMA.md) and
 [pipeline walkthrough](docs/PIPELINE_TRAINING_AGENTS.html).
 
+### Supervised ranking pilot and physical features
+
+The selected next use is a human-supervised heat-ranking pilot. The
+[acceptance contract](docs/MODEL_ACCEPTANCE.md) proposes metrics, evaluation protocol
+and gates **pending approval**; it does not authorize promotion or invent an agreed
+error tolerance. Heat ranking and vulnerability-weighted policy priority are separate.
+
+Audit existing canopy without training or BigQuery table/model writes:
+
+```bash
+python3 -m data_plane.pipelines.audit_physical_features \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --feature-run 20261027_163945_a1f7fcb70be3          # Plan only
+python3 -m data_plane.pipelines.audit_physical_features \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --feature-run 20261027_163945_a1f7fcb70be3 \
+  --execute --output canopy_audit.json
+```
+
+The optional output must be a new local file. Reports retain executed SQL/hash,
+job statistics, source quality, duplicate-safe join coverage for training/evaluation
+and agent-eligible tracts, plus unresolved provenance requirements. Execution submits
+read-only BigQuery jobs (subject to query billing), not training or registry writes.
+Canopy remains blocked pending source verification and coverage review; no automatic
+unit conversion, imputation, model-contract change or agent integration occurs.
+
+The [retained audit from 2026-10-27](docs/canopy_audit_20261027.json) found:
+
+| Population | Valid unique canopy match | Coverage |
+|---|---|---|
+| Training observations | 16,957 / 20,168 | 84.1% |
+| Evaluation observations | 2,983 / 3,218 | 92.7% |
+| All demographic tract rows | 56 / 353 | 15.9% |
+| Agent ranking-eligible tract rows | 56 / 264 | 21.2% |
+
+All 109 source GEOIDs were unique and well formed; canopy had no null/non-finite/
+out-of-range values under a provisional 0–100 check. No table description or labels
+were present. This is not unit or source verification. High observation coverage
+does not imply broad serving coverage: 208 eligible tract rows lack a usable match.
+The report documents current source reads and query lineage, not immutable source
+snapshots or an approved feature contract.
+
 ### Command migration
 
 The previous top-level `scripts/`, `sql/`, `notebooks/` and `data/` directories have moved here.
