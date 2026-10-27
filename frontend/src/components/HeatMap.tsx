@@ -1,7 +1,24 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import L from 'leaflet';
-import { CensusTract, DispatchedAsset } from '../types';
-import { Flame, Users, Navigation, AlertTriangle, Sparkles, Building, Info, Search, Crosshair, Trees, ShieldAlert, X, Truck } from 'lucide-react';
+import { CensusTract, DispatchedAsset, AssetType } from '../types';
+import { 
+  Flame, 
+  Users, 
+  Navigation, 
+  AlertTriangle, 
+  Sparkles, 
+  Info, 
+  Search, 
+  Crosshair, 
+  Trees, 
+  ShieldAlert, 
+  X, 
+  Truck,
+  HeartHandshake,
+  Check
+} from 'lucide-react';
+import { useMetricChoropleth } from '../hooks/useMetricChoropleth';
+import { useUI } from '../context/UIContext';
 
 interface HeatMapProps {
   tracts: CensusTract[];
@@ -10,6 +27,9 @@ interface HeatMapProps {
   onAskAgentAboutTract: (tract: CensusTract) => void;
   forecastBaselineF: number;
   dispatchedAssets?: DispatchedAsset[];
+  onRecallAsset?: (id: string) => void;
+  onSwitchToDecisions?: () => void;
+  onDeployAsset?: (type: AssetType, locationName: string, lat: number, lng: number, tractId?: string) => void;
 }
 
 export const HeatMap: React.FC<HeatMapProps> = ({
@@ -19,10 +39,18 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   onAskAgentAboutTract,
   forecastBaselineF,
   dispatchedAssets = [],
+  onRecallAsset,
+  onSwitchToDecisions,
+  onDeployAsset,
 }) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const layerGroupRef = useRef<L.LayerGroup | null>(null);
+
+  const { openGlossary } = useUI();
+  const { activeMetric, setActiveMetric, getColor, legendConfig } = useMetricChoropleth({
+    initialMetric: 'heat',
+  });
 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [isSearchFocused, setIsSearchFocused] = useState<boolean>(false);
@@ -30,7 +58,34 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   const [minPovertyFilter, setMinPovertyFilter] = useState<number>(0);
   const [showWalkBuffers, setShowWalkBuffers] = useState<boolean>(true);
   const [onlyCandidates, setOnlyCandidates] = useState<boolean>(false);
+  const [onlyWellnessPriority, setOnlyWellnessPriority] = useState<boolean>(false);
   const [showDispatchedAssets, setShowDispatchedAssets] = useState<boolean>(true);
+  const [selectedAsset, setSelectedAsset] = useState<DispatchedAsset | null>(null);
+  const [dispatchFeedback, setDispatchFeedback] = useState<string | null>(null);
+
+  // Helper to determine whether a tract meets Senior & Disability wellness priority criteria
+  const isWellnessPriority = (t: CensusTract): boolean => {
+    return Boolean(
+      t.wellnessPriority ||
+      (t.seniorsLivingAlonePct !== undefined && t.seniorsLivingAlonePct >= 18) ||
+      (t.disabilityRatePct !== undefined && t.disabilityRatePct >= 15) ||
+      (t.sviScore !== undefined && t.sviScore >= 0.75 && t.predictedOffsetF >= 3.0)
+    );
+  };
+
+  const wellnessTractsCount = useMemo(() => {
+    return tracts.filter(isWellnessPriority).length;
+  }, [tracts]);
+
+  // Calculate CDC SVI rank for selected tract among all tracts
+  const sviRankInfo = useMemo(() => {
+    if (!selectedTract || selectedTract.sviScore === undefined) return null;
+    const sorted = [...tracts]
+      .filter((t) => t.sviScore !== undefined)
+      .sort((a, b) => (b.sviScore ?? 0) - (a.sviScore ?? 0));
+    const rank = sorted.findIndex((t) => t.geoId === selectedTract.geoId) + 1;
+    return { rank, total: sorted.length };
+  }, [selectedTract, tracts]);
 
   // Filtered tracts for search autocomplete
   const searchResults = useMemo(() => {
@@ -47,15 +102,6 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       .slice(0, 7);
   }, [tracts, searchQuery]);
 
-  // Color helper based on predicted offset
-  const getOffsetColor = (offset: number) => {
-    if (offset >= 4.0) return '#ef4444'; // Red extreme
-    if (offset >= 2.5) return '#f97316'; // Orange high
-    if (offset >= 0.5) return '#eab308'; // Amber medium
-    if (offset >= -0.5) return '#38bdf8'; // Sky neutral
-    return '#22c55e'; // Green cool
-  };
-
   const handleSelectAndFly = (tract: CensusTract) => {
     onSelectTract(tract);
     setSearchQuery('');
@@ -64,6 +110,23 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       mapInstanceRef.current.flyTo([tract.latitude, tract.longitude], 14, {
         duration: 1.0,
       });
+    }
+  };
+
+  const handleDispatchWellnessVanToSelected = () => {
+    if (!selectedTract) return;
+    if (onDeployAsset) {
+      onDeployAsset(
+        'wellness',
+        `${selectedTract.neighborhood} (Tract ${selectedTract.geoId})`,
+        selectedTract.latitude,
+        selectedTract.longitude,
+        selectedTract.geoId
+      );
+      setDispatchFeedback(`Dispatched Wellness Van to ${selectedTract.neighborhood}!`);
+      setTimeout(() => setDispatchFeedback(null), 3000);
+    } else if (onSwitchToDecisions) {
+      onSwitchToDecisions();
     }
   };
 
@@ -79,7 +142,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Standard OpenStreetMap tiles (free, open-source, no API key required)
+      // Standard OpenStreetMap tiles
       L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
@@ -95,7 +158,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     };
   }, []);
 
-  // Update markers and buffers when tracts or filters change
+  // Update markers and buffers when tracts, filters, or activeMetric change
   useEffect(() => {
     if (!mapInstanceRef.current || !layerGroupRef.current) return;
 
@@ -105,30 +168,37 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       if (t.predictedOffsetF < minOffsetFilter) return false;
       if (t.povertyRatePct < minPovertyFilter) return false;
       if (onlyCandidates && !t.hasCoolingCenter) return false;
+      if (onlyWellnessPriority && !isWellnessPriority(t)) return false;
       return true;
     });
 
     filtered.forEach((tract) => {
-      const color = getOffsetColor(tract.predictedOffsetF);
+      const color = getColor(activeMetric, tract);
       const isSelected = selectedTract?.geoId === tract.geoId;
+      const isWellness = isWellnessPriority(tract);
 
-      // Draw tract heat footprint circle
+      // Draw tract heat footprint circle colored by active choropleth metric
       const circle = L.circleMarker([tract.latitude, tract.longitude], {
         radius: isSelected ? 18 : 13,
         fillColor: color,
-        color: isSelected ? '#ffffff' : color,
-        weight: isSelected ? 3 : 1.5,
-        opacity: 0.9,
-        fillOpacity: isSelected ? 0.9 : 0.65,
+        color: isSelected ? '#ffffff' : isWellness && onlyWellnessPriority ? '#fb7185' : color,
+        weight: isSelected ? 3.5 : isWellness && onlyWellnessPriority ? 2.5 : 1.5,
+        opacity: 0.95,
+        fillOpacity: isSelected ? 0.92 : 0.68,
       });
 
-      // Tooltip
+      // Tooltip for tract
       circle.bindTooltip(
-        `<div class="p-1 font-sans text-xs">
+        `<div class="p-1.5 font-sans text-xs min-w-[190px] leading-tight">
           <div class="font-bold text-slate-900">${tract.neighborhood}</div>
-          <div class="text-slate-700">Offset: <b>${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
-          <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore ? (tract.sviScore * 100).toFixed(0) + 'th %ile' : 'N/A'}</b></div>
+          <div class="text-[10px] text-slate-500 font-mono">Tract GEOID: ${tract.geoId}</div>
+          <div class="text-slate-700 mt-1">Thermal Offset: <b style="color:${color};">${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
+          <div class="text-slate-700">Canopy: <b>${tract.treeCanopyPct ?? 'N/A'}%</b> | SVI: <b>${tract.sviScore !== undefined ? tract.sviScore.toFixed(2) : 'N/A'}</b></div>
           <div class="text-slate-700">Poverty: <b>${tract.povertyRatePct}%</b> | No Car: <b>${tract.noVehicleRatePct}%</b></div>
+          ${tract.seniorsLivingAlonePct !== undefined ? `<div class="text-slate-700">Seniors Alone: <b>${tract.seniorsLivingAlonePct}%</b> | Disability: <b>${tract.disabilityRatePct ?? 14}%</b></div>` : ''}
+          ${isWellness ? '<div class="text-rose-700 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🛡️ Senior & Disability Wellness Priority Zone</div>' : ''}
+          ${tract.hasCoolingCenter ? '<div class="text-emerald-700 font-semibold text-[10px] mt-1 pt-0.5 border-t border-slate-200">🏛️ Identified Cooling Center Candidate</div>' : ''}
+          <div class="text-indigo-600 font-medium text-[10px] mt-1">👉 Click tract to inspect full demographic & AI dossier</div>
         </div>`,
         { direction: 'top', className: 'rounded shadow-md' }
       );
@@ -142,47 +212,131 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       // Add 10-minute walk buffer (800 meters) around candidate cooling center sites
       if (showWalkBuffers && tract.hasCoolingCenter) {
         const buffer = L.circle([tract.latitude, tract.longitude], {
-          radius: 800, // 800m is approximately a 10-minute walk
+          radius: 800,
           fillColor: '#0ea5e9',
           color: '#0284c7',
           weight: 1.5,
           dashArray: '4, 4',
-          fillOpacity: 0.1,
+          fillOpacity: 0.12,
         });
-        buffer.bindTooltip(`10-minute walk buffer (800m) to ${tract.coolingCenterName}`, {
-          direction: 'bottom',
+        buffer.bindTooltip(
+          `<div class="p-1 font-sans text-xs">
+            <b class="text-sky-700">10-Minute Walk Buffer (800m)</b><br/>
+            <span class="text-slate-800">Pedestrian shed to <b>${tract.coolingCenterName}</b></span><br/>
+            <span class="text-slate-500 text-[10px]">Zero-vehicle pedestrian catchment zone</span>
+          </div>`,
+          { direction: 'bottom' }
+        );
+        buffer.on('click', () => {
+          onSelectTract(tract);
         });
         layerGroupRef.current?.addLayer(buffer);
+      }
+
+      // Add prominent candidate cooling center pin
+      if (tract.hasCoolingCenter) {
+        const coolingIcon = L.divIcon({
+          html: `
+            <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;border:2px solid #38bdf8;background:#0369a1;box-shadow:0 3px 10px rgba(0,0,0,0.5);font-size:13px;cursor:pointer;">
+              🏛️
+            </div>
+          `,
+          className: 'candidate-cooling-pin',
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
+        });
+
+        const coolingMarker = L.marker([tract.latitude, tract.longitude], {
+          icon: coolingIcon,
+          zIndexOffset: 600,
+        });
+
+        coolingMarker.bindTooltip(
+          `<div class="p-1.5 font-sans text-xs min-w-[180px]">
+            <div class="flex items-center gap-1">
+              <span class="text-sm">🏛️</span>
+              <b class="text-slate-900">${tract.coolingCenterName || 'Candidate Cooling Center'}</b>
+            </div>
+            <div class="text-[10px] text-sky-600 font-bold uppercase mt-0.5">Priority Cooling Site Candidate</div>
+            <div class="text-slate-700 text-[11px] mt-1">Facility Type: <b>${tract.coolingCenterType || 'Recreation Center'}</b></div>
+            <div class="text-slate-700 text-[11px]">Walk Access Score: <b>${tract.walkScore}/100</b></div>
+            <div class="text-rose-600 text-[11px]">Thermal Offset: <b>${tract.predictedOffsetF > 0 ? '+' : ''}${tract.predictedOffsetF}°F</b></div>
+            <div class="text-sky-700 text-[10px] italic mt-1 font-semibold">👉 Click site to inspect full dossier</div>
+          </div>`,
+          { direction: 'top', offset: [0, -10] }
+        );
+
+        coolingMarker.on('click', () => {
+          onSelectTract(tract);
+        });
+
+        layerGroupRef.current?.addLayer(coolingMarker);
       }
     });
 
     // Render active mobile dispatched assets (Resource Mover)
     if (showDispatchedAssets && dispatchedAssets && dispatchedAssets.length > 0) {
       dispatchedAssets.forEach((asset) => {
-        const iconEmoji = asset.type === 'hydration' ? '💧' : asset.type === 'wellness' ? '🚑' : '🚌';
-        const colorClass =
-          asset.type === 'hydration'
-            ? 'background:#d97706;'
-            : asset.type === 'wellness'
-            ? 'background:#4f46e5;'
-            : 'background:#0891b2;';
+        const isHydration = asset.type === 'hydration';
+        const isWellness = asset.type === 'wellness';
+        const payloadIcon = isHydration ? '💧' : isWellness ? '🚑' : '🚌';
+        const badgeColor = isHydration ? '#f59e0b' : isWellness ? '#6366f1' : '#06b6d4';
+        const badgeBg = isHydration ? '#78350f' : isWellness ? '#312e81' : '#164e63';
 
         const customIcon = L.divIcon({
-          html: `<div style="display:flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:9999px;border:2px solid #ffffff;box-shadow:0 4px 12px rgba(0,0,0,0.6);font-size:14px;cursor:pointer;${colorClass}">${iconEmoji}</div>`,
+          html: `
+            <div style="display:flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:9999px;border:2px solid ${badgeColor};background:${badgeBg};box-shadow:0 3px 10px rgba(0,0,0,0.6);font-size:13px;cursor:pointer;">
+              ${payloadIcon}
+            </div>
+          `,
           className: 'custom-asset-pin',
-          iconSize: [30, 30],
-          iconAnchor: [15, 15],
+          iconSize: [28, 28],
+          iconAnchor: [14, 14],
         });
 
-        const marker = L.marker([asset.lat, asset.lng], { icon: customIcon });
+        const marker = L.marker([asset.lat, asset.lng], { 
+          icon: customIcon,
+          zIndexOffset: 1000,
+        });
+
+        const payloadDescription = isHydration
+          ? '1,000-gal chilled potable water reservoir + misting fans'
+          : isWellness
+          ? 'Paramedic triage team + cooling ice vests'
+          : 'Air-conditioned mobile transit heat shelter';
+
         marker.bindTooltip(
-          `<div style="font-family:sans-serif;font-size:12px;padding:2px;">
-            <b style="color:#ffffff;">${asset.name}</b><br/>
-            <span style="color:#94a3b8;">${asset.locationName}</span><br/>
-            <span style="color:#34d399;">+${asset.protectedPopulation.toLocaleString()} residents protected</span>
+          `<div class="p-2 font-sans text-xs min-w-[210px] leading-tight">
+            <div class="flex items-center gap-1.5 font-bold text-slate-900 text-sm">
+              <span>🚚</span>
+              <span>${payloadIcon}</span>
+              <span>${asset.name}</span>
+            </div>
+            <div class="text-[10px] font-bold uppercase mt-0.5" style="color:${badgeColor};">
+              ${isHydration ? 'Mobile Fleet (Trailer) • Hydration Payload' : isWellness ? 'Mobile Fleet (Van) • Paramedic Triage' : 'Mobile Transit • Cooling Shelter Bus'}
+            </div>
+            <div class="text-slate-700 mt-1.5">📍 <b>${asset.locationName}</b></div>
+            <div class="text-slate-600 text-[11px] mt-0.5">Payload: ${payloadDescription}</div>
+            <div class="text-emerald-700 font-semibold mt-1">👥 +${asset.protectedPopulation.toLocaleString()} residents protected</div>
+            <div class="flex items-center justify-between text-[10px] text-slate-500 mt-1 pt-1 border-t border-slate-200">
+              <span>Status: <b class="text-emerald-600 uppercase">${asset.status}</b></span>
+              <span>Dispatched: ${asset.dispatchedAt}</span>
+            </div>
+            <div class="text-amber-700 text-[10px] font-semibold mt-1">👉 Click to view unit deployment actions & tract details</div>
           </div>`,
-          { direction: 'top', offset: [0, -15] }
+          { direction: 'top', offset: [0, -10] }
         );
+
+        marker.on('click', () => {
+          setSelectedAsset(asset);
+          if (asset.tractId) {
+            const tract = tracts.find((t) => t.geoId === asset.tractId);
+            if (tract) {
+              onSelectTract(tract);
+            }
+          }
+        });
+
         layerGroupRef.current?.addLayer(marker);
       });
     }
@@ -193,8 +347,11 @@ export const HeatMap: React.FC<HeatMapProps> = ({
     minPovertyFilter,
     showWalkBuffers,
     onlyCandidates,
+    onlyWellnessPriority,
     showDispatchedAssets,
     dispatchedAssets,
+    activeMetric,
+    getColor,
     onSelectTract,
   ]);
 
@@ -270,7 +427,7 @@ export const HeatMap: React.FC<HeatMapProps> = ({
         </div>
 
         {/* Spatial Heat & Walk Filters Panel */}
-        <div className="bg-slate-900/90 backdrop-blur border border-slate-700/70 p-3 rounded-xl shadow-xl hidden sm:block">
+        <div className="bg-slate-900/90 backdrop-blur border border-slate-700/70 p-3 rounded-xl shadow-xl hidden sm:block max-h-[75vh] overflow-y-auto modal-scroll-container">
           <div className="flex items-center space-x-2 mb-2 pb-1 border-b border-slate-800">
             <Flame className="w-4 h-4 text-rose-400" />
             <h4 className="text-xs font-bold text-slate-100 uppercase tracking-wider">Spatial Heat & Walk Filters</h4>
@@ -333,30 +490,94 @@ export const HeatMap: React.FC<HeatMapProps> = ({
                 </label>
               </div>
 
-              <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer pt-0.5">
-                <input
-                  type="checkbox"
-                  checked={showDispatchedAssets}
-                  onChange={(e) => setShowDispatchedAssets(e.target.checked)}
-                  className="rounded accent-emerald-500 text-emerald-500"
-                />
-                <span className="flex items-center gap-1 text-emerald-300">
-                  <Truck className="w-3 h-3 text-emerald-400" />
-                  <span>Mobile Assets ({dispatchedAssets.length})</span>
-                </span>
-              </label>
+              {/* Dedicated Senior & Disability Wellness Priority Zones Layer */}
+              <div className="pt-1 border-t border-slate-800/60">
+                <label className="flex items-start space-x-1.5 text-slate-200 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={onlyWellnessPriority}
+                    onChange={(e) => setOnlyWellnessPriority(e.target.checked)}
+                    className="rounded accent-rose-500 text-rose-500 mt-0.5"
+                  />
+                  <div className="leading-tight">
+                    <span className="font-medium text-rose-300 flex items-center gap-1">
+                      <span>🛡️</span>
+                      <span>Senior & Disability Wellness Priority Zones</span>
+                    </span>
+                    <span className="text-[10px] text-slate-400 block mt-0.5">
+                      Elderly living alone ≥18% or disability ≥15% ({wellnessTractsCount} tracts flagged)
+                    </span>
+                  </div>
+                </label>
+              </div>
+
+              {/* Mobile Fleet Units Toggle */}
+              <div className="pt-1 space-y-1 border-t border-slate-800/60">
+                <label className="flex items-center space-x-1.5 text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={showDispatchedAssets}
+                    onChange={(e) => setShowDispatchedAssets(e.target.checked)}
+                    className="rounded accent-emerald-500 text-emerald-500"
+                  />
+                  <span className="flex items-center gap-1.5 text-emerald-300 font-medium">
+                    <Truck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>Mobile Fleet Units ({dispatchedAssets.length})</span>
+                  </span>
+                </label>
+              </div>
             </div>
           </div>
 
-          {/* Legend */}
-          <div className="mt-3 pt-2 border-t border-slate-800 text-[11px] flex items-center justify-between">
-            <span className="text-slate-400">Thermal Offset:</span>
-            <div className="flex items-center space-x-1">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" title="< -0.5°F"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-sky-400" title="0°F Baseline"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" title="+1°F to +2°F"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-orange-500" title="+2.5°F to +3.9°F"></span>
-              <span className="w-2.5 h-2.5 rounded-full bg-rose-500" title="+4°F+ Extreme"></span>
+          {/* Dynamic Active Metric Choropleth Map Legend */}
+          <div className="mt-3 pt-2 border-t border-slate-800 text-[11px] space-y-2">
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-slate-300 font-bold">{legendConfig.title}:</span>
+                <span className="text-[10px] font-mono px-1.5 py-0.2 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase">
+                  {activeMetric}
+                </span>
+              </div>
+              <div className="space-y-1">
+                {legendConfig.items.map((item, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-[10px] text-slate-300">
+                    <span className="truncate pr-1">{item.label}</span>
+                    <span
+                      className="w-3 h-3 rounded-full shrink-0 shadow-sm border border-slate-700"
+                      style={{ backgroundColor: item.color }}
+                    ></span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Mobile Fleet Units Legend Breakdown */}
+            <div className="pt-2 border-t border-slate-800/70 space-y-1 text-[10px]">
+              <span className="text-slate-400 font-bold uppercase tracking-wider block text-[9px]">
+                Asset & Siting Key:
+              </span>
+              <div className="grid grid-cols-2 gap-1.5 text-slate-300">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs">🏛️</span>
+                  <span>Cooling Site</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="w-2.5 h-2.5 rounded-full border border-sky-400 bg-sky-500/20 inline-block"></span>
+                  <span>10-min Walk</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs">💧</span>
+                  <span>Hydration Trailer</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs">🚑</span>
+                  <span>Wellness Van</span>
+                </div>
+                <div className="flex items-center gap-1.5 col-span-2">
+                  <span className="text-xs">🚌</span>
+                  <span>MARTA Shelter Bus (68°F)</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -365,16 +586,130 @@ export const HeatMap: React.FC<HeatMapProps> = ({
       {/* Main Map Canvas */}
       <div className="flex-1 h-full relative" onClick={() => setIsSearchFocused(false)}>
         <div ref={mapContainerRef} className="w-full h-full z-10" />
+
+        {/* Selected Dispatched Mobile Fleet Asset Floating Inspector */}
+        {selectedAsset && (
+          <div className="absolute top-4 right-4 z-20 max-w-sm w-full bg-slate-900/95 backdrop-blur-md border border-amber-500/40 rounded-xl p-4 shadow-2xl text-slate-200 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-start justify-between pb-2.5 border-b border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-base">
+                  {selectedAsset.type === 'hydration' ? '🚚💧' : selectedAsset.type === 'wellness' ? '🚚🚑' : '🚌'}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white leading-tight">{selectedAsset.name}</h4>
+                  <span className="text-[10px] font-mono text-amber-400 uppercase tracking-wide">
+                    {selectedAsset.type === 'hydration'
+                      ? 'Mobile Fleet • Potable Hydration Payload'
+                      : selectedAsset.type === 'wellness'
+                      ? 'Mobile Fleet • Paramedic Triage Payload'
+                      : 'Transit Bus • Cooling Shelter Payload'}
+                  </span>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedAsset(null)}
+                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+                title="Dismiss Inspector"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="flex justify-between items-center bg-slate-950/70 px-2.5 py-1.5 rounded-md border border-slate-800/80">
+                <span className="text-slate-400">Deployed Station:</span>
+                <span className="font-semibold text-slate-100">{selectedAsset.locationName}</span>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-950/70 px-2.5 py-1.5 rounded-md border border-slate-800/80">
+                <span className="text-slate-400">Vehicle Carrier:</span>
+                <span className="font-mono text-emerald-400">🚚 Class-6 Rapid Deployment Truck</span>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-950/70 px-2.5 py-1.5 rounded-md border border-slate-800/80">
+                <span className="text-slate-400">Mission Payload:</span>
+                <span className="font-medium text-amber-300">
+                  {selectedAsset.type === 'hydration'
+                    ? '💧 1,000-gal Chilled Potable Reservoir'
+                    : selectedAsset.type === 'wellness'
+                    ? '🚑 Mobile Paramedic Ice-Vest Unit'
+                    : '🚌 Air-Conditioned High-Capacity Cabin'}
+                </span>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-950/70 px-2.5 py-1.5 rounded-md border border-slate-800/80">
+                <span className="text-slate-400">Protected Population:</span>
+                <span className="font-mono font-bold text-sky-400">+{selectedAsset.protectedPopulation.toLocaleString()} residents</span>
+              </div>
+
+              <div className="flex justify-between items-center bg-slate-950/70 px-2.5 py-1.5 rounded-md border border-slate-800/80">
+                <span className="text-slate-400">Status & Timestamp:</span>
+                <span className="text-emerald-400 font-semibold">{selectedAsset.status.toUpperCase()} ({selectedAsset.dispatchedAt})</span>
+              </div>
+            </div>
+
+            {/* Asset Operations */}
+            <div className="mt-3.5 pt-3 border-t border-slate-800/80 flex items-center gap-2">
+              {selectedAsset.tractId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const assignedTract = tracts.find((t) => t.geoId === selectedAsset.tractId);
+                    if (assignedTract) {
+                      onSelectTract(assignedTract);
+                      if (mapInstanceRef.current) {
+                        mapInstanceRef.current.flyTo([assignedTract.latitude, assignedTract.longitude], 14, { duration: 0.8 });
+                      }
+                    }
+                  }}
+                  className="flex-1 py-1.5 px-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded text-[11px] font-medium transition-colors text-center"
+                >
+                  Inspect Tract
+                </button>
+              )}
+
+              {onRecallAsset && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onRecallAsset(selectedAsset.id);
+                    setSelectedAsset(null);
+                  }}
+                  className="flex-1 py-1.5 px-2 bg-rose-950/60 hover:bg-rose-900 border border-rose-500/40 text-rose-300 rounded text-[11px] font-medium transition-colors text-center"
+                >
+                  Recall Unit
+                </button>
+              )}
+
+              {onSwitchToDecisions && (
+                <button
+                  type="button"
+                  onClick={() => onSwitchToDecisions()}
+                  className="py-1.5 px-2.5 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 text-amber-300 rounded text-[11px] font-medium transition-colors text-center"
+                  title="Open Dispatch & Decisions Panel"
+                >
+                  Dispatch Ops
+                </button>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Interactive Selected Tract Inspector Drawer */}
       {selectedTract ? (
-        <div className="w-full md:w-96 bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 p-5 overflow-y-auto flex flex-col justify-between z-20">
-          <div>
+        <div className="w-full md:w-96 bg-slate-900 border-t md:border-t-0 md:border-l border-slate-800 p-5 overflow-y-auto flex flex-col justify-between z-20 modal-scroll-container">
+          <div className="space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div>
                 <span className="text-xs font-mono text-slate-400">TRACT {selectedTract.geoId}</span>
                 <h3 className="text-base font-bold text-white leading-tight">{selectedTract.neighborhood}</h3>
+                {isWellnessPriority(selectedTract) && (
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40 mt-1">
+                    🛡️ Senior & Disability Priority
+                  </span>
+                )}
               </div>
               <div className="flex items-center space-x-2">
                 <button
@@ -403,100 +738,311 @@ export const HeatMap: React.FC<HeatMapProps> = ({
               </div>
             </div>
 
-            {/* Localized Temperature Calculator against Current City Baseline */}
-            <div className="mt-4 p-3 rounded-lg bg-slate-950 border border-slate-800">
-              <div className="flex justify-between items-center text-xs text-slate-400">
-                <span>City Forecast Baseline:</span>
-                <span className="font-mono text-slate-200">{forecastBaselineF}°F</span>
+            {/* Localized Temperature Calculator / Microclimate Offset Card (Interactive Layer Switcher) */}
+            <div
+              onClick={() => setActiveMetric('heat')}
+              className={`p-3 rounded-xl border transition-all cursor-pointer relative ${
+                activeMetric === 'heat'
+                  ? 'bg-rose-950/40 border-rose-500 ring-2 ring-rose-500/50 shadow-lg shadow-rose-950/50'
+                  : 'bg-slate-950 border-slate-800 hover:border-slate-700'
+              }`}
+            >
+              <div className="flex justify-between items-center text-xs">
+                <div className="flex items-center gap-1.5">
+                  <Flame className="w-4 h-4 text-rose-400" />
+                  <span className="font-semibold text-slate-200">Microclimate Thermal Offset</span>
+                  {activeMetric === 'heat' && (
+                    <span className="text-[9px] font-bold px-1.5 py-0.2 rounded bg-rose-500/30 text-rose-300 border border-rose-500/40">
+                      Active Map Layer
+                    </span>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openGlossary('thermal-offset');
+                  }}
+                  className="text-slate-400 hover:text-white p-1 rounded"
+                  title="View Thermal Offset definition in Glossary"
+                >
+                  <Info className="w-3.5 h-3.5" />
+                </button>
               </div>
-              <div className="flex justify-between items-center mt-1 text-sm font-semibold">
-                <span className="text-slate-300">Predicted Microclimate:</span>
-                <span className="font-mono text-rose-400 text-lg">
-                  {(forecastBaselineF + selectedTract.predictedOffsetF).toFixed(1)}°F
+
+              <div className="flex justify-between items-baseline mt-2">
+                <div>
+                  <span className="text-[11px] text-slate-400">Localized Reading: </span>
+                  <span className="font-mono text-rose-400 text-lg font-bold">
+                    {(forecastBaselineF + selectedTract.predictedOffsetF).toFixed(1)}°F
+                  </span>
+                </div>
+                <span className="font-mono font-bold text-sm text-slate-200">
+                  {selectedTract.predictedOffsetF > 0 ? `+${selectedTract.predictedOffsetF}°F` : `${selectedTract.predictedOffsetF}°F`}
                 </span>
               </div>
-              <div className="text-[11px] text-slate-400 mt-1 italic">
-                *Tract runs {Math.abs(selectedTract.predictedOffsetF)}°F {selectedTract.predictedOffsetF >= 0 ? 'hotter' : 'cooler'} than citywide baseline.
+              <div className="text-[10px] text-slate-400 mt-1">
+                Baseline {forecastBaselineF}°F • Click card to color map by Heat Offset
               </div>
             </div>
 
-            {/* Tree Canopy & SVI Environmental Justice Cards */}
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="p-2.5 rounded-lg bg-emerald-950/30 border border-emerald-500/30">
-                <div className="flex items-center space-x-1.5 text-xs text-emerald-300 mb-1">
-                  <Trees className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Tree Canopy</span>
+            {/* Tree Canopy & SVI Cards (Interactive Layer Switchers) */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Tree Canopy Card */}
+              <div
+                onClick={() => setActiveMetric('canopy')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeMetric === 'canopy'
+                    ? 'bg-emerald-950/40 border-emerald-400 ring-2 ring-emerald-400/50 shadow-lg'
+                    : 'bg-emerald-950/20 border-emerald-500/30 hover:border-emerald-400/60'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs text-emerald-300 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <Trees className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="font-semibold">Tree Canopy</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('explainability-ai-attribution');
+                    }}
+                    className="text-emerald-400/70 hover:text-white"
+                    title="Tree Canopy info in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="text-base font-bold text-white font-mono">
                   {selectedTract.treeCanopyPct !== undefined ? `${selectedTract.treeCanopyPct}%` : '36.5%'}
                 </div>
-                <span className="text-[10px] text-slate-400">City Avg: 36.5%</span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">City Avg: 36.5%</span>
+                  {activeMetric === 'canopy' && (
+                    <span className="text-[9px] font-bold text-emerald-400">Active</span>
+                  )}
+                </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-purple-950/30 border border-purple-500/30">
-                <div className="flex items-center space-x-1.5 text-xs text-purple-300 mb-1">
-                  <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
-                  <span>CDC SVI Rank</span>
+              {/* CDC SVI Percentile Card */}
+              <div
+                onClick={() => setActiveMetric('svi')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeMetric === 'svi'
+                    ? 'bg-purple-950/40 border-purple-400 ring-2 ring-purple-400/50 shadow-lg'
+                    : 'bg-purple-950/20 border-purple-500/30 hover:border-purple-400/60'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs text-purple-300 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <ShieldAlert className="w-3.5 h-3.5 text-purple-400" />
+                    <span className="font-semibold">CDC SVI</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('cdc-svi');
+                    }}
+                    className="text-purple-400/70 hover:text-white"
+                    title="CDC SVI definition in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="text-base font-bold text-white font-mono">
-                  {selectedTract.sviScore !== undefined ? `${(selectedTract.sviScore * 100).toFixed(0)}th %ile` : 'High'}
+                  {selectedTract.sviScore !== undefined ? selectedTract.sviScore.toFixed(2) : '0.85'}
                 </div>
-                <span className="text-[10px] text-slate-400">
-                  {selectedTract.integratedRiskScore ? `Risk: ${selectedTract.integratedRiskScore.toFixed(1)}/100` : 'Composite High'}
-                </span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">
+                    {sviRankInfo ? `#${sviRankInfo.rank} of ${sviRankInfo.total}` : 'Composite Score'}
+                  </span>
+                  {activeMetric === 'svi' && (
+                    <span className="text-[9px] font-bold text-purple-300">Active</span>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Vulnerability Metrics Grid */}
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-1">
-                  <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
-                  <span>Poverty Rate</span>
+            {/* Socioeconomic Vulnerability Grid (Interactive Layer Switchers) */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Poverty Rate Card */}
+              <div
+                onClick={() => setActiveMetric('poverty')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeMetric === 'poverty'
+                    ? 'bg-amber-950/40 border-amber-400 ring-2 ring-amber-400/50 shadow-lg'
+                    : 'bg-slate-800/60 border-slate-700/50 hover:border-slate-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="font-semibold text-slate-200">Poverty Rate</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('poverty-vehicle-deficit');
+                    }}
+                    className="text-slate-400 hover:text-white"
+                    title="Poverty Thresholds in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="text-base font-bold text-slate-100 font-mono">
                   {selectedTract.povertyRatePct}%
                 </div>
-                <span className="text-[10px] text-slate-400">P75 Threshold: 24.5%</span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">P75: 24.5%</span>
+                  {activeMetric === 'poverty' && (
+                    <span className="text-[9px] font-bold text-amber-400">Active</span>
+                  )}
+                </div>
               </div>
 
-              <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-1">
-                  <Navigation className="w-3.5 h-3.5 text-sky-400" />
-                  <span>No Vehicle</span>
+              {/* Zero Vehicle Households Card */}
+              <div
+                onClick={() => setActiveMetric('noVehicle')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeMetric === 'noVehicle'
+                    ? 'bg-cyan-950/40 border-cyan-400 ring-2 ring-cyan-400/50 shadow-lg'
+                    : 'bg-slate-800/60 border-slate-700/50 hover:border-slate-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <Navigation className="w-3.5 h-3.5 text-sky-400" />
+                    <span className="font-semibold text-slate-200">No Vehicle</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('poverty-vehicle-deficit');
+                    }}
+                    className="text-slate-400 hover:text-white"
+                    title="Vehicle Deficit in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
                 </div>
                 <div className="text-base font-bold text-slate-100 font-mono">
                   {selectedTract.noVehicleRatePct}%
                 </div>
-                <span className="text-[10px] text-slate-400">P75 Threshold: 14.8%</span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-1">
-                  <Users className="w-3.5 h-3.5 text-indigo-400" />
-                  <span>Population</span>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">P75: 14.8%</span>
+                  {activeMetric === 'noVehicle' && (
+                    <span className="text-[9px] font-bold text-cyan-300">Active</span>
+                  )}
                 </div>
-                <div className="text-base font-bold text-slate-100 font-mono">
-                  {selectedTract.totalPop.toLocaleString()}
-                </div>
-                <span className="text-[10px] text-slate-400">Median Age: {selectedTract.medianAge}y</span>
-              </div>
-
-              <div className="p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
-                <div className="flex items-center space-x-1.5 text-xs text-slate-400 mb-1">
-                  <Building className="w-3.5 h-3.5 text-emerald-400" />
-                  <span>Vintage</span>
-                </div>
-                <div className="text-base font-bold text-slate-100 font-mono">
-                  {selectedTract.medianYearBuilt}
-                </div>
-                <span className="text-[10px] text-slate-400">{selectedTract.housingUnits ?? 0} housing units</span>
               </div>
             </div>
 
-            {/* Existing / Recommended Cooling Center status */}
+            {/* Senior & Disability Demographics Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Seniors Living Alone Card (Interactive Layer Switcher for Seniors) */}
+              <div
+                onClick={() => setActiveMetric('seniors')}
+                className={`p-3 rounded-xl border transition-all cursor-pointer ${
+                  activeMetric === 'seniors'
+                    ? 'bg-rose-950/40 border-rose-400 ring-2 ring-rose-400/50 shadow-lg'
+                    : 'bg-slate-800/60 border-slate-700/50 hover:border-slate-600'
+                }`}
+              >
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <Users className="w-3.5 h-3.5 text-rose-400" />
+                    <span className="font-semibold text-slate-200">Seniors Alone</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('wellness-check-thresholds');
+                    }}
+                    className="text-slate-400 hover:text-white"
+                    title="Senior Isolation Thresholds in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="text-base font-bold text-rose-300 font-mono">
+                  {selectedTract.seniorsLivingAlonePct !== undefined ? `${selectedTract.seniorsLivingAlonePct}%` : '21.4%'}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">Threshold: ≥18%</span>
+                  {activeMetric === 'seniors' && (
+                    <span className="text-[9px] font-bold text-rose-300">Active</span>
+                  )}
+                </div>
+              </div>
+
+              {/* Disability Rate Card */}
+              <div
+                onClick={() => setActiveMetric('seniors')}
+                className="p-3 rounded-xl border border-slate-700/50 bg-slate-800/60 hover:border-slate-600 transition-all cursor-pointer"
+              >
+                <div className="flex items-center justify-between text-xs text-slate-400 mb-1">
+                  <div className="flex items-center space-x-1.5">
+                    <HeartHandshake className="w-3.5 h-3.5 text-indigo-400" />
+                    <span className="font-semibold text-slate-200">Disability Rate</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openGlossary('wellness-check-thresholds');
+                    }}
+                    className="text-slate-400 hover:text-white"
+                    title="Disability Threshold in Glossary"
+                  >
+                    <Info className="w-3 h-3" />
+                  </button>
+                </div>
+                <div className="text-base font-bold text-indigo-300 font-mono">
+                  {selectedTract.disabilityRatePct !== undefined ? `${selectedTract.disabilityRatePct}%` : '16.8%'}
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[10px] text-slate-400">Threshold: ≥15%</span>
+                  <span className="text-[10px] text-slate-400">Age: {selectedTract.medianAge}y</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Action: Dispatch Wellness Van to Tract */}
+            <div className="p-3 rounded-xl bg-slate-950/80 border border-slate-800 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-200 flex items-center gap-1.5">
+                  <HeartHandshake className="w-3.5 h-3.5 text-rose-400" />
+                  <span>Proactive Wellness Dispatch</span>
+                </span>
+                <span className="text-[10px] text-slate-400 font-mono">Mobile Surge Unit</span>
+              </div>
+              <p className="text-[11px] text-slate-400 leading-tight">
+                Send emergency paramedics and ice vests to verify vulnerable elderly/isolated residents in this tract.
+              </p>
+              <button
+                type="button"
+                onClick={handleDispatchWellnessVanToSelected}
+                className="w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs flex items-center justify-center gap-1.5 transition shadow shadow-indigo-950/50 cursor-pointer"
+              >
+                <span>🚑 Dispatch Wellness Van to Tract</span>
+              </button>
+              {dispatchFeedback && (
+                <div className="flex items-center gap-1.5 text-[11px] text-emerald-400 bg-emerald-950/40 p-1.5 rounded border border-emerald-800/40">
+                  <Check className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                  <span>{dispatchFeedback}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Existing / Recommended Cooling Center Status */}
             {selectedTract.hasCoolingCenter && (
-              <div className="mt-3 p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-xs">
+              <div className="p-3 rounded-lg bg-emerald-950/40 border border-emerald-500/30 text-xs">
                 <div className="font-bold text-emerald-300 flex items-center space-x-1.5">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
                   <span>Identified Cooling Siting Candidate</span>
@@ -511,10 +1057,10 @@ export const HeatMap: React.FC<HeatMapProps> = ({
           </div>
 
           {/* Action CTA: Consult AI Advisor */}
-          <div className="pt-3 border-t border-slate-800 mt-3">
+          <div className="pt-3 border-t border-slate-800 mt-4">
             <button
               onClick={() => onAskAgentAboutTract(selectedTract)}
-              className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-medium text-xs flex items-center justify-center space-x-2 shadow-lg shadow-rose-950/50 transition-all"
+              className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-medium text-xs flex items-center justify-center space-x-2 shadow-lg shadow-rose-950/50 transition-all cursor-pointer"
             >
               <Sparkles className="w-4 h-4" />
               <span>Query Advisor on {selectedTract.neighborhood}</span>

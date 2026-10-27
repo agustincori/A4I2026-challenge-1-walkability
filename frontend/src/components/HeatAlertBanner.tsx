@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ShieldAlert, X, CheckCircle2 } from 'lucide-react';
 import { HeatAlert } from '../types';
+import { useModalDismiss } from '../hooks/useModalDismiss';
 
 interface HeatAlertBannerProps {
   alerts: HeatAlert[];
@@ -9,6 +10,11 @@ interface HeatAlertBannerProps {
 
 export const HeatAlertBanner: React.FC<HeatAlertBannerProps> = ({ alerts, baselineTempF }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { modalRef, handleBackdropClick } = useModalDismiss({
+    isOpen: isModalOpen,
+    onClose: () => setIsModalOpen(false),
+  });
 
   return (
     <>
@@ -44,33 +50,47 @@ export const HeatAlertBanner: React.FC<HeatAlertBannerProps> = ({ alerts, baseli
         </div>
       </div>
 
-      {/* Alerts Modal */}
+      {/* Alerts Modal with P0 constrained layout & outside click / Esc dismiss */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-slate-900 border border-slate-700 rounded-2xl max-w-xl w-full p-6 shadow-2xl relative">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-              <div className="flex items-center gap-2">
+        <div
+          onClick={handleBackdropClick}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="heat-advisories-title"
+        >
+          <div
+            ref={modalRef}
+            className="w-full max-w-2xl max-h-[85vh] flex flex-col bg-slate-900 border border-rose-500/40 rounded-2xl shadow-2xl overflow-hidden animate-scale-in"
+          >
+            {/* Pinned Header */}
+            <div className="p-5 border-b border-slate-800 shrink-0 flex items-center justify-between bg-slate-900/95">
+              <div className="flex items-center gap-3">
                 <span className="p-2 rounded-lg bg-rose-500/10 text-rose-400 border border-rose-500/20">
                   <ShieldAlert className="w-5 h-5" />
                 </span>
                 <div>
-                  <h3 className="font-bold text-white text-base">Active Municipal Heat Advisories</h3>
+                  <h3 id="heat-advisories-title" className="font-bold text-white text-base">
+                    Active Municipal Heat Advisories
+                  </h3>
                   <p className="text-xs text-slate-400">Emergency Operations Center • City of Atlanta</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition"
+                className="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer"
+                aria-label="Close modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <div className="space-y-3.5 my-4 max-h-[60vh] overflow-y-auto pr-1">
+            {/* Scrollable Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-5 space-y-3 modal-scroll-container">
               {alerts.map((alert) => (
                 <div
                   key={alert.id}
-                  className={`p-3.5 rounded-xl border ${
+                  className={`p-3.5 rounded-xl border transition-all ${
                     alert.severity === 'warning'
                       ? 'bg-rose-950/30 border-rose-800/40 text-rose-200'
                       : alert.severity === 'spike'
@@ -93,13 +113,25 @@ export const HeatAlertBanner: React.FC<HeatAlertBannerProps> = ({ alerts, baseli
               ))}
             </div>
 
-            <div className="pt-3 border-t border-slate-800 flex justify-end">
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition"
-              >
-                Acknowledge Directives
-              </button>
+            {/* Pinned Footer */}
+            <div className="p-4 border-t border-slate-800 shrink-0 flex items-center justify-between bg-slate-900/95">
+              <span className="text-xs text-slate-400">
+                {alerts.length} active directives under NWS Stage 3 protocol
+              </span>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3.5 py-2 rounded-xl text-xs font-semibold transition cursor-pointer"
+                >
+                  Close
+                </button>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="bg-rose-600 hover:bg-rose-500 text-white px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer shadow-lg shadow-rose-950/50"
+                >
+                  Acknowledge Directives
+                </button>
+              </div>
             </div>
           </div>
         </div>
