@@ -1,7 +1,8 @@
 import React from 'react';
-import { Flame, Activity, RefreshCw, Database } from 'lucide-react';
+import { Flame, Activity, RefreshCw, Database, HelpCircle } from 'lucide-react';
 import { HeatAlert } from '../types';
 import { HeatAlertBanner } from './HeatAlertBanner';
+import { useUI } from '../context/UIContext';
 
 interface NavbarProps {
   activeTab: string;
@@ -30,6 +31,8 @@ export const Navbar: React.FC<NavbarProps> = ({
   baselineTempF,
   pendingDecisionsCount = 0,
 }) => {
+  const { openGlossary } = useUI();
+
   const tabs = [
     { id: 'map', label: 'Map & Walkability', icon: '🗺️' },
     { 
@@ -50,9 +53,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       <HeatAlertBanner alerts={alerts} baselineTempF={baselineTempF} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 gap-3">
           {/* Logo & City Title */}
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-3 shrink-0">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-rose-600 via-amber-500 to-emerald-400 p-0.5 shadow-lg shadow-rose-950/50">
               <div className="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
                 <Flame className="w-5 h-5 text-amber-400" />
@@ -71,8 +74,21 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           </div>
 
-          {/* Cloud Run Service Status Badge */}
-          <div className="flex items-center space-x-3">
+          {/* Right Action Controls */}
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            {/* Help & Glossary Button */}
+            <button
+              type="button"
+              onClick={() => openGlossary()}
+              className="flex items-center space-x-1.5 px-3 py-1.5 rounded-lg border border-indigo-500/30 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/50 hover:text-white text-xs font-medium transition-all shadow-sm cursor-pointer"
+              title="Open Urban Heat & Equity Metric Glossary"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-indigo-400" />
+              <span className="hidden sm:inline">? Help & Glossary</span>
+              <span className="sm:hidden">? Help</span>
+            </button>
+
+            {/* Cloud Run Service Status Badge */}
             <div
               className={`flex items-center space-x-2 px-3 py-1.5 rounded-lg border text-xs font-medium cursor-pointer transition-all ${
                 isCloudRunConnected
@@ -94,13 +110,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }`}
                 ></span>
               </span>
-              <span className="font-mono">Cloud Run Agent: {isCloudRunConnected ? 'LIVE' : 'OFFLINE'}</span>
-              {latencyMs > 0 && <span className="text-slate-400 font-mono text-[10px]">({latencyMs}ms)</span>}
+              <span className="font-mono hidden md:inline">Cloud Run: {isCloudRunConnected ? 'LIVE' : 'OFFLINE'}</span>
+              <span className="font-mono md:hidden">{isCloudRunConnected ? 'LIVE' : 'OFF'}</span>
+              {latencyMs > 0 && <span className="text-slate-400 font-mono text-[10px] hidden sm:inline">({latencyMs}ms)</span>}
               <RefreshCw className="w-3 h-3 text-slate-400 hover:text-white ml-1" />
             </div>
 
             {/* Data Source Toggle */}
-            <div className="hidden md:flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-lg p-1 text-xs">
+            <div className="hidden lg:flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-lg p-1 text-xs">
               <button
                 type="button"
                 onClick={() => setUseMockMode(false)}
@@ -157,4 +174,3 @@ export const Navbar: React.FC<NavbarProps> = ({
     </header>
   );
 };
-
