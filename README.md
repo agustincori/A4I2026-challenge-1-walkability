@@ -3,23 +3,14 @@
 **Agents for Impact 2026**
 
 
-> [!NOTE]
-> ### 📢 Pitch Deck & Presentation Draft (Under Review)
-> - 📊 **Download PowerPoint Deck:** [docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx](docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx)  
->   *(Direct Link: [Atlanta_Heat_Resilience_2_Slide_Deck.pptx](https://github.com/agustincori/A4I2026-challenge-1-walkability/raw/main/docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx))*
-> - 🖥️ **Interactive Web Slides / PDF Export:** [docs/pitch_deck_2_slides.html](docs/pitch_deck_2_slides.html)
-> - 📜 **3-Minute Timed Video Walkthrough Script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
-> - 📋 **2-Slide Deck Markdown Reference:** [docs/PITCH_DECK_2_SLIDES.md](docs/PITCH_DECK_2_SLIDES.md)
-> - 📑 **System Architecture & Technical Overview:** [docs/SUBMISSION_OVERVIEW.md](docs/SUBMISSION_OVERVIEW.md)
-> - 🏆 **Official Hackathon Submission Document:** [docs/SUBMISSION.md](docs/SUBMISSION.md)
-> - ⚠️ **Draft Status Notice:** This presentation structure and talk track is shared for table and team review. Data points and siting figures will be refreshed once final data pipeline runs conclude.
-
 ### Team implementation layout
 
 The [data plane](data_plane/README.md) owns loading, notebooks, SQL, model training,
 evaluation and experiment history. The [agent](agent/) owns the online ADK tools and
-conversation runtime. Run data workflows as python3 -m data_plane.pipelines.<workflow>
-from the repository root; the data-plane guide lists the commands and integration contract.
+conversation runtime. The [docs](docs/) directory is the central hub for all competition deliverables,
+official submission documentation, pitch decks, demo walkthrough scripts, and architecture specifications.
+Run data workflows as python3 -m data_plane.pipelines.<workflow> from the repository root; the data-plane
+guide lists the commands and integration contract.
 
 ---
 
