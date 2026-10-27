@@ -1,7 +1,9 @@
 import { ToolCallTrace } from '../types';
 import { parseAgentEvents } from './agentEvidence';
 
-export const CLOUD_RUN_URL = 'https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app';
+export const CLOUD_RUN_URL = (
+  import.meta.env?.VITE_AGENT_API_URL || 'https://atlanta-heat-advisor-1004921377034.us-central1.run.app'
+).replace(/\/+$/, '');
 
 // Detect whether to use relative proxy in dev or direct Cloud Run URL
 const getBaseUrl = () => {

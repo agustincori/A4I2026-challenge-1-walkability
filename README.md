@@ -10,6 +10,7 @@
 > - 🖥️ **Interactive Web Slides / PDF Export:** [docs/pitch_deck_2_slides.html](docs/pitch_deck_2_slides.html)
 > - 📜 **3-Minute Timed Video Walkthrough Script:** [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md)
 > - 📋 **2-Slide Deck Markdown Reference:** [docs/PITCH_DECK_2_SLIDES.md](docs/PITCH_DECK_2_SLIDES.md)
+> - 📑 **System Architecture & Submission Overview:** [docs/SUBMISSION_OVERVIEW.md](docs/SUBMISSION_OVERVIEW.md)
 > - ⚠️ **Draft Status Notice:** This presentation structure and talk track is shared for table and team review. Data points and siting figures will be refreshed once final data pipeline runs conclude.
 
 ### Team implementation layout
@@ -814,3 +815,32 @@ been solved at another table.
 To report a problem with the data or the notebook, run the **diagnostic cell** at the bottom of
 the notebook and share what it prints. One block, everything a coach needs, beats a screenshot
 every time.
+
+## Frontend dashboard
+
+The React/TypeScript dashboard lives in [`frontend/`](frontend/). The earlier minimal
+chat files are retained, but `src/main.tsx` explicitly loads the dashboard.
+Run it locally with:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+During local development, Vite proxies requests to the deployed agent documented in
+[`agent/README.md`](agent/README.md). Set `AGENT_API_URL` before starting Vite to use a
+local agent. `VITE_AGENT_API_URL` overrides the browser endpoint in non-container builds.
+See [`frontend/README.md`](frontend/README.md#local-e2e-validation) for local E2E validation.
+For Cloud Run, configure `AGENT_API_URL` to the agent's HTTPS base URL and deploy from the
+repository root:
+
+```bash
+export AGENT_API_URL="https://your-agent-service-xxxxx.run.app"
+bash frontend/deploy.sh
+```
+
+The script uses `gcloud run deploy --source` to build and deploy the frontend. It also sets the
+`AGENT_API_URL` Cloud Run environment variable; Nginx proxies the UI's `/api/cloudrun` requests
+to that agent service. The Cloud Build/Run APIs must be enabled and your account must have permission to
+build images and deploy Cloud Run services.
