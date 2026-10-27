@@ -14,6 +14,8 @@ export interface CensusTract {
   predictedOffsetF: number;
   treeCanopyPct: number;
   walkScore: number;
+  sviScore?: number;
+  integratedRiskScore?: number;
   hasCoolingCenter?: boolean;
   coolingCenterName?: string;
   coolingCenterType?: 'Library' | 'Recreation Center' | 'Community Center' | 'High School';
