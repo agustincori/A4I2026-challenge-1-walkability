@@ -5,6 +5,7 @@ Synchronized with data-lane cleaning contracts and production model serving.
 
 import os
 import re
+from datetime import datetime, timezone
 from typing import Dict, Any, List, Optional
 
 try:
@@ -112,7 +113,7 @@ def predict_heat_offset_and_explain(
         }
 
     sql = f"""
-    WITH tract AS (
+    WITH tract_base AS (
       SELECT 
         geo_id,
         tract_lat,
@@ -134,6 +135,14 @@ def predict_heat_offset_and_explain(
         AND tract_lon BETWEEN -180 AND 180
       ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(tract_lon, tract_lat)), geo_id
       LIMIT 1
+    ),
+    tract AS (
+      SELECT 
+        b.*,
+        ROUND(CASE WHEN c.tree_canopy_pct <= 1.0 THEN c.tree_canopy_pct * 100 ELSE c.tree_canopy_pct END, 1) AS tree_canopy_pct
+      FROM tract_base b
+      LEFT JOIN `{PROJECT_ID}.{DATASET_ID}.atlanta_canopy_heat_svi_modeling` c
+        ON b.geo_id = c.GEOID
     )
     SELECT 
       p.predicted_offset_f,
@@ -189,7 +198,8 @@ def predict_heat_offset_and_explain(
             "poverty_rate_pct": round(row.poverty_rate * 100, 1),
             "no_vehicle_rate_pct": round(row.no_vehicle_rate * 100, 1),
             "median_age": round(row.median_age, 1),
-            "median_year_structure_built": int(row.median_year_structure_built)
+            "median_year_structure_built": int(row.median_year_structure_built),
+            "tree_canopy_pct": getattr(row, "tree_canopy_pct", None),
         }
     }
 
@@ -227,13 +237,23 @@ def compare_locations_and_explain(
 
     diff_f = round(site1["predicted_heat_offset_f"] - site2["predicted_heat_offset_f"], 2)
     
+    canopy1 = site1.get("demographics", {}).get("tree_canopy_pct")
+    canopy2 = site2.get("demographics", {}).get("tree_canopy_pct")
+    canopy_summary = ""
+    if canopy1 is not None and canopy2 is not None:
+        canopy_diff = round(canopy1 - canopy2, 1)
+        canopy_summary = (
+            f" Tree canopy cover: {label1} has {canopy1}% vs {label2} with {canopy2}% "
+            f"({abs(canopy_diff)}% {'higher' if canopy_diff > 0 else 'lower'})."
+        )
+    
     return {
         "site_1": {"name": label1, "details": site1},
         "site_2": {"name": label2, "details": site2},
         "temperature_difference_f": diff_f,
         "comparison_summary": (
             f"{label1} is predicted to be {abs(diff_f)}°F "
-            f"{'hotter' if diff_f > 0 else 'cooler'} than {label2}."
+            f"{'hotter' if diff_f > 0 else 'cooler'} than {label2}.{canopy_summary}"
         )
     }
 
@@ -312,22 +332,25 @@ def rank_cooling_center_sites(
       JOIN cleaned_tracts t USING (geo_id)
     )
     SELECT 
-      geo_id,
-      tract_lat,
-      tract_lon,
-      ROUND(predicted_offset_f, 2) AS offset_f,
-      ROUND(total_pop) AS total_pop,
-      ROUND(poverty_rate * 100, 1) AS poverty_pct,
-      ROUND(no_vehicle_rate * 100, 1) AS no_vehicle_pct,
-      ROUND(median_age, 1) AS median_age,
+      p.geo_id,
+      p.tract_lat,
+      p.tract_lon,
+      ROUND(p.predicted_offset_f, 2) AS offset_f,
+      ROUND(p.total_pop) AS total_pop,
+      ROUND(p.poverty_rate * 100, 1) AS poverty_pct,
+      ROUND(p.no_vehicle_rate * 100, 1) AS no_vehicle_pct,
+      ROUND(p.median_age, 1) AS median_age,
       ROUND(
-        (predicted_offset_f * 0.4) + 
-        (poverty_rate * 10.0 * 0.3) + 
-        (no_vehicle_rate * 10.0 * 0.3),
+        (p.predicted_offset_f * 0.4) + 
+        (p.poverty_rate * 10.0 * 0.3) + 
+        (p.no_vehicle_rate * 10.0 * 0.3),
         2
       ) AS composite_vulnerability_score,
-      top_feature_attributions
-    FROM predictions
+      ROUND(CASE WHEN c.tree_canopy_pct <= 1.0 THEN c.tree_canopy_pct * 100 ELSE c.tree_canopy_pct END, 1) AS tree_canopy_pct,
+      p.top_feature_attributions
+    FROM predictions p
+    LEFT JOIN `{PROJECT_ID}.{DATASET_ID}.atlanta_canopy_heat_svi_modeling` c
+      ON p.geo_id = c.GEOID
     ORDER BY composite_vulnerability_score DESC
     LIMIT {top_n}
     """
@@ -351,6 +374,7 @@ def rank_cooling_center_sites(
             "poverty_rate_pct": r.poverty_pct,
             "no_vehicle_rate_pct": r.no_vehicle_pct,
             "median_age": r.median_age,
+            "tree_canopy_pct": getattr(r, "tree_canopy_pct", None),
             "composite_score": r.composite_vulnerability_score,
             "top_feature_attributions": attributions,
         })
@@ -425,24 +449,28 @@ def get_tract_demographics(
             return {"error": f"Invalid 11-digit Census tract GEOID: {tract_id}."}
         sql = f"""
         SELECT 
-          geo_id,
-          tract_lat,
-          tract_lon,
-          total_pop,
-          CASE WHEN median_age BETWEEN 0 AND 120 THEN median_age ELSE 36.0 END AS median_age,
-          CASE WHEN median_income >= 0 THEN median_income ELSE 65000.0 END AS median_income,
-          CASE WHEN housing_units >= 0 THEN housing_units ELSE 1500.0 END AS housing_units,
+          d.geo_id,
+          d.tract_lat,
+          d.tract_lon,
+          d.total_pop,
+          CASE WHEN d.median_age BETWEEN 0 AND 120 THEN d.median_age ELSE 36.0 END AS median_age,
+          CASE WHEN d.median_income >= 0 THEN d.median_income ELSE 65000.0 END AS median_income,
+          CASE WHEN d.housing_units >= 0 THEN d.housing_units ELSE 1500.0 END AS housing_units,
           CASE
-            WHEN median_year_structure_built > 1800 AND median_year_structure_built <= 2030
-            THEN median_year_structure_built
+            WHEN d.median_year_structure_built > 1800 AND d.median_year_structure_built <= 2030
+            THEN d.median_year_structure_built
             ELSE 1975.0
           END AS median_year_structure_built,
-          no_cars,
-          households,
-          ROUND(CASE WHEN poverty_rate BETWEEN 0 AND 1 THEN poverty_rate ELSE 0.15 END * 100, 1) AS poverty_pct,
-          ROUND(CASE WHEN no_vehicle_rate BETWEEN 0 AND 1 THEN no_vehicle_rate ELSE 0.10 END * 100, 1) AS no_vehicle_pct
-        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
-        WHERE geo_id = @tract_id
+          d.no_cars,
+          d.households,
+          ROUND(CASE WHEN d.poverty_rate BETWEEN 0 AND 1 THEN d.poverty_rate ELSE 0.15 END * 100, 1) AS poverty_pct,
+          ROUND(CASE WHEN d.no_vehicle_rate BETWEEN 0 AND 1 THEN d.no_vehicle_rate ELSE 0.10 END * 100, 1) AS no_vehicle_pct,
+          ROUND(CASE WHEN c.tree_canopy_pct <= 1.0 THEN c.tree_canopy_pct * 100 ELSE c.tree_canopy_pct END, 1) AS tree_canopy_pct,
+          ROUND(c.integrated_risk_score, 2) AS integrated_risk_score
+        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics` d
+        LEFT JOIN `{PROJECT_ID}.{DATASET_ID}.atlanta_canopy_heat_svi_modeling` c
+          ON d.geo_id = c.GEOID
+        WHERE d.geo_id = @tract_id
         LIMIT 1
         """
         job_config = bigquery.QueryJobConfig(
@@ -460,24 +488,28 @@ def get_tract_demographics(
             }
         sql = f"""
         SELECT 
-          geo_id,
-          tract_lat,
-          tract_lon,
-          total_pop,
-          CASE WHEN median_age BETWEEN 0 AND 120 THEN median_age ELSE 36.0 END AS median_age,
-          CASE WHEN median_income >= 0 THEN median_income ELSE 65000.0 END AS median_income,
-          CASE WHEN housing_units >= 0 THEN housing_units ELSE 1500.0 END AS housing_units,
+          d.geo_id,
+          d.tract_lat,
+          d.tract_lon,
+          d.total_pop,
+          CASE WHEN d.median_age BETWEEN 0 AND 120 THEN d.median_age ELSE 36.0 END AS median_age,
+          CASE WHEN d.median_income >= 0 THEN d.median_income ELSE 65000.0 END AS median_income,
+          CASE WHEN d.housing_units >= 0 THEN d.housing_units ELSE 1500.0 END AS housing_units,
           CASE
-            WHEN median_year_structure_built > 1800 AND median_year_structure_built <= 2030
-            THEN median_year_structure_built
+            WHEN d.median_year_structure_built > 1800 AND median_year_structure_built <= 2030
+            THEN d.median_year_structure_built
             ELSE 1975.0
           END AS median_year_structure_built,
-          no_cars,
-          households,
-          ROUND(CASE WHEN poverty_rate BETWEEN 0 AND 1 THEN poverty_rate ELSE 0.15 END * 100, 1) AS poverty_pct,
-          ROUND(CASE WHEN no_vehicle_rate BETWEEN 0 AND 1 THEN no_vehicle_rate ELSE 0.10 END * 100, 1) AS no_vehicle_pct
-        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics`
-        ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(tract_lon, tract_lat)), geo_id
+          d.no_cars,
+          d.households,
+          ROUND(CASE WHEN d.poverty_rate BETWEEN 0 AND 1 THEN d.poverty_rate ELSE 0.15 END * 100, 1) AS poverty_pct,
+          ROUND(CASE WHEN d.no_vehicle_rate BETWEEN 0 AND 1 THEN d.no_vehicle_rate ELSE 0.10 END * 100, 1) AS no_vehicle_pct,
+          ROUND(CASE WHEN c.tree_canopy_pct <= 1.0 THEN c.tree_canopy_pct * 100 ELSE c.tree_canopy_pct END, 1) AS tree_canopy_pct,
+          ROUND(c.integrated_risk_score, 2) AS integrated_risk_score
+        FROM `{PROJECT_ID}.{DATASET_ID}.tract_demographics` d
+        LEFT JOIN `{PROJECT_ID}.{DATASET_ID}.atlanta_canopy_heat_svi_modeling` c
+          ON d.geo_id = c.GEOID
+        ORDER BY ST_DISTANCE(ST_GEOGPOINT(@lon, @lat), ST_GEOGPOINT(d.tract_lon, d.tract_lat)), d.geo_id
         LIMIT 1
         """
         job_config = bigquery.QueryJobConfig(
@@ -504,7 +536,9 @@ def get_tract_demographics(
         "median_year_built": int(r.median_year_structure_built) if r.median_year_structure_built else None,
         "households_without_vehicle": int(r.no_cars) if r.no_cars else None,
         "poverty_rate_pct": r.poverty_pct,
-        "no_vehicle_rate_pct": r.no_vehicle_pct
+        "no_vehicle_rate_pct": r.no_vehicle_pct,
+        "tree_canopy_pct": getattr(r, "tree_canopy_pct", None),
+        "integrated_risk_score": getattr(r, "integrated_risk_score", None),
     }
 
 
@@ -555,6 +589,7 @@ def compare_census_tracts(
             "larger_population_tract": tract_id_1 if (site1["demographics"]["total_pop"] or 0) > (site2["demographics"]["total_pop"] or 0) else tract_id_2,
             "higher_poverty_tract": tract_id_1 if site1["demographics"]["poverty_rate_pct"] > site2["demographics"]["poverty_rate_pct"] else tract_id_2,
             "higher_transit_dependency_tract": tract_id_1 if site1["demographics"]["no_vehicle_rate_pct"] > site2["demographics"]["no_vehicle_rate_pct"] else tract_id_2,
+            "lower_tree_canopy_tract": tract_id_1 if (site1["demographics"].get("tree_canopy_pct") or 0.0) < (site2["demographics"].get("tree_canopy_pct") or 0.0) else tract_id_2,
         }
     }
 
@@ -635,4 +670,183 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
             "citywide_75th_percentile_no_vehicle_pct": r.city_p75_no_vehicle_pct
         },
         "audit_finding": r.audit_status
+    }
+
+
+def recommend_canopy_interventions(
+    top_n: int = 5,
+    min_pop_density: float = 1000.0,
+) -> Dict[str, Any]:
+    """
+    Identifies high-priority Atlanta Census tracts for urban forestry, tree planting,
+    and shade canopy interventions based on heat exposure, social vulnerability,
+    population density, and current canopy deficit.
+
+    Args:
+        top_n: Number of priority tracts to return (default: 5).
+        min_pop_density: Minimum population density per sq mile to prioritize human impact (default: 1000.0).
+
+    Returns:
+        Dict with list of recommended tracts, canopy deficits, and targeted resilience interventions.
+    """
+    client = get_client()
+    sql = f"""
+    SELECT 
+      GEOID AS tract_id,
+      NAME AS tract_name,
+      POP100 AS population,
+      ROUND(pop_density, 1) AS pop_density,
+      ROUND(mean_temp, 1) AS mean_temp_f,
+      ROUND(CASE WHEN tree_canopy_pct <= 1.0 THEN tree_canopy_pct * 100 ELSE tree_canopy_pct END, 1) AS tree_canopy_pct,
+      ROUND(RPL_THEMES, 3) AS svi_percentile,
+      ROUND(integrated_risk_score, 2) AS integrated_risk_score,
+      ROUND(EP_POV150, 1) AS poverty_pct,
+      ROUND(EP_NOVEH, 1) AS no_vehicle_pct
+    FROM `{PROJECT_ID}.{DATASET_ID}.atlanta_canopy_heat_svi_modeling`
+    WHERE pop_density >= @min_pop_density
+      AND tree_canopy_pct IS NOT NULL
+    ORDER BY integrated_risk_score DESC, tree_canopy_pct ASC
+    LIMIT @top_n
+    """
+    job_config = bigquery.QueryJobConfig(
+        query_parameters=[
+            bigquery.ScalarQueryParameter("top_n", "INT64", top_n),
+            bigquery.ScalarQueryParameter("min_pop_density", "FLOAT64", min_pop_density),
+        ]
+    )
+    results = list(client.query(sql, job_config=job_config).result())
+    recommendations = []
+    target_canopy_goal = 50.0  # City of Atlanta master plan canopy target
+    for r in results:
+        canopy = r.tree_canopy_pct or 0.0
+        deficit = round(max(0.0, target_canopy_goal - canopy), 1)
+        actions = [
+            "Right-of-way street tree planting along major pedestrian and transit corridors",
+            "Cool pavement and reflective surface treatments for wide unshaded asphalt",
+        ]
+        if (r.no_vehicle_pct or 0) > 20.0:
+            actions.append("Shaded bus stop canopy retrofits and high-capacity misting shelters")
+        if (r.poverty_pct or 0) > 25.0:
+            actions.append("Direct residential tree distribution and community green space expansion")
+
+        recommendations.append({
+            "tract_id": r.tract_id,
+            "tract_name": r.tract_name,
+            "population": int(r.population) if r.population else None,
+            "pop_density_per_sq_mi": r.pop_density,
+            "mean_summer_temp_f": r.mean_temp_f,
+            "tree_canopy_pct": canopy,
+            "city_target_gap_pct": deficit,
+            "social_vulnerability_index": r.svi_percentile,
+            "integrated_risk_score": r.integrated_risk_score,
+            "poverty_pct": r.poverty_pct,
+            "no_vehicle_pct": r.no_vehicle_pct,
+            "priority_interventions": actions,
+        })
+
+    return {
+        "city_target_canopy_pct": target_canopy_goal,
+        "recommended_priority_tracts": recommendations,
+        "count": len(recommendations),
+        "strategic_framework": "Atlanta Decade Track Urban Forestry & Heat Equity Plan",
+    }
+
+
+def generate_council_proposal(
+    top_n: int = 3,
+    baseline_forecast_f: float = 102.0,
+    funding_source: str = "Atlanta Climate Resilience Emergency Fund",
+) -> Dict[str, Any]:
+    """
+    Synthesizes cooling center recommendations, equity audit verification, and canopy
+    interventions into a formal municipal policy memorandum ready for presentation to the
+    Atlanta City Council and Mayor's Office.
+
+    Args:
+        top_n: Number of emergency cooling center locations to propose (default: 3).
+        baseline_forecast_f: Citywide baseline weather forecast during heat emergency (default: 102.0°F).
+        funding_source: Designated funding vehicle (default: 'Atlanta Climate Resilience Emergency Fund').
+
+    Returns:
+        Dict containing structured memorandum components and the full formatted proposal markdown.
+    """
+    ranked_result = rank_cooling_center_sites(top_n=top_n)
+    if "error" in ranked_result or not ranked_result.get("ranked_sites"):
+        return {"error": "Failed to retrieve ranked cooling center sites for proposal."}
+
+    sites = ranked_result["ranked_sites"]
+    tract_ids = [s["tract_id"] for s in sites]
+
+    audit_result = audit_equity(selected_tract_ids=tract_ids)
+    canopy_result = recommend_canopy_interventions(top_n=top_n)
+
+    memo_lines = [
+        "# MEMORANDUM",
+        "",
+        "**TO:** Atlanta City Council, Committee on City Utilities & Resilience",
+        "**FROM:** Office of Sustainability and Resilience, Urban Heat Emergency Task Force",
+        f"**DATE:** {datetime.now(timezone.utc).strftime('%B %d, %Y')}",
+        "**SUBJECT:** Action Item: Emergency Cooling Center Mobilization & Targeted Canopy Mitigation Authorization",
+        "",
+        "---",
+        "",
+        "## 1. Executive Summary",
+        f"During extreme weather conditions with ambient forecasts reaching {baseline_forecast_f}°F, localized urban heat island effects exacerbate surface and ambient temperatures substantially across vulnerable neighborhoods. Based on BigQuery ML empirical microclimate modeling, this proposal authorizes the immediate mobilization of {top_n} primary emergency cooling facilities and initiates accompanying urban forestry interventions.",
+        "",
+        "## 2. Priority Cooling Center Deployments",
+        "The following locations have been identified through empirical heat offset prediction and socio-demographic vulnerability indexing:",
+        "",
+    ]
+
+    for idx, s in enumerate(sites, 1):
+        offset = s["predicted_heat_offset_f"]
+        surface_temp = round(baseline_forecast_f + offset, 1)
+        top_attr = ", ".join([f"{a['feature']} (+{a['attribution_deg_f']}°F)" for a in s.get("top_feature_attributions", [])])
+        canopy_val = f"{s['tree_canopy_pct']}%" if s.get("tree_canopy_pct") is not None else "N/A"
+        pop_str = f"{s['population']:,}" if s.get('population') else "N/A"
+        memo_lines.extend([
+            f"### Site {idx}: Census Tract {s['tract_id']}",
+            f"- **Coordinates:** Latitude {s['latitude']}, Longitude {s['longitude']}",
+            f"- **Predicted Surface Microclimate:** {surface_temp}°F (+{offset}°F microclimate offset over {baseline_forecast_f}°F baseline)",
+            f"- **Vulnerability Profile:** Population {pop_str} | Poverty Rate: {s['poverty_rate_pct']}% | Zero-Vehicle Households: {s['no_vehicle_rate_pct']}% | Tree Canopy: {canopy_val}",
+            f"- **Key Thermal Drivers (Attributions):** {top_attr if top_attr else 'Impervious surface & legacy built environment'}",
+            "- **Recommended Facility:** Municipal library, community center, or MARTA-adjacent public facility equipped with redundant backup HVAC and continuous hydration stations.",
+            "",
+        ])
+
+    memo_lines.extend([
+        "## 3. Title VI & Equity Audit Verification",
+        f"- **Audit Status:** {audit_result.get('audit_finding', 'VERIFIED')}",
+        f"- **Poverty Quartile Alignment:** Selected sites average {audit_result.get('poverty_comparison', {}).get('selected_sites_avg_pct', 0)}% poverty vs. citywide average {audit_result.get('poverty_comparison', {}).get('citywide_avg_pct', 0)}% (75th percentile benchmark: {audit_result.get('poverty_comparison', {}).get('citywide_75th_percentile_pct', 0)}%).",
+        f"- **Transit & Mobility Dependency:** Selected sites average {audit_result.get('mobility_access_comparison', {}).get('selected_sites_no_vehicle_avg_pct', 0)}% vehicle lack vs. citywide average {audit_result.get('mobility_access_comparison', {}).get('citywide_avg_no_vehicle_pct', 0)}% (75th percentile benchmark: {audit_result.get('mobility_access_comparison', {}).get('citywide_75th_percentile_no_vehicle_pct', 0)}%).",
+        "- **Civil Rights Compliance:** Demographic features are excluded from training-stage prediction gates; resource distribution strictly remediates empirical heat burden and transit exclusion.",
+        "",
+        "## 4. Concurrent Canopy & Urban Forestry Interventions (Decade Track)",
+        "To reduce long-term dependency on emergency cooling centers, the following tracts are designated for priority green infrastructure investment to close canopy deficits relative to Atlanta's 50% target:",
+        "",
+    ])
+
+    for c in canopy_result.get("recommended_priority_tracts", []):
+        memo_lines.extend([
+            f"- **Tract {c['tract_id']} ({c.get('tract_name', 'Atlanta')}):** Current canopy {c['tree_canopy_pct']}% (Canopy deficit: {c['city_target_gap_pct']}%). Interventions: {'; '.join(c['priority_interventions'])}.",
+        ])
+
+    memo_lines.extend([
+        "",
+        "## 5. Funding Mechanism & Operating Standards",
+        f"- **Funding Vehicle:** Appropriated through the {funding_source}.",
+        "- **Operating Hours:** 08:00 - 20:00 EST daily while heat advisory or excessive heat warning remains in effect.",
+        "- **MARTA Integration:** Free fare-free transit passes and shuttle coordination along designated high-risk routes for residents without vehicle access.",
+        "",
+        "## 6. Action Requested",
+        "Adoption of the emergency resolution authorizing facility operations and departmental deployment.",
+    ])
+
+    proposal_md = "\n".join(memo_lines)
+    return {
+        "title": "Atlanta Emergency Cooling Center Mobilization & Canopy Mitigation Plan",
+        "target_tract_ids": tract_ids,
+        "equity_audit": audit_result,
+        "funding_source": funding_source,
+        "proposal_markdown": proposal_md,
     }

@@ -34,6 +34,7 @@ def get_candidate_event(training: TrainingRun, candidate_run: str) -> dict[str, 
 
 
 def smoke_test_explanation(training: TrainingRun, model_name: str) -> list[dict[str, Any]]:
+    training.context["tract_source"] = f"{training.namespace}.tract_demographics"
     smoke = training.execute(
         "smoke_explain", training.template("explain_prediction.sql").replace(
             f"`{training.context['candidate_model']}`", f"`{model_name}`"

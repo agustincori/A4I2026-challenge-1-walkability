@@ -20,35 +20,43 @@ The **Atlanta Heat Resilience Advisor** assists municipal decision-makers (city 
 
 ## 2. Tools & Capabilities
 
-The agent exposes 7 specialized Python tools addressing the core planner workflows:
+The agent exposes 9 specialized Python tools addressing the core planner workflows:
 
 1. `predict_heat_offset_and_explain(latitude, longitude, tract_id, baseline_forecast_f)`
    - Predicts localized microclimate heat offset (°F) and computes localized temperatures against any forecast.
-   - Extracts top-3 feature attributions explaining *why* the microclimate is warmer.
+   - Extracts top-3 feature attributions explaining *why* the microclimate is warmer, supplemented by tract-level tree canopy percentage.
 
 2. `compare_locations_and_explain(lat1, lon1, label1, lat2, lon2, label2)`
    - Computes spatial temperature differentials between two coordinates (e.g. South Pryor St vs. Piedmont Park).
-   - Breaks down the comparative structural drivers.
+   - Breaks down the comparative structural drivers and tree canopy differences.
 
 3. `compare_census_tracts(tract_id_1, tract_id_2)`
    - Provides side-by-side trade-off evaluations between two Census tracts.
-   - Contrasts acute vulnerability (poverty & vehicle deprivation) against aggregate population scale.
+   - Contrasts acute vulnerability (poverty & vehicle deprivation), population scale, and tree canopy deficit.
 
 4. `rank_cooling_center_sites(top_n, focus_criteria)`
    - Calculates a multi-factor composite vulnerability score:
      $$\text{Composite Score} = 0.4 \times \text{Offset (°F)} + 0.3 \times \text{Poverty Rate (scaled)} + 0.3 \times \text{Transit Deprivation (scaled)}$$
-   - Returns top recommended Census tracts across Atlanta.
+   - Returns top recommended Census tracts across Atlanta with tree canopy metrics.
 
 5. `query_heat_history(min_temp_f, start_year)`
    - Analyzes multi-year GHCN daily weather station observations from 2018 to present.
    - Counts extreme heat days (e.g. $\ge 95^\circ\text{F}$) and computes summer peak temperatures.
 
 6. `get_tract_demographics(latitude, longitude, tract_id)`
-   - Retrieves population, median age, median income, housing units, housing vintage, and transit access by coordinate or GEOID.
+   - Retrieves population, median age, median income, housing units, housing vintage, transit access, tree canopy percentage, and integrated risk score by coordinate or GEOID.
 
 7. `audit_equity(selected_tract_ids)`
    - Benchmarks recommended sites against the Atlanta citywide 75th percentile (top quartile) for poverty and no-vehicle rates.
    - Validates that public investments counteract historic climate inequities.
+
+8. `recommend_canopy_interventions(top_n, min_pop_density)`
+   - Queries `atlanta_canopy_heat_svi_modeling` to identify high-heat, low-canopy priority tracts.
+   - Computes deficits against Atlanta's 50% tree canopy master goal and prescribes targeted urban forestry interventions (street tree planting corridors, misting shelters, cool pavement retrofits).
+
+9. `generate_council_proposal(top_n, baseline_forecast_f, funding_source)`
+   - Automatically generates a complete, official City of Atlanta City Council Policy Memorandum in Markdown.
+   - Synthesizes site rankings, thermal attributions, Title VI equity audit proof, long-term canopy recommendations, and transit access standards.
 
 ---
 
