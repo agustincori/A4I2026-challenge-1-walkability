@@ -1,4 +1,3 @@
-from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
@@ -11,7 +10,7 @@ from data_plane.pipelines.promote_candidate import (
 
 class PromoteCandidateTests(unittest.TestCase):
     def test_plan_does_not_modify_models(self):
-        import promote_candidate
+        from data_plane.pipelines import promote_candidate
         with (
             patch.object(sys, "argv", [
                 "promote_candidate.py", "--project", "sample-project",
@@ -61,7 +60,7 @@ class PromoteCandidateTests(unittest.TestCase):
         }]
 
         with (
-            patch("promote_candidate.code_manifest", return_value={}),
+            patch("data_plane.pipelines.promote_candidate.code_manifest", return_value={}),
             patch.object(training.bq, "query", return_value=[{"state": "VALIDATED_CANDIDATE", "payload": candidate_payload}]),
             patch.object(training.bq, "model", side_effect=[
                 {"etag": "cand_etag"},  # candidate_meta
@@ -109,7 +108,7 @@ class PromoteCandidateTests(unittest.TestCase):
         }]
 
         with (
-            patch("promote_candidate.code_manifest", return_value={}),
+            patch("data_plane.pipelines.promote_candidate.code_manifest", return_value={}),
             patch.object(training.bq, "model", side_effect=[
                 {"etag": "backup_etag"}, # backup_meta
                 {"etag": "current_etag"},# active_before

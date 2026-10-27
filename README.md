@@ -528,7 +528,7 @@ fast, which is exactly why it's worth reading what it did.
 3. **My Notebooks** → **Import** → source **URL**, and paste this:
 
    ```
-   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/notebooks/c1_01_load_explore.ipynb
+   https://raw.githubusercontent.com/haggman/A4I2026-challenge-1-walkability/main/data_plane/notebooks/c1_01_load_explore.ipynb
    ```
 
    *(If your team modifies the notebook later, get your own copy's raw URL by opening the file
@@ -547,14 +547,14 @@ fallback. The snapshot already has everything the notebook pulls. From the root 
 repo in Cloud Shell:
 
 ```bash
-bash scripts/load.sh dallas
+bash data_plane/scripts/load.sh dallas
 ```
 
 ```bash
-bash scripts/load.sh --list       # every city we've published
+bash data_plane/scripts/load.sh --list       # every city we've published
 ```
 
-Invoke it with `bash` rather than `./scripts/load.sh`—that way it doesn't matter whether the
+Invoke it with `bash` rather than `./data_plane/scripts/load.sh`—that way it doesn't matter whether the
 file arrived with its executable bit set, which depends on how your repo was created.
 
 It's safe to run more than once. Every table is fully replaced rather than appended to, so if
@@ -706,15 +706,15 @@ you're unsure, ask a coach. Thirty seconds of checking beats finding out later.
 ## What's in this repository
 
 ```
-notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
-notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
-scripts/load.sh                   Headless fallback if Colab is unavailable.
+data_plane/notebooks/c1_01_load_explore.ipynb   The main artifact. Run this first.
+data_plane/notebooks/c1_90_publish_snapshot.ipynb  ROI maintainers only. You do not need it.
+data_plane/scripts/load.sh                   Headless fallback if Colab is unavailable.
 data/                             A short README. Seed data, if any.
 agent/                            A one-page README. Your agent goes here.
 ```
 
 `c1_90_publish_snapshot.ipynb` is for ROI maintainers: it regenerates the Cloud Storage snapshot
-that `scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
+that `data_plane/scripts/load.sh` reads from. If you run it you will get a permissions error, because you do not
 have write access to our bucket. That is expected, and you never need it.
 
 `agent/` is empty on purpose. We built the on-ramp—data, loading, validation, sample queries.

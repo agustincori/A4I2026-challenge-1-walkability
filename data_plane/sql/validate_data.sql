@@ -1,6 +1,6 @@
 -- Read-only regression checks for the Atlanta snapshot and four-table join.
 -- Run from the repository root with:
--- bq query --location=US --use_legacy_sql=false < sql/validate_data.sql
+-- bq query --location=US --use_legacy_sql=false < data_plane/sql/validate_data.sql
 
 DECLARE expected_columns ARRAY<STRUCT<
   table_name STRING,
@@ -85,7 +85,7 @@ ASSERT (
 ASSERT (
   SELECT COUNTIF(city IS NULL OR TRIM(city) = '') = 0
   FROM `qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.heat_observations`
-) AS 'heat_observations contains rows without a city label; run sql/normalize_city_label.sql.';
+) AS 'heat_observations contains rows without a city label; run data_plane/sql/normalize_city_label.sql.';
 
 ASSERT (
   SELECT COUNT(*) > 0

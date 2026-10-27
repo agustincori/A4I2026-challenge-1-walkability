@@ -11,8 +11,8 @@ export GOOGLE_CLOUD_PROJECT=qwiklabs-gcp-03-1578f96a5a7a
 export BQ_DATASET=a4i_climate
 export BQ_LOCATION=US
 
-python3 scripts/train_candidate.py            # Plan only; no BigQuery calls or writes.
-python3 scripts/train_candidate.py --execute  # Creates and tests a versioned candidate.
+python3 -m data_plane.pipelines.train_candidate            # Plan only; no BigQuery calls or writes.
+python3 -m data_plane.pipelines.train_candidate --execute  # Creates and tests a versioned candidate.
 ```
 
 This workflow is scoped to the Atlanta dataset. It never replaces `heat_offset_model`, updates
@@ -40,7 +40,7 @@ and apply an explicit retention policy before running large experiments.
 Each reading is assigned to its nearest valid tract centroid with a stable GEOID tie-breaker.
 That is an approximation, not polygon containment, and has no maximum-distance cutoff; the run
 records the maximum matching distance. Invalid Census values receive documented fixed fallbacks
-from [clean_tracts.sql](../sql/clean_tracts.sql), reused by training and explain-prediction.
+from [clean_tracts.sql](../data_plane/sql/clean_tracts.sql), reused by training and explain-prediction.
 
 Cells of 0.02 degrees are assigned deterministically to a roughly 20% holdout using a normalized
 hash modulo five. The realized fraction depends on where observations cluster. Cells never occur
@@ -67,8 +67,8 @@ every candidate still requires promotion review.
 
 Missing source city labels are reported and retained in raw snapshots, not silently rewritten;
 the candidate uses the known Atlanta-only dataset without filtering this nullable field.
-For explicitly authorized source repair, run `sql/normalize_city_label.sql` before the strict
-snapshot regression checks in `sql/validate_data.sql`. Future loads through `scripts/load.sh`
+For explicitly authorized source repair, run `data_plane/sql/normalize_city_label.sql` before the strict
+snapshot regression checks in `data_plane/sql/validate_data.sql`. Future loads through `data_plane/scripts/load.sh`
 fill missing labels automatically. These are separate from candidate execution.
 
 ### Inspect training history
@@ -107,15 +107,15 @@ Interruption does not automatically cancel an already-submitted job; inspect its
 
 ### Agent-lane handoff
 
-`sql/train_model.sql`, `sql/evaluate_model.sql`, `sql/prepare_features.sql`, and
-`sql/explain_prediction.sql` are templates, not standalone `bq` commands. The runner resolves
+`data_plane/sql/train_model.sql`, `data_plane/sql/evaluate_model.sql`, `data_plane/sql/prepare_features.sql`, and
+`data_plane/sql/explain_prediction.sql` are templates, not standalone `bq` commands. The runner resolves
 their identifiers and records the exact executed SQL. The explain SQL and parameters are available
 in the `explain` / `SUBMITTED` event; its successful result is in `explain` / `SUCCEEDED`.
 
 For serving, the agent lane (`agent/tools.py`) is synchronized with the data-lane contract:
 - **Atlanta coverage boundary:** Validates coordinates against the municipal/metro bounding box
   (latitude [33.55, 34.02], longitude [-84.60, -84.15]) before inference to reject out-of-boundary queries.
-- **Demographics cleaning:** Matches `sql/clean_tracts.sql` by mapping negative Census income sentinels
+- **Demographics cleaning:** Matches `data_plane/sql/clean_tracts.sql` by mapping negative Census income sentinels
   and missing values to the documented City of Atlanta baseline ($65,000.00) and clamping poverty rates.
 - **Attribution explanation:** `rank_cooling_center_sites` uses `ML.EXPLAIN_PREDICT` to return top feature
   attributions alongside vulnerability scores.
@@ -125,7 +125,7 @@ For serving, the agent lane (`agent/tools.py`) is synchronized with the data-lan
 Run local tests without Cloud access:
 
 ```bash
-python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+python3 -m unittest discover -s data_plane/tests -p 'test_*.py' -v
 python3 -m unittest discover -s agent/tests -p 'test_*.py' -v
 ```
 
@@ -134,8 +134,8 @@ python3 -m unittest discover -s agent/tests -p 'test_*.py' -v
 Run a bounded ridge-regression experiment against the preserved features from a validated run:
 
 ```bash
-python3 scripts/tune_candidate.py --parent-run 20261027_163945_a1f7fcb70be3
-python3 scripts/tune_candidate.py --parent-run 20261027_163945_a1f7fcb70be3 --execute
+python3 -m data_plane.pipelines.tune_candidate --parent-run 20261027_163945_a1f7fcb70be3
+python3 -m data_plane.pipelines.tune_candidate --parent-run 20261027_163945_a1f7fcb70be3 --execute
 ```
 
 This reuses the parent data/outer split, snapshots its prepared feature table, and trains nine
@@ -163,8 +163,8 @@ impervious-surface data) and new/buffered spatial validation, not repeated tunin
 ## Residual audit and a physical separation stress test
 
 ```bash
-python3 scripts/audit_candidate.py --parent-run 20261027_164544_b1e872144cc1
-python3 scripts/audit_candidate.py --parent-run 20261027_164544_b1e872144cc1 --execute
+python3 -m data_plane.pipelines.audit_candidate --parent-run 20261027_164544_b1e872144cc1
+python3 -m data_plane.pipelines.audit_candidate --parent-run 20261027_164544_b1e872144cc1 --execute
 ```
 
 This snapshots the tuned experiment's features, retains the same holdout, and removes fitting
@@ -197,10 +197,10 @@ using `promote_candidate.py`:
 
 ```bash
 # Plan-only dry run (no writes, verifies candidate exists and passes contract)
-python3 scripts/promote_candidate.py --candidate-run 20261027_164544_b1e872144cc1
+python3 -m data_plane.pipelines.promote_candidate --candidate-run 20261027_164544_b1e872144cc1
 
 # Execute promotion to production
-python3 scripts/promote_candidate.py --candidate-run 20261027_164544_b1e872144cc1 --execute
+python3 -m data_plane.pipelines.promote_candidate --candidate-run 20261027_164544_b1e872144cc1 --execute
 ```
 
 ### Safety and verification guarantees:
@@ -220,10 +220,10 @@ backup or candidate model:
 
 ```bash
 # Dry run rollback
-python3 scripts/promote_candidate.py --rollback-model heat_offset_model_backup_20261027_170000_1234abcd
+python3 -m data_plane.pipelines.promote_candidate --rollback-model heat_offset_model_backup_20261027_170000_1234abcd
 
 # Execute rollback
-python3 scripts/promote_candidate.py --rollback-model heat_offset_model_backup_20261027_170000_1234abcd --execute
+python3 -m data_plane.pipelines.promote_candidate --rollback-model heat_offset_model_backup_20261027_170000_1234abcd --execute
 ```
 
 This creates a safety backup of the current model and logs a `ROLLED_BACK` event into `model_training_events`.
@@ -233,7 +233,7 @@ This creates a safety backup of the current model and logs a `ROLLED_BACK` event
 Headless alternatives to the notebook, for when a Colab Enterprise runtime is slow or
 unavailable.
 
-`load.sh` reaches the same end state as `notebooks/c1_01_load_explore.ipynb`—the same tables, in
+`load.sh` reaches the same end state as `data_plane/notebooks/c1_01_load_explore.ipynb`—the same tables, in
 the same dataset, in your project. Use the notebook if you can: it explains what it's doing and
 why, and the explanations matter. Use this if you can't.
 
@@ -242,12 +242,12 @@ why, and the explanations matter. Use this if you can't.
 From the **root of the repo**, in Cloud Shell:
 
 ```bash
-bash scripts/load.sh              # loads the default city
-bash scripts/load.sh --list       # show every available city
-bash scripts/load.sh --help       # usage
+bash data_plane/scripts/load.sh              # loads the default city
+bash data_plane/scripts/load.sh --list       # show every available city
+bash data_plane/scripts/load.sh --help       # usage
 ```
 
-Invoke it with `bash` rather than `./scripts/load.sh`. That way it works whether or not the
+Invoke it with `bash` rather than `./data_plane/scripts/load.sh`. That way it works whether or not the
 file's executable bit survived however your copy of this repo was created.
 
 ## It is safe to run more than once

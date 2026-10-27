@@ -1,4 +1,3 @@
-from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
@@ -46,7 +45,7 @@ class TuningTests(unittest.TestCase):
             fit_sql("model", "table", 0, -1)
 
     def test_plan_does_not_call_bigquery(self):
-        import tune_candidate
+        from data_plane.pipelines import tune_candidate
         with (
             patch.object(sys, "argv", ["tune_candidate.py", "--project", "sample-project",
                                      "--parent-run", "20261027_163945_a1f7fcb70be3"]),
@@ -88,7 +87,7 @@ class TuningTests(unittest.TestCase):
             order.append(f"event_{stage}_{state}")
 
         with (
-            patch("tune_candidate.code_manifest", return_value={}),
+            patch("data_plane.pipelines.tune_candidate.code_manifest", return_value={}),
             patch.object(training.bq, "query", return_value=[{"payload": parent}]),
             patch.object(training.bq, "model", return_value={"etag": "same"}),
             patch.object(training, "execute", side_effect=execute),

@@ -1,4 +1,3 @@
-from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
@@ -36,7 +35,7 @@ class AuditCandidateTests(unittest.TestCase):
         self.assertIn("HAVING COUNT(*) >= 30", sql)
 
     def test_plan_never_executes(self):
-        import audit_candidate
+        from data_plane.pipelines import audit_candidate
         with (
             patch.object(sys, "argv", ["audit_candidate.py", "--project", "sample-project",
                                      "--parent-run", "20261027_164544_b1e872144cc1"]),
@@ -65,7 +64,7 @@ class AuditCandidateTests(unittest.TestCase):
             return []
 
         with (
-            patch("audit_candidate.code_manifest", return_value={}),
+            patch("data_plane.pipelines.audit_candidate.code_manifest", return_value={}),
             patch.object(training.bq, "query", return_value=[{"payload": parent}]),
             patch.object(training.bq, "model", return_value={"etag": "same"}),
             patch.object(training, "execute", side_effect=execute) as commands,

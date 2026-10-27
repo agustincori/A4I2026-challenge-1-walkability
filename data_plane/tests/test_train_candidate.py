@@ -1,5 +1,4 @@
 import json
-from pathlib import Path
 import sys
 import unittest
 from unittest.mock import patch
@@ -81,26 +80,26 @@ class MetricTests(unittest.TestCase):
 
 
 class AuditTests(unittest.TestCase):
-    @patch("train_candidate.subprocess.run")
+    @patch("data_plane.pipelines.train_candidate.subprocess.run")
     def test_successful_ddl_has_text_output_even_with_json_format(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout="Table created.\n", stderr="")
         bq = BigQuery("sample-project", "US", "test_run", 1000000000)
         self.assertEqual(bq.query("CREATE TABLE", "features", fetch_rows=False), [])
 
-    @patch("train_candidate.subprocess.run")
+    @patch("data_plane.pipelines.train_candidate.subprocess.run")
     def test_malformed_select_output_is_not_silently_discarded(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout="not JSON", stderr="")
         with self.assertRaises(json.JSONDecodeError):
             BigQuery("sample-project", "US", "test_run", 1000000000).query("SELECT 1", "check")
 
-    @patch("train_candidate.subprocess.run")
+    @patch("data_plane.pipelines.train_candidate.subprocess.run")
     def test_model_metadata_uses_cli_colon_not_sql_dot_notation(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout='{"etag": "active"}', stderr="")
         bq = BigQuery("sample-project", "US", "test_run", 1000000000)
         self.assertEqual(bq.model("sample-project.test_data.heat_offset_model"), {"etag": "active"})
         self.assertEqual(run.call_args.args[0][-1], "sample-project:test_data.heat_offset_model")
 
-    @patch("train_candidate.subprocess.run")
+    @patch("data_plane.pipelines.train_candidate.subprocess.run")
     def test_query_sets_explicit_project_cost_cap_and_job_id(self, run):
         run.return_value = subprocess.CompletedProcess([], 0, stdout='[{"ok": true}]', stderr="")
         bq = BigQuery("sample-project", "US", "test_run", 1000000000)
@@ -111,7 +110,7 @@ class AuditTests(unittest.TestCase):
         self.assertIn("--maximum_bytes_billed=1000000000", command)
         self.assertIn("--label=training_run:test_run", command)
 
-    @patch("train_candidate.subprocess.run")
+    @patch("data_plane.pipelines.train_candidate.subprocess.run")
     def test_query_error_includes_stage_and_job_id(self, run):
         run.return_value = subprocess.CompletedProcess([], 1, stdout="", stderr="Denied")
         with self.assertRaisesRegex(RuntimeError, "stage train, job fixed failed"):
@@ -139,7 +138,7 @@ class AuditTests(unittest.TestCase):
     def test_failed_stage_is_recorded_and_propagated(self):
         training = TrainingRun(BigQuery("sample-project", "US", "test_run", 1000000000), "test_data")
         with (
-            patch("train_candidate.code_manifest", return_value={}),
+            patch("data_plane.pipelines.train_candidate.code_manifest", return_value={}),
             patch.object(training.bq, "model", return_value={"etag": "active"}),
             patch.object(training.bq, "query", return_value=[]),
             patch.object(training, "event") as event,
@@ -151,7 +150,7 @@ class AuditTests(unittest.TestCase):
             self.assertIn("test failure", event.call_args_list[-1].args[2]["error"])
 
     def test_plan_mode_does_not_call_bigquery(self):
-        import train_candidate
+        from data_plane.pipelines import train_candidate
         with (
             patch.object(sys, "argv", ["train_candidate.py", "--project", "sample-project"]),
             patch("builtins.print") as output,

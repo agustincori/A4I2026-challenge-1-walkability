@@ -8,9 +8,9 @@
 # runtime is slow, unavailable, or the upstream NOAA service is down.
 #
 # Run it from the repo root in Cloud Shell (no chmod needed - invoke with bash):
-#     bash scripts/load.sh              # defaults to dallas
-#     bash scripts/load.sh atlanta
-#     bash scripts/load.sh --list       # show available cities
+#     bash data_plane/scripts/load.sh              # defaults to dallas
+#     bash data_plane/scripts/load.sh atlanta
+#     bash data_plane/scripts/load.sh --list       # show available cities
 #
 # You still want the notebook if you can run it. It explains every cleaning
 # decision, and several of those explanations will save you time later. This
@@ -36,7 +36,7 @@ fail()  { printf '\n\033[1mERROR:\033[0m %s\n\n%s\n\n' "$*" \
 on_interrupt() {
   printf '\n\n\033[1mInterrupted.\033[0m Nothing is broken.\n'
   printf 'Every load replaces the whole table, so just run this script again:\n'
-  printf '    bash scripts/load.sh %s\n\n' "${CITY:-<city>}"
+  printf '    bash data_plane/scripts/load.sh %s\n\n' "${CITY:-<city>}"
   exit 130
 }
 trap on_interrupt INT TERM
@@ -47,7 +47,7 @@ list_cities() {
     fail "Could not list ${BUCKET}/. Check that you have network access."
   fi
   echo
-  echo "Usage: bash scripts/load.sh <city>"
+  echo "Usage: bash data_plane/scripts/load.sh <city>"
 }
 
 # --------------------------------------------------------------------------

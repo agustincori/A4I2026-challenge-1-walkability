@@ -361,8 +361,8 @@
       <div class="eyebrow">02 · Data flow</div>
       <h2>Pipeline stages</h2>
       <p class="section-intro">
-        The workflow runs through <code>scripts/train_candidate.py</code>. It uses BigQuery source
-        tables and versioned SQL in <code>sql/</code>; artifact names include a unique run ID.
+        The workflow runs through <code>data_plane.pipelines.train_candidate</code>. It uses BigQuery source
+        tables and versioned SQL in <code>data_plane/sql/</code>; artifact names include a unique run ID.
       </p>
       <div class="flow">
         <article class="step">
@@ -467,8 +467,8 @@
 export BQ_DATASET=a4i_climate
 export BQ_LOCATION=US
 
-python3 scripts/train_candidate.py            # Plan only; no BigQuery calls or writes
-python3 scripts/train_candidate.py --execute  # Creates and validates the candidate</code></pre>
+python3 -m data_plane.pipelines.train_candidate            # Plan only; no BigQuery calls or writes
+python3 -m data_plane.pipelines.train_candidate --execute  # Creates and validates the candidate</code></pre>
     </section>
 
     <section id="tuning-audit">
@@ -483,15 +483,15 @@ python3 scripts/train_candidate.py --execute  # Creates and validates the candid
         <article class="card accent-violet">
           <h3>Ridge tuning</h3>
           <p>
-            <code>scripts/tune_candidate.py</code> requires a
+            <code>data_plane.pipelines.tune_candidate</code> requires a
             <code>VALIDATED_CANDIDATE</code> parent. It snapshots the parent's prepared features,
             then compares L2 values 0, 1000, and 10000 across three spatial folds drawn only from
             the outer training rows. Each inner-fold target anchor is computed from its fitting
             rows only. Lowest equal-fold mean MSE selects the configuration; ties prefer stronger
             regularization.
           </p>
-          <pre><code>python3 scripts/tune_candidate.py --parent-run &lt;validated_run_id&gt;
-python3 scripts/tune_candidate.py --parent-run &lt;validated_run_id&gt; --execute</code></pre>
+          <pre><code>python3 -m data_plane.pipelines.tune_candidate --parent-run &lt;validated_run_id&gt;
+python3 -m data_plane.pipelines.tune_candidate --parent-run &lt;validated_run_id&gt; --execute</code></pre>
           <p style="margin-top:14px">
             After selection is recorded, the chosen model is refit on all outer training rows and
             scored once on the preserved outer holdout. The event is
@@ -502,13 +502,13 @@ python3 scripts/tune_candidate.py --parent-run &lt;validated_run_id&gt; --execut
         <article class="card accent-amber">
           <h3>500 m buffer audit</h3>
           <p>
-            <code>scripts/audit_candidate.py</code> requires a completed tuning experiment. It
+            <code>data_plane.pipelines.audit_candidate</code> requires a completed tuning experiment. It
             removes training readings within 500 m of any holdout reading, verifies no violating
             pairs remain, recomputes the target anchor, and refits the already-selected L2 value
             without another hyperparameter search.
           </p>
-          <pre><code>python3 scripts/audit_candidate.py --parent-run &lt;tuning_run_id&gt;
-python3 scripts/audit_candidate.py --parent-run &lt;tuning_run_id&gt; --execute</code></pre>
+          <pre><code>python3 -m data_plane.pipelines.audit_candidate --parent-run &lt;tuning_run_id&gt;
+python3 -m data_plane.pipelines.audit_candidate --parent-run &lt;tuning_run_id&gt; --execute</code></pre>
           <p style="margin-top:14px">
             It preserves the holdout and writes parent/buffered residual tables plus aggregate
             error slices. The terminal event is <code>BUFFER_AUDIT_COMPLETED</code>. Because the
@@ -589,7 +589,7 @@ python3 scripts/audit_candidate.py --parent-run &lt;tuning_run_id&gt; --execute<
         <article class="output-card accent-cyan">
           <h3>B. Explained prediction result</h3>
           <p>
-            <code>sql/explain_prediction.sql</code> queries the candidate with coordinates and
+            <code>data_plane/sql/explain_prediction.sql</code> queries the candidate with coordinates and
             returns one row with the offset, three attributions, and tract context:
           </p>
           <pre><code>{
@@ -639,7 +639,7 @@ python3 scripts/audit_candidate.py --parent-run &lt;tuning_run_id&gt; --execute<
         </div>
         <div class="status-line">
           <div class="status-key">Promotion & Rollback</div>
-          <div class="status-value"><span class="ok">✓</span> <code>scripts/promote_candidate.py</code> provides safe candidate verification, automatic active-model backup, atomic promotion, and rollback with audit logging.</div>
+          <div class="status-value"><span class="ok">✓</span> <code>data_plane.pipelines.promote_candidate</code> provides safe candidate verification, automatic active-model backup, atomic promotion, and rollback with audit logging.</div>
         </div>
         <div class="status-line">
           <div class="status-key">Coverage</div>
