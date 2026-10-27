@@ -200,3 +200,11 @@ adk web --port 8080 .
 ```bash
 adk web --port 8080 .
 ```
+
+### Automated Cloud Build Deployment
+
+The repository-root [`cloudbuild.yaml`](../cloudbuild.yaml) runs unit tests in the built
+container, publishes an immutable image digest to Artifact Registry, then deploys and promotes
+a ready Cloud Run revision. The pipeline defaults to private access at the IAM layer. See
+[`scripts/README.md`](../scripts/README.md#building-and-deploying-the-agent) for project IAM
+setup, required service accounts, and the submission command.
