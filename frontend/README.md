@@ -50,8 +50,10 @@ rankings do not create cards. Unknown demographics are shown as unavailable,
 not zero. Repeated/parallel tool responses are paired by their ADK call ID.
 
 Cards show campaign-relative offsets, tract population and vulnerability,
-model provenance when returned, and a coordinate link to OpenStreetMap in a new
-tab. These links do not route through the dashboard's mock tract map or claim
+model provenance when returned, and a coordinate search link to Google Maps in a new
+tab (no API key required). Coordinates are also visible as selectable text so
+they remain usable if an external map provider is unavailable or rate-limited.
+These links do not route through the dashboard's mock tract map or claim
 verified facilities/walking routes. The audit action sends the exact displayed
 tract IDs back to the live agent; it does not display a mock audit or change the
 ranking. Actions from messages generated in a different data mode are disabled.

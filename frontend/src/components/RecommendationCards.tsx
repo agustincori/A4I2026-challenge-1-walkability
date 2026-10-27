@@ -32,13 +32,16 @@ export const RecommendationCards: React.FC<Props> = ({ evidence, isMock, disable
             <div><dt className="text-slate-400">Poverty rate</dt><dd>{site.povertyPct === undefined ? 'Unavailable' : `${site.povertyPct.toFixed(1)}%`}</dd></div>
             <div><dt className="text-slate-400">Car-free households</dt><dd>{site.noVehiclePct === undefined ? 'Unavailable' : `${site.noVehiclePct.toFixed(1)}%`}</dd></div>
           </dl>
+          <p className="mt-3 break-words font-mono text-[11px] text-slate-400" aria-label="Site coordinates">
+            {site.latitude}, {site.longitude}
+          </p>
           <a
-            href={`https://www.openstreetmap.org/?mlat=${site.latitude}&mlon=${site.longitude}#map=16/${site.latitude}/${site.longitude}`}
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${site.latitude},${site.longitude}`)}`}
             target="_blank" rel="noopener noreferrer"
             className="mt-3 inline-flex items-center gap-1 text-xs text-sky-300 underline underline-offset-2 focus-visible:outline focus-visible:outline-2"
-            aria-label={`View tract ${site.tractId} coordinates on OpenStreetMap (opens a new tab)`}
+            aria-label={`View tract ${site.tractId} coordinates on Google Maps (opens a new tab)`}
           >
-            <MapPin className="h-3 w-3" aria-hidden="true" /> View coordinates on map ↗
+            <MapPin className="h-3 w-3" aria-hidden="true" /> Open in Google Maps ↗
           </a>
         </article>
       ))}
