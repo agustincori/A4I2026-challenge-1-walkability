@@ -106,6 +106,10 @@ bash scripts/deploy.sh \
 
 The pipeline pins deployment to the pushed Artifact Registry digest, disables runtime BQML
 model bootstrapping, and keeps traffic on the current revision until the candidate is ready.
+It registers only the Atlanta tool family by default. `--model-family planning` sets
+the `_MODEL_FAMILY` substitution explicitly; use it only after validating the separate
+planning model with `python -m agent.validate_models --family planning --execute`
+under the runtime identity. Health/readiness alone does not validate BigQuery access.
 Resource sizing and model/dataset values are configurable through the substitutions in
 [`../cloudbuild.yaml`](../cloudbuild.yaml). Avoid passing credentials as substitutions or
 environment variables; use Secret Manager references for any future secret configuration.

@@ -1,6 +1,7 @@
 """Verify the merged Atlanta and extended planning agent surfaces."""
 
 import unittest
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
@@ -9,6 +10,8 @@ from google.api_core.exceptions import NotFound
 from agent import planning_tools, tools
 from agent.agent import build_agent
 from agent.config import AgentConfig
+from agent.contracts import ToolFailure
+from agent.tests.model_fixtures import model_metadata
 
 
 class TestMergedAgent(unittest.TestCase):
@@ -23,10 +26,11 @@ class TestMergedAgent(unittest.TestCase):
             mcp_toolbox_url=None,
         )
         self.client = MagicMock()
+        self.client.get_model.side_effect = model_metadata
         self.runtime = tools.HeatResilienceRuntime(config=self.config, client=self.client)
         tools.set_runtime(self.runtime)
 
-    def test_build_registers_both_toolsets_and_preserves_atlanta_identity(self) -> None:
+    def test_build_registers_only_atlanta_tools_and_preserves_identity(self) -> None:
         agent = build_agent()
 
         self.assertEqual(agent.name, "atlanta_heat_resilience_advisor")
@@ -43,22 +47,10 @@ class TestMergedAgent(unittest.TestCase):
                 "audit_equity",
                 "recommend_canopy_interventions",
                 "generate_council_proposal",
-                "predict_and_explain_location",
-                "rank_cooling_sites",
-                "audit_recommendations_equity",
-                "get_station_heat_frequency",
             },
         )
         self.assertIn("strictly scoped to the City of Atlanta", agent.instruction)
         self.assertIn("Never blend or directly compare predictions", agent.instruction)
-        self.assertIn(
-            '"We stripped the demographic variable from the model inputs and audited the outcome. '
-            'Heat is driven by the physical and built environment—pavement, building vintage, '
-            'and canopy deficit—not race. Our model predicts microclimate heat strictly using '
-            'physical and economic vulnerability features, while our equity audit tool checks '
-            'after the fact that public cooling investments land where they are needed most."',
-            agent.instruction,
-        )
         self.assertIn("Economic tract features may still be prediction inputs", agent.instruction)
         self.assertIn("predictive associations rather than causal proof", agent.instruction)
         self.client.query.assert_not_called()
@@ -96,7 +88,7 @@ class TestMergedAgent(unittest.TestCase):
         sql = self.client.query.call_args.args[0]
         self.assertIn("test-project.test_climate.atlanta_offset", sql)
         self.assertNotIn("planning_offset", sql)
-        self.client.get_model.assert_not_called()
+        self.client.get_model.assert_called_once()
 
     def test_tract_lookup_remains_parameterized(self) -> None:
         self.client.query.return_value.result.return_value = []
@@ -112,6 +104,9 @@ class TestMergedAgent(unittest.TestCase):
         self.assertEqual(params[0].value, tract_id)
 
     def test_planning_model_bootstrap_never_discovers_or_replaces_atlanta_model(self) -> None:
+        self.runtime = tools.HeatResilienceRuntime(
+            config=replace(self.config, auto_bootstrap_bqml=True), client=self.client
+        )
         self.client.get_model.side_effect = NotFound("Missing planning model")
 
         model = self.runtime.resolve_or_bootstrap_model()
@@ -134,15 +129,12 @@ class TestMergedAgent(unittest.TestCase):
         self.client.query.assert_not_called()
 
     def test_identical_model_names_are_rejected(self) -> None:
-        config = AgentConfig(
-            project_id="test-project",
-            bqml_model_name="same_model",
-            planning_bqml_model_name="same_model",
-        )
-        runtime = tools.HeatResilienceRuntime(config=config, client=self.client)
-
         with self.assertRaisesRegex(ValueError, "must differ"):
-            runtime.resolve_or_bootstrap_model()
+            AgentConfig(
+                project_id="test-project",
+                bqml_model_name="same_model",
+                planning_bqml_model_name="same_model",
+            )
         self.client.get_model.assert_not_called()
 
     def test_missing_model_with_bootstrap_disabled_reports_error(self) -> None:
@@ -150,7 +142,7 @@ class TestMergedAgent(unittest.TestCase):
         runtime = tools.HeatResilienceRuntime(config=config, client=self.client)
         self.client.get_model.side_effect = NotFound("Missing planning model")
 
-        with self.assertRaisesRegex(RuntimeError, "No BigQuery ML model found"):
+        with self.assertRaisesRegex(ToolFailure, "No BigQuery ML model found"):
             runtime.resolve_or_bootstrap_model()
         self.client.query.assert_not_called()
 

@@ -10,13 +10,14 @@ Usage:
     --build-service-account BUILD_SA_EMAIL \
     --runtime-service-account RUN_SA_EMAIL \
     [--project PROJECT_ID] [--region REGION] [--repository REPOSITORY] \
-    [--service SERVICE_NAME] [--public]
+    [--service SERVICE_NAME] [--model-family atlanta|planning] [--public]
 
 Defaults:
   project     gcloud's configured project (or GOOGLE_CLOUD_PROJECT)
   region      us-central1
   repository  walkability
   service     atlanta-heat-advisor
+  model-family atlanta; planning requires its separately validated model
   access      private; pass --public only when unauthenticated access is intended
 EOF
 }
@@ -33,6 +34,7 @@ SERVICE_NAME="atlanta-heat-advisor"
 BUILD_SERVICE_ACCOUNT=""
 RUN_SERVICE_ACCOUNT=""
 ALLOW_UNAUTHENTICATED="false"
+MODEL_FAMILY="atlanta"
 
 while (($#)); do
   case "$1" in
@@ -70,6 +72,11 @@ while (($#)); do
       ALLOW_UNAUTHENTICATED="true"
       shift
       ;;
+    --model-family)
+      (($# >= 2)) || { usage >&2; exit 2; }
+      MODEL_FAMILY="$2"
+      shift 2
+      ;;
     --help|-h)
       usage
       exit 0
@@ -81,6 +88,11 @@ while (($#)); do
       ;;
   esac
 done
+
+if [[ "$MODEL_FAMILY" != "atlanta" && "$MODEL_FAMILY" != "planning" ]]; then
+  printf 'ERROR: model family must be atlanta or planning.\n' >&2
+  exit 2
+fi
 
 if [[ -z "$PROJECT_ID" || "$PROJECT_ID" == "(unset)" \
   || -z "$BUILD_SERVICE_ACCOUNT" || -z "$RUN_SERVICE_ACCOUNT" ]]; then
@@ -98,4 +110,4 @@ gcloud builds submit . \
   --region="$REGION" \
   --service-account="projects/$PROJECT_ID/serviceAccounts/$BUILD_SERVICE_ACCOUNT" \
   --config=cloudbuild.yaml \
-  --substitutions="_REGION=$REGION,_AR_REPOSITORY=$REPOSITORY,_SERVICE_NAME=$SERVICE_NAME,_RUN_SERVICE_ACCOUNT=$RUN_SERVICE_ACCOUNT,_ALLOW_UNAUTHENTICATED=$ALLOW_UNAUTHENTICATED"
+  --substitutions="_REGION=$REGION,_AR_REPOSITORY=$REPOSITORY,_SERVICE_NAME=$SERVICE_NAME,_RUN_SERVICE_ACCOUNT=$RUN_SERVICE_ACCOUNT,_ALLOW_UNAUTHENTICATED=$ALLOW_UNAUTHENTICATED,_MODEL_FAMILY=$MODEL_FAMILY"

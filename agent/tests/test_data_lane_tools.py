@@ -6,12 +6,14 @@ from unittest.mock import MagicMock, patch
 
 from agent import tools
 from agent.config import AgentConfig
+from agent.tests.model_fixtures import model_metadata
 
 
 class TestDataLaneTools(unittest.TestCase):
     def setUp(self) -> None:
         self.addCleanup(tools.set_runtime, tools.get_runtime())
         self.client = MagicMock()
+        self.client.get_model.side_effect = model_metadata
         tools.set_runtime(tools.HeatResilienceRuntime(
             AgentConfig(project_id="test-project"), self.client
         ))

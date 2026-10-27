@@ -9,12 +9,14 @@ from google.api_core.exceptions import BadRequest
 
 from agent import tools
 from agent.config import AgentConfig
+from agent.tests.model_fixtures import model_metadata
 
 
 class TestToolContracts(unittest.TestCase):
     def setUp(self) -> None:
         self.addCleanup(tools.set_runtime, tools.get_runtime())
         self.client = MagicMock()
+        self.client.get_model.side_effect = model_metadata
         self.config = AgentConfig(project_id="test-project")
         self.runtime = tools.HeatResilienceRuntime(self.config, self.client)
         tools.set_runtime(self.runtime)
@@ -112,13 +114,14 @@ class TestToolContracts(unittest.TestCase):
         for case in cases:
             with self.subTest(case=case):
                 result = case()
-                self.assertEqual(result["status"], "INVALID_INPUT")
+                self.assertEqual(result["status"], "ERROR")
+                self.assertEqual(result["category"], "INVALID_INPUT")
                 self.assertIn("error_code", result)
         self.client.query.assert_not_called()
 
     def test_prediction_uses_data_lane_preprocessing_and_provenance(self) -> None:
         row = SimpleNamespace(
-            predicted_offset_f=3.25, top_feature_attributions=[],
+            predicted_offset_f=3.25, top_feature_attributions=[{"feature": "latitude", "attribution": 0.25}],
             geo_id="13121006802", total_pop=4200, poverty_rate=0.25,
             no_vehicle_rate=0.2, median_age=38, median_year_structure_built=1960,
         )
@@ -137,7 +140,7 @@ class TestToolContracts(unittest.TestCase):
         self.assertIn("LEFT JOIN canopy", sql)
         model_inputs = sql.split("ML.EXPLAIN_PREDICT", 1)[1].split("STRUCT(3", 1)[0]
         self.assertNotIn("tree_canopy_pct", model_inputs)
-        self.client.get_model.assert_not_called()
+        self.client.get_model.assert_called_once()
 
     def test_ranking_uses_same_cleaning_and_honors_focus(self) -> None:
         self.client.query.return_value.result.return_value = []
@@ -157,22 +160,22 @@ class TestToolContracts(unittest.TestCase):
 
     def test_comparison_propagates_failure_without_key_error(self) -> None:
         with patch.object(tools, "predict_heat_offset_and_explain", return_value={"error": "no data"}) as predict:
-            with self.assertLogs("agent.tools", level="WARNING"):
+            with self.assertLogs("agent.contracts", level="WARNING"):
                 result = tools.compare_locations_and_explain(33.75, -84.39, "A", 33.76, -84.4, "B")
-        self.assertEqual(result["error_code"], "COMPARISON_FAILED")
+        self.assertEqual(result["error_code"], "TOOL_FAILED")
         predict.assert_called_once()
 
     def test_comparison_propagates_second_site_failure(self) -> None:
         with patch.object(tools, "predict_heat_offset_and_explain", side_effect=[
             {"predicted_heat_offset_f": 1.0}, {"error": "no data"},
         ]):
-            with self.assertLogs("agent.tools", level="WARNING"):
+            with self.assertLogs("agent.contracts", level="WARNING"):
                 result = tools.compare_locations_and_explain(33.75, -84.39, "A", 33.76, -84.4, "B")
-        self.assertEqual(result["error_code"], "COMPARISON_FAILED")
+        self.assertEqual(result["error_code"], "TOOL_FAILED")
 
     def test_prediction_null_baseline_preserves_offset_without_absolute_temperature(self) -> None:
         row = SimpleNamespace(
-            predicted_offset_f=-1.25, top_feature_attributions=[],
+            predicted_offset_f=-1.25, top_feature_attributions=[{"feature": "latitude", "attribution": -0.25}],
             geo_id="13121006802", total_pop=4200, poverty_rate=0.25,
             no_vehicle_rate=0.2, median_age=38, median_year_structure_built=1960,
         )

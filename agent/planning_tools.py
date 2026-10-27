@@ -20,6 +20,9 @@ from __future__ import annotations
 import logging
 import math
 import threading
+from contextlib import contextmanager
+from contextvars import ContextVar
+from collections.abc import Iterator
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
@@ -70,6 +73,10 @@ from .config import (
     FEATURE_INTERVENTION_GUIDANCE,
     AgentConfig,
     get_config,
+)
+from .contracts import (
+    Family, ToolFailure, exception_result, explained_features, required_number, tool_boundary,
+    validate_model_metadata,
 )
 
 logger = logging.getLogger(__name__)
@@ -176,9 +183,20 @@ class HeatResilienceRuntime:
                 except GoogleAPICallError:
                     logger.exception("Failed to cancel timed-out BigQuery job")
             raise
+
         except GoogleAPICallError:
             logger.exception("BigQuery query failed")
             raise
+
+    def validate_model(self, family: Family, model_name: str | None = None) -> dict[str, Any]:
+        """Check fresh resource metadata so a promoted incompatible model fails closed."""
+        name = model_name or (
+            self.config.bqml_model_name if family == "atlanta"
+            else self.config.planning_bqml_model_name
+        )
+        resource = f"{self.dataset_fqn}.{name}"
+        model = self.client.get_model(resource, timeout=self.config.query_timeout_seconds)
+        return validate_model_metadata(model, family, resource)
 
     def get_city_metadata(self) -> CityCampaignMetadata:
         """Fetch and cache the bounding box and baseline temperature for the loaded city."""
@@ -207,11 +225,15 @@ class HeatResilienceRuntime:
             """
             rows = self.query_rows(sql)
             if not rows or not rows[0]["total_observations"]:
-                raise RuntimeError(
+                raise ToolFailure(
+                    "CAMPAIGN_EMPTY",
                     f"Table `{self.dataset_fqn}.heat_observations` is empty or missing. "
                     "Run `bash data_plane/scripts/load.sh <city>` or the load notebook first."
                 )
             row = rows[0]
+            for key in ("total_observations", "city_avg_temp_f", "city_min_temp_f",
+                        "city_max_temp_f", "min_lat", "max_lat", "min_lon", "max_lon"):
+                required_number(row, key)
             self._city_meta = CityCampaignMetadata(
                 city=str(row["city"] or "Unknown City"),
                 total_observations=int(row["total_observations"]),
@@ -248,7 +270,8 @@ class HeatResilienceRuntime:
                 logger.info("Planning BQML model %s not found.", preferred_fqn)
 
             if not self.config.auto_bootstrap_bqml:
-                raise RuntimeError(
+                raise ToolFailure(
+                    "MODEL_NOT_FOUND",
                     f"No BigQuery ML model found in `{self.dataset_fqn}`. "
                     f"Expected `{preferred_fqn}`. Ask the Data Lane to train the model or "
                     "enable AUTO_BOOTSTRAP_BQML=true."
@@ -267,11 +290,25 @@ class HeatResilienceRuntime:
 
 # Default module-level runtime singleton
 _RUNTIME = HeatResilienceRuntime()
+_ACTIVE_RUNTIME: ContextVar[HeatResilienceRuntime | None] = ContextVar(
+    "heat_resilience_runtime", default=None
+)
 
 
 def get_runtime() -> HeatResilienceRuntime:
     """Return the active HeatResilienceRuntime singleton."""
-    return _RUNTIME
+    active = _ACTIVE_RUNTIME.get()
+    return active if active is not None else _RUNTIME
+
+
+@contextmanager
+def using_runtime(runtime: HeatResilienceRuntime) -> Iterator[None]:
+    """Keep nested tool calls bound to the owning agent's configuration."""
+    token = _ACTIVE_RUNTIME.set(runtime)
+    try:
+        yield
+    finally:
+        _ACTIVE_RUNTIME.reset(token)
 
 
 def set_runtime(runtime: HeatResilienceRuntime) -> None:
@@ -393,10 +430,10 @@ def format_feature_attributions(
         if not isinstance(item, dict):
             # Support Row / namedtuple objects if returned by BigQuery client
             feature = str(getattr(item, "feature", None) or item.get("feature", "unknown"))
-            attribution = float(getattr(item, "attribution", 0.0) or item.get("attribution", 0.0))
+            attribution = required_number(item, "attribution")
         else:
             feature = str(item.get("feature", "unknown"))
-            attribution = float(item.get("attribution") or 0.0)
+            attribution = required_number(item, "attribution")
 
         human_label = FEATURE_EXPLANATION_LABELS.get(
             feature, f"{feature.replace('_', ' ')} ({feature})"
@@ -426,24 +463,8 @@ def format_feature_attributions(
 
 
 def _extract_predicted_offset(row_dict: dict[str, Any]) -> float:
-    """Extract the predicted offset column from an `ML.EXPLAIN_PREDICT` row regardless of label name."""
-    for candidate in (
-        "predicted_heat_offset_f",
-        "predicted_degrees_above_city_average",
-        "predicted_offset_f",
-        "predicted_offset",
-        "predicted_temp_offset_f",
-    ):
-        if candidate in row_dict and row_dict[candidate] is not None:
-            return float(row_dict[candidate])
-
-    for key, val in row_dict.items():
-        if key.startswith("predicted_") and val is not None:
-            return float(val)
-
-    raise KeyError(
-        f"Could not find `predicted_*` column in ML.EXPLAIN_PREDICT output. Columns: {list(row_dict.keys())}"
-    )
+    """Only accept the declared planning label, never an arbitrary prediction."""
+    return required_number(row_dict, "predicted_heat_offset_f")
 
 
 def _select_intervention(
@@ -478,6 +499,7 @@ def _select_intervention(
 # ==============================================================================
 
 
+@tool_boundary
 def predict_and_explain_location(latitude: float, longitude: float) -> dict[str, Any]:
     """Predict the urban heat offset (°F above city average) and feature attributions for a specific coordinate.
 
@@ -488,8 +510,8 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
 
     IMPORTANT FOR THE AGENT:
     - First verifies whether `(latitude, longitude)` falls inside the loaded city's campaign
-      bounding box in `heat_observations`. If out of bounds, returns `{"status": "OUT_OF_BOUNDS", ...}`.
-      When `status == "OUT_OF_BOUNDS"`, you MUST refuse to predict and state which city and
+      bounding box in `heat_observations`. Out of bounds returns status ERROR, category OUT_OF_BOUNDS.
+      When `category == "OUT_OF_BOUNDS"`, you MUST refuse to predict and state which city and
       bounding box are loaded.
     - The model predicts a **heat offset** (`predicted_heat_offset_f`, i.e., degrees Fahrenheit
       hotter or cooler than the citywide average on a hot afternoon), NOT an absolute daily
@@ -501,7 +523,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
 
     Returns:
         A dictionary containing:
-        - `status`: `"OK"`, `"OUT_OF_BOUNDS"`, or `"ERROR"`.
+        - `status`: `"OK"` or `"ERROR"`; failures include a category and error code.
         - `city`: Name of the city loaded in BigQuery.
         - `coordinates`: Requested `{"latitude": float, "longitude": float}`.
         - `predicted_heat_offset_f`: Predicted temperature offset (°F relative to city average).
@@ -538,11 +560,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
         city_meta = runtime.get_city_metadata()
     except Exception as exc:  # noqa: BLE001
         logger.exception("Failed to load city campaign metadata")
-        return {
-            "status": "ERROR",
-            "error_code": "METADATA_UNAVAILABLE",
-            "message": str(exc),
-        }
+        return dict(exception_result(exc))
 
     pad = runtime.config.bbox_pad_degrees
     in_lat_bounds = (city_meta.min_lat - pad) <= lat <= (city_meta.max_lat + pad)
@@ -573,6 +591,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
 
     try:
         model_fqn = runtime.resolve_or_bootstrap_model()
+        provenance = runtime.validate_model("planning")
         top_k = runtime.config.explain_top_k
 
         sql = f"""
@@ -706,14 +725,20 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
             }
 
         row_dict = dict(rows[0].items())
+        if not row_dict.get("primary_geo_id"):
+            raise ToolFailure("TRACT_NOT_FOUND", "No tract context is available.")
+        for key in ("primary_tract_dist_m", "total_pop", "median_age", "median_income",
+                    "poverty_rate", "no_vehicle_rate", "median_year_structure_built",
+                    "readings_within_500m"):
+            required_number(row_dict, key)
         predicted_offset = _extract_predicted_offset(row_dict)
-        raw_attributions = row_dict.get("top_feature_attributions") or []
+        raw_attributions = explained_features(row_dict.get("top_feature_attributions"), "planning")
         structured_attrs, narrative_summary = format_feature_attributions(raw_attributions)
 
         sign = "+" if predicted_offset >= 0 else "\u2212"
         formatted_offset = f"{sign}{abs(predicted_offset):.2f}\u00b0F vs. {city_meta.city} campaign average"
 
-        readings_500m = int(row_dict.get("readings_within_500m") or 0)
+        readings_500m = int(required_number(row_dict, "readings_within_500m"))
         nearest_obs_m = (
             round(float(row_dict["nearest_reading_dist_m"]), 1)
             if row_dict.get("nearest_reading_dist_m") is not None
@@ -730,13 +755,14 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
             "status": "OK",
             "city": city_meta.city,
             "model_used": model_fqn,
+            "provenance": provenance,
             "coordinates": {"latitude": round(lat, 5), "longitude": round(lon, 5)},
             "predicted_heat_offset_f": round(predicted_offset, 2),
             "formatted_offset": formatted_offset,
             "baseline_value_f": (
-                round(float(row_dict["baseline_value"]), 2)
-                if row_dict.get("baseline_value") is not None
-                else 0.0
+                round(required_number(row_dict, "baseline_prediction_value"), 2)
+                if row_dict.get("baseline_prediction_value") is not None
+                else None
             ),
             "city_campaign_avg_temp_f": round(city_meta.city_avg_temp_f, 1),
             "estimated_temp_on_campaign_day_f": round(
@@ -747,17 +773,17 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
             "nearest_tract_context": {
                 "tract_geo_id": str(row_dict.get("primary_geo_id") or ""),
                 "distance_to_tract_centroid_m": round(
-                    float(row_dict.get("primary_tract_dist_m") or 0.0), 1
+                    required_number(row_dict, "primary_tract_dist_m"), 1
                 ),
-                "total_population": int(round(float(row_dict.get("total_pop") or 0.0))),
-                "median_age": round(float(row_dict.get("median_age") or 0.0), 1),
-                "median_income_usd": int(round(float(row_dict.get("median_income") or 0.0))),
-                "poverty_rate_pct": round(float(row_dict.get("poverty_rate") or 0.0) * 100.0, 1),
+                "total_population": int(round(required_number(row_dict, "total_pop"))),
+                "median_age": round(required_number(row_dict, "median_age"), 1),
+                "median_income_usd": int(round(required_number(row_dict, "median_income"))),
+                "poverty_rate_pct": round(required_number(row_dict, "poverty_rate") * 100.0, 1),
                 "no_vehicle_rate_pct": round(
-                    float(row_dict.get("no_vehicle_rate") or 0.0) * 100.0, 1
+                    required_number(row_dict, "no_vehicle_rate") * 100.0, 1
                 ),
                 "median_year_structure_built": int(
-                    round(float(row_dict.get("median_year_structure_built") or 1978.0))
+                    round(required_number(row_dict, "median_year_structure_built"))
                 ),
             },
             "nearby_observed_readings": {
@@ -775,13 +801,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
         }
     except Exception as exc:  # noqa: BLE001
         logger.exception("Error in predict_and_explain_location(%s, %s)", lat, lon)
-        return {
-            "status": "ERROR",
-            "error_code": "BQML_PREDICTION_FAILED",
-            "loaded_city": city_meta.city,
-            "requested_coordinates": {"latitude": lat, "longitude": lon},
-            "message": f"BigQuery ML prediction query failed: {exc}",
-        }
+        return dict(exception_result(exc))
 
 
 # ==============================================================================
@@ -789,6 +809,7 @@ def predict_and_explain_location(latitude: float, longitude: float) -> dict[str,
 # ==============================================================================
 
 
+@tool_boundary
 def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, Any]:
     """Rank the highest-priority intervention locations by crossing `ML.EXPLAIN_PREDICT` with Census demographics.
 
@@ -855,6 +876,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
     try:
         city_meta = runtime.get_city_metadata()
         model_fqn = runtime.resolve_or_bootstrap_model()
+        provenance = runtime.validate_model("planning")
         top_k = runtime.config.explain_top_k
         pad = runtime.config.bbox_pad_degrees
 
@@ -983,20 +1005,28 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
         )
 
         rows = runtime.query_rows(sql, job_config)
+        if not rows:
+            raise ToolFailure("NO_SITES", "No ranking candidates were found.")
         sites: list[dict[str, Any]] = []
         tract_ids: list[str] = []
 
         for idx, row in enumerate(rows, start=1):
             row_dict = dict(row.items())
+            if not row_dict.get("geo_id"):
+                raise ToolFailure("TRACT_NOT_FOUND", "A ranked candidate has no tract identifier.")
+            for key in ("latitude", "longitude", "composite_priority_score", "no_vehicle_rate",
+                        "poverty_rate", "total_pop", "no_cars", "median_age", "median_income",
+                        "median_year_structure_built"):
+                required_number(row_dict, key)
             geo_id = str(row_dict.get("geo_id") or "").zfill(11)
             tract_ids.append(geo_id)
 
             pred_offset = _extract_predicted_offset(row_dict)
-            raw_attrs = row_dict.get("top_feature_attributions") or []
+            raw_attrs = explained_features(row_dict.get("top_feature_attributions"), "planning")
             structured_attrs, narrative_summary = format_feature_attributions(raw_attrs)
 
-            no_veh_rate = float(row_dict.get("no_vehicle_rate") or 0.0)
-            pov_rate = float(row_dict.get("poverty_rate") or 0.0)
+            no_veh_rate = required_number(row_dict, "no_vehicle_rate")
+            pov_rate = required_number(row_dict, "poverty_rate")
             intervention = _select_intervention(
                 normalized_mode, structured_attrs, no_veh_rate, pov_rate
             )
@@ -1011,7 +1041,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
                         "longitude": round(float(row_dict["longitude"]), 5),
                     },
                     "composite_priority_score": float(
-                        row_dict.get("composite_priority_score") or 0.0
+                        row_dict["composite_priority_score"]
                     ),
                     "predicted_heat_offset_f": round(pred_offset, 2),
                     "formatted_offset": f"{sign}{abs(pred_offset):.2f}\u00b0F vs. city average",
@@ -1021,16 +1051,16 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
                     "why_it_is_hot": narrative_summary,
                     "top_feature_attributions": structured_attrs,
                     "demographics": {
-                        "total_population": int(round(float(row_dict.get("total_pop") or 0.0))),
+                        "total_population": int(round(required_number(row_dict, "total_pop"))),
                         "poverty_rate_pct": round(pov_rate * 100.0, 1),
                         "no_vehicle_rate_pct": round(no_veh_rate * 100.0, 1),
-                        "households_without_car": int(round(float(row_dict.get("no_cars") or 0.0))),
-                        "median_age": round(float(row_dict.get("median_age") or 0.0), 1),
+                        "households_without_car": int(round(required_number(row_dict, "no_cars"))),
+                        "median_age": round(required_number(row_dict, "median_age"), 1),
                         "median_income_usd": int(
-                            round(float(row_dict.get("median_income") or 0.0))
+                            round(required_number(row_dict, "median_income"))
                         ),
                         "median_year_structure_built": int(
-                            round(float(row_dict.get("median_year_structure_built") or 1978.0))
+                            round(required_number(row_dict, "median_year_structure_built"))
                         ),
                     },
                     "recommended_intervention": intervention,
@@ -1043,6 +1073,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
             "mode": normalized_mode,
             "scoring_methodology": track_description,
             "model_used": model_fqn,
+            "provenance": provenance,
             "city_campaign_avg_temp_f": round(city_meta.city_avg_temp_f, 1),
             "top_n_returned": len(sites),
             "recommended_tract_ids": tract_ids,
@@ -1054,11 +1085,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
         }
     except Exception as exc:  # noqa: BLE001
         logger.exception("Error in rank_cooling_sites(top_n=%s, mode=%s)", top_n, mode)
-        return {
-            "status": "ERROR",
-            "error_code": "SITE_RANKING_FAILED",
-            "message": f"Failed to rank cooling sites: {exc}",
-        }
+        return dict(exception_result(exc))
 
 
 # ==============================================================================
@@ -1066,6 +1093,7 @@ def rank_cooling_sites(top_n: int = 5, mode: str = "budget_cycle") -> dict[str, 
 # ==============================================================================
 
 
+@tool_boundary
 def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
     """Audit whether recommended Census tracts equitably reach the city's most vulnerable neighborhoods.
 
@@ -1141,11 +1169,11 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
           SELECT
             LPAD(geo_id, 11, '0') AS geo_id,
             total_pop,
-            NULLIF(median_age, -666666666.0) AS median_age,
-            NULLIF(median_income, -666666666.0) AS median_income,
-            poverty_rate,
-            no_vehicle_rate,
-            no_cars,
+            CASE WHEN median_age BETWEEN 0 AND 120 THEN median_age END AS median_age,
+            CASE WHEN median_income >= 0 THEN median_income END AS median_income,
+            CASE WHEN poverty_rate BETWEEN 0 AND 1 THEN poverty_rate END AS poverty_rate,
+            CASE WHEN no_vehicle_rate BETWEEN 0 AND 1 THEN no_vehicle_rate END AS no_vehicle_rate,
+            CASE WHEN no_cars >= 0 THEN no_cars END AS no_cars,
             households,
             LPAD(geo_id, 11, '0') IN UNNEST(@tract_ids) AS is_recommended
           FROM `{runtime.dataset_fqn}.tract_demographics`
@@ -1154,6 +1182,12 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
         SELECT
           -- Recommended tracts aggregation
           COUNTIF(is_recommended) AS rec_tract_count,
+          COUNTIF(is_recommended AND (
+            median_age IS NULL OR median_income IS NULL OR poverty_rate IS NULL
+            OR no_vehicle_rate IS NULL OR no_cars IS NULL
+          )) AS incomplete_recommended_count,
+          COUNTIF(median_age IS NULL OR median_income IS NULL OR poverty_rate IS NULL
+            OR no_vehicle_rate IS NULL) AS incomplete_baseline_count,
           ARRAY_AGG(IF(is_recommended, geo_id, NULL) IGNORE NULLS) AS matched_tract_ids,
           SUM(IF(is_recommended, total_pop, 0)) AS rec_total_pop,
           AVG(IF(is_recommended, poverty_rate, NULL)) AS rec_avg_poverty_rate,
@@ -1187,7 +1221,7 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
             }
 
         r = dict(rows[0].items())
-        rec_count = int(r.get("rec_tract_count") or 0)
+        rec_count = int(required_number(r, "rec_tract_count"))
         matched_ids = list(r.get("matched_tract_ids") or [])
         missing_ids = [tid for tid in normalized_ids if tid not in set(matched_ids)]
 
@@ -1203,22 +1237,36 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
                 ),
             }
 
-        rec_pov_pct = float(r.get("rec_avg_poverty_rate") or 0.0) * 100.0
-        city_pov_pct = float(r.get("city_avg_poverty_rate") or 0.0) * 100.0
+        if missing_ids:
+            raise ToolFailure("TRACTS_NOT_FOUND", "One or more requested tracts were not found.")
+        if required_number(r, "incomplete_recommended_count") or required_number(r, "incomplete_baseline_count"):
+            raise ToolFailure("INCOMPLETE_EQUITY_DATA", "Selected tracts or citywide baseline have missing equity metrics.")
+        for key in (
+            "rec_avg_poverty_rate", "city_avg_poverty_rate",
+            "rec_avg_no_vehicle_rate", "city_avg_no_vehicle_rate",
+            "rec_avg_median_age", "city_avg_median_age",
+            "rec_avg_median_income", "city_avg_median_income",
+            "rec_total_pop", "rec_total_no_car_households", "city_tract_count", "city_total_pop",
+        ):
+            required_number(r, key)
+        rec_pov_pct = required_number(r, "rec_avg_poverty_rate") * 100.0
+        city_pov_pct = required_number(r, "city_avg_poverty_rate") * 100.0
         pov_delta_pts = rec_pov_pct - city_pov_pct
 
-        rec_noveh_pct = float(r.get("rec_avg_no_vehicle_rate") or 0.0) * 100.0
-        city_noveh_pct = float(r.get("city_avg_no_vehicle_rate") or 0.0) * 100.0
+        rec_noveh_pct = required_number(r, "rec_avg_no_vehicle_rate") * 100.0
+        city_noveh_pct = required_number(r, "city_avg_no_vehicle_rate") * 100.0
         noveh_delta_pts = rec_noveh_pct - city_noveh_pct
 
-        rec_age = float(r.get("rec_avg_median_age") or 0.0)
-        city_age = float(r.get("city_avg_median_age") or 0.0)
+        rec_age = required_number(r, "rec_avg_median_age")
+        city_age = required_number(r, "city_avg_median_age")
         age_delta = rec_age - city_age
 
-        rec_inc = float(r.get("rec_avg_median_income") or 0.0)
-        city_inc = float(r.get("city_avg_median_income") or 0.0)
+        rec_inc = required_number(r, "rec_avg_median_income")
+        city_inc = required_number(r, "city_avg_median_income")
         inc_delta = rec_inc - city_inc
-        inc_ratio_pct = (rec_inc / city_inc * 100.0) if city_inc > 0 else 100.0
+        if city_inc <= 0:
+            raise ToolFailure("INVALID_BASELINE", "Citywide income baseline must be positive.", "NO_DATA")
+        inc_ratio_pct = rec_inc / city_inc * 100.0
 
         # Evaluate alignment with high-need populations
         reaches_higher_poverty = pov_delta_pts >= 2.0
@@ -1263,9 +1311,9 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
             "missing_tract_ids": missing_ids,
             "recommended_tracts_summary": {
                 "tract_count": rec_count,
-                "total_population_covered": int(round(float(r.get("rec_total_pop") or 0.0))),
+                "total_population_covered": int(round(required_number(r, "rec_total_pop"))),
                 "total_car_free_households_covered": int(
-                    round(float(r.get("rec_total_no_car_households") or 0.0))
+                    round(required_number(r, "rec_total_no_car_households"))
                 ),
                 "avg_poverty_rate_pct": round(rec_pov_pct, 1),
                 "avg_no_vehicle_rate_pct": round(rec_noveh_pct, 1),
@@ -1273,8 +1321,8 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
                 "avg_median_income_usd": int(round(rec_inc)),
             },
             "citywide_baseline_summary": {
-                "total_city_tracts": int(r.get("city_tract_count") or 0),
-                "total_city_population": int(round(float(r.get("city_total_pop") or 0.0))),
+                "total_city_tracts": int(required_number(r, "city_tract_count")),
+                "total_city_population": int(round(required_number(r, "city_total_pop"))),
                 "avg_poverty_rate_pct": round(city_pov_pct, 1),
                 "avg_no_vehicle_rate_pct": round(city_noveh_pct, 1),
                 "avg_median_age_years": round(city_age, 1),
@@ -1300,11 +1348,7 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001
         logger.exception("Error in audit_recommendations_equity(%s)", tract_ids)
-        return {
-            "status": "ERROR",
-            "error_code": "EQUITY_AUDIT_FAILED",
-            "message": f"Failed to run equity audit: {exc}",
-        }
+        return dict(exception_result(exc))
 
 
 # ==============================================================================
@@ -1312,6 +1356,7 @@ def audit_recommendations_equity(tract_ids: list[str]) -> dict[str, Any]:
 # ==============================================================================
 
 
+@tool_boundary
 def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
     """Analyze 7 years of NOAA GHCN-Daily weather station history to quantify extreme heat frequency and trends.
 
@@ -1419,7 +1464,9 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
             }
 
         first_row = dict(rows[0].items())
-        total_stations = int(first_row.get("total_stations") or 0)
+        total_stations = int(required_number(first_row, "total_stations"))
+        if total_stations <= 0:
+            raise ToolFailure("STATION_HISTORY_EMPTY", "No reporting stations are available.")
         station_names = list(first_row.get("station_names") or [])
         first_date = str(first_row.get("first_date") or "")
         last_date = str(first_row.get("last_date") or "")
@@ -1429,40 +1476,46 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
 
         for row in rows:
             r = dict(row.items())
-            obs_days = int(r.get("observed_days") or 0)
+            for key in ("observed_days", "days_avg_ge_threshold", "days_peak_ge_threshold",
+                        "days_ge_90f", "days_ge_95f", "days_ge_100f", "annual_peak_temp_f"):
+                required_number(r, key)
+            obs_days = int(required_number(r, "observed_days"))
             is_complete_year = obs_days >= 240  # Guard against partial final calendar year
             item = {
                 "year": int(r["obs_year"]),
                 "observed_days": obs_days,
                 "is_complete_year": is_complete_year,
-                "days_at_or_above_threshold": int(r.get("days_avg_ge_threshold") or 0),
+                "days_at_or_above_threshold": int(required_number(r, "days_avg_ge_threshold")),
                 "days_any_station_at_or_above_threshold": int(
-                    r.get("days_peak_ge_threshold") or 0
+                    r["days_peak_ge_threshold"]
                 ),
-                "days_90f_plus": int(r.get("days_ge_90f") or 0),
-                "days_95f_plus": int(r.get("days_ge_95f") or 0),
-                "days_100f_plus": int(r.get("days_ge_100f") or 0),
+                "days_90f_plus": int(required_number(r, "days_ge_90f")),
+                "days_95f_plus": int(required_number(r, "days_ge_95f")),
+                "days_100f_plus": int(required_number(r, "days_ge_100f")),
                 "summer_jja_mean_max_f": (
                     float(r["summer_mean_max_f"])
                     if r.get("summer_mean_max_f") is not None
                     else None
                 ),
-                "annual_peak_temp_f": float(r.get("annual_peak_temp_f") or 0.0),
+                "annual_peak_temp_f": required_number(r, "annual_peak_temp_f"),
             }
             yearly_breakdown.append(item)
             if is_complete_year:
                 complete_years.append(item)
 
-        # Fallback to all years if none have >= 240 days
-        eval_years = complete_years if complete_years else yearly_breakdown
+        if not complete_years:
+            raise ToolFailure(
+                "INSUFFICIENT_HISTORY", "No years meet the minimum 240 observed-day coverage threshold."
+            )
+        eval_years = complete_years
         n_years = len(eval_years)
 
         avg_days_ge_thresh = (
-            sum(y["days_at_or_above_threshold"] for y in eval_years) / n_years if n_years else 0.0
+            sum(y["days_at_or_above_threshold"] for y in eval_years) / n_years
         )
-        avg_days_90 = sum(y["days_90f_plus"] for y in eval_years) / n_years if n_years else 0.0
-        avg_days_95 = sum(y["days_95f_plus"] for y in eval_years) / n_years if n_years else 0.0
-        avg_days_100 = sum(y["days_100f_plus"] for y in eval_years) / n_years if n_years else 0.0
+        avg_days_90 = sum(y["days_90f_plus"] for y in eval_years) / n_years
+        avg_days_95 = sum(y["days_95f_plus"] for y in eval_years) / n_years
+        avg_days_100 = sum(y["days_100f_plus"] for y in eval_years) / n_years
         all_time_peak_f = max(y["annual_peak_temp_f"] for y in yearly_breakdown)
 
         # Compute trend across complete years (ordinary least squares slope + early vs late split)
@@ -1485,12 +1538,14 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
             late_avg = sum(y["days_at_or_above_threshold"] for y in late_slice) / len(late_slice)
             delta_early_to_late = late_avg - early_avg
         else:
-            slope_days_per_year = 0.0
-            early_avg = avg_days_ge_thresh
-            late_avg = avg_days_ge_thresh
-            delta_early_to_late = 0.0
+            slope_days_per_year = None
+            early_avg = None
+            late_avg = None
+            delta_early_to_late = None
 
-        if slope_days_per_year >= 0.75 or delta_early_to_late >= 3.0:
+        if slope_days_per_year is None or delta_early_to_late is None:
+            trend_direction = "INSUFFICIENT_HISTORY"
+        elif slope_days_per_year >= 0.75 or delta_early_to_late >= 3.0:
             trend_direction = "INCREASING"
         elif slope_days_per_year <= -0.75 or delta_early_to_late <= -3.0:
             trend_direction = "DECREASING"
@@ -1517,10 +1572,10 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
             },
             "trend_analysis": {
                 "direction": trend_direction,
-                "slope_hot_days_per_year": round(slope_days_per_year, 2),
-                "early_period_avg_days_ge_threshold": round(early_avg, 1),
-                "recent_period_avg_days_ge_threshold": round(late_avg, 1),
-                "change_recent_vs_early_days": round(delta_early_to_late, 1),
+                "slope_hot_days_per_year": round(slope_days_per_year, 2) if slope_days_per_year is not None else None,
+                "early_period_avg_days_ge_threshold": round(early_avg, 1) if early_avg is not None else None,
+                "recent_period_avg_days_ge_threshold": round(late_avg, 1) if late_avg is not None else None,
+                "change_recent_vs_early_days": round(delta_early_to_late, 1) if delta_early_to_late is not None else None,
                 "microclimate_compounding_note": (
                     f"Regional stations measure background air mass ({avg_days_ge_thresh:.1f} days/yr >= {thresh:.0f}°F). "
                     f"However, a street corner with a +6°F microclimate offset crosses {thresh:.0f}°F "
@@ -1532,11 +1587,7 @@ def get_station_heat_frequency(threshold_f: float = 95.0) -> dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001
         logger.exception("Error in get_station_heat_frequency(threshold_f=%s)", threshold_f)
-        return {
-            "status": "ERROR",
-            "error_code": "STATION_FREQUENCY_QUERY_FAILED",
-            "message": f"Failed to compute station heat frequency: {exc}",
-        }
+        return dict(exception_result(exc))
 
 
 CUSTOM_HEAT_TOOLS = [

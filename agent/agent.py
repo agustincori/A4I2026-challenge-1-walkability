@@ -4,15 +4,18 @@ Built with Google Agent Development Kit (ADK), Gemini, and BigQuery ML.
 """
 
 from typing import Any
+import inspect
+import logging
+from functools import wraps
 
 from google.adk.agents.llm_agent import Agent
 from .config import AgentConfig
-from .prompts import PLANNING_INSTRUCTION
+from .prompts import SYSTEM_INSTRUCTION as PLANNING_SYSTEM_INSTRUCTION
+from .planning_tools import using_runtime
 from .tools import (
     CUSTOM_HEAT_TOOLS,
     HeatResilienceRuntime,
     get_runtime,
-    set_runtime,
     predict_heat_offset_and_explain,
     compare_locations_and_explain,
     compare_census_tracts,
@@ -24,6 +27,7 @@ from .tools import (
     generate_council_proposal,
 )
 
+logger = logging.getLogger(__name__)
 SYSTEM_INSTRUCTION = """
 You are the Senior Climate Resilience Advisor for the City of Atlanta's Office of Sustainability and Emergency Management.
 Your mandate is to assist municipal decision-makers (city planners, emergency directors, city council members) in allocating heat mitigation resources, siting cooling centers, and evaluating climate equity during extreme heat emergencies.
@@ -73,12 +77,37 @@ Your mandate is to assist municipal decision-makers (city planners, emergency di
 Maintain a professional, authoritative, and actionable tone suitable for presentation to the Mayor and City Council.
 """
 
+def _configured_tool(function: Any, runtime: HeatResilienceRuntime) -> Any:
+    """Keep candidate selection out of the LLM schema while retaining the Python API."""
+    signature = inspect.signature(function)
+    model_kwargs = (
+        {"model_name": runtime.config.bqml_model_name}
+        if "model_name" in signature.parameters else {}
+    )
+    @wraps(function)
+    def invoke(*args: Any, **kwargs: Any) -> Any:
+        if "model_name" in kwargs:
+            from .contracts import failure
+            logger.warning("Agent tool %s rejected a model override", function.__name__)
+            return failure("MODEL_OVERRIDE_DISABLED", "The agent's model is fixed by configuration.", "INVALID_INPUT")
+        with using_runtime(runtime):
+            return function(*args, **kwargs, **model_kwargs)
+
+    invoke.__signature__ = signature.replace(  # type: ignore[attr-defined]
+        parameters=[p for name, p in signature.parameters.items() if name != "model_name"]
+    )
+    invoke.__doc__ = "\n".join(
+        line for line in (function.__doc__ or "").splitlines()
+        if not line.strip().startswith("model_name:")
+    )
+    return invoke
+
+
 def build_agent(config: AgentConfig | None = None) -> Agent:
-    """Build the Atlanta advisor with both planner toolsets and optional MCP tools."""
-    if config is not None:
-        set_runtime(HeatResilienceRuntime(config=config))
-    active_config = get_runtime().config
-    tools: list[Any] = [
+    """Expose exactly one configured model family, with no fallback."""
+    runtime = HeatResilienceRuntime(config=config) if config is not None else get_runtime()
+    active_config = runtime.config
+    atlanta_tools = [
         predict_heat_offset_and_explain,
         compare_locations_and_explain,
         compare_census_tracts,
@@ -88,8 +117,26 @@ def build_agent(config: AgentConfig | None = None) -> Agent:
         audit_equity,
         recommend_canopy_interventions,
         generate_council_proposal,
-        *CUSTOM_HEAT_TOOLS,
     ]
+    if active_config.model_family == "atlanta":
+        tools: list[Any] = [_configured_tool(tool, runtime) for tool in atlanta_tools]
+        instruction = SYSTEM_INSTRUCTION
+        selected_model = active_config.bqml_model_name
+    else:
+        tools = [_configured_tool(tool, runtime) for tool in CUSTOM_HEAT_TOOLS]
+        instruction = PLANNING_SYSTEM_INSTRUCTION
+        selected_model = active_config.planning_bqml_model_name
+    instruction += (
+        f"\nACTIVE MODEL FAMILY: {active_config.model_family}. "
+        f"Configured model: {selected_model}. Use only the registered tools. "
+        "Never blend or directly compare predictions from different model families. "
+        "Never fall back to another model or infer success from unavailable evidence. "
+        "Every tool returns status OK or ERROR. On ERROR, report the error category and "
+        "missing evidence; do not invent replacement figures or draft a verified proposal. "
+        "Economic tract features may still be prediction inputs. Interpret feature "
+        "attributions as predictive associations rather than causal proof. "
+        "Race and ethnicity are excluded; this does not establish fairness by itself."
+    )
     if active_config.mcp_toolbox_url:
         from toolbox_core import ToolboxSyncClient
 
@@ -99,7 +146,7 @@ def build_agent(config: AgentConfig | None = None) -> Agent:
         model=active_config.gemini_model,
         name="atlanta_heat_resilience_advisor",
         description="A municipal heat resilience planning assistant for the City of Atlanta.",
-        instruction=SYSTEM_INSTRUCTION + "\n" + PLANNING_INSTRUCTION,
+        instruction=instruction,
         tools=tools,
     )
 

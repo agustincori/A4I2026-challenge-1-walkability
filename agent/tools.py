@@ -8,6 +8,7 @@ import re
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, Any, List, Optional
+from .contracts import ToolFailure, explained_features, required_number, tool_boundary
 from .planning_tools import (
     CUSTOM_HEAT_TOOLS,
     HeatResilienceRuntime,
@@ -98,6 +99,7 @@ def _location_error(
     return None
 
 
+@tool_boundary
 def predict_heat_offset_and_explain(
     latitude: Optional[float] = None, 
     longitude: Optional[float] = None, 
@@ -145,6 +147,7 @@ def predict_heat_offset_and_explain(
     invalid = _location_error(latitude, longitude, None)
     if invalid is not None:
         return invalid
+    provenance = get_runtime().validate_model("atlanta", target_model)
 
     sql = f"""
     WITH cleaned_tracts AS (
@@ -194,19 +197,21 @@ def predict_heat_offset_and_explain(
         return _error("NO_PREDICTION", "No model prediction available for this location.")
     
     row = results[0]
-    offset = round(row.predicted_offset_f, 2)
+    offset = round(required_number(row, "predicted_offset_f"), 2)
     predicted_temp = round(baseline_forecast_f + offset, 2) if baseline_forecast_f is not None else None
     
     attributions = []
-    for attr in row.top_feature_attributions:
-        feat = attr.get("feature", "")
-        weight = round(attr.get("attribution", 0.0), 2)
+    for attr in explained_features(row.top_feature_attributions, "atlanta"):
+        feat = attr["feature"]
+        weight = round(attr["attribution"], 2)
         attributions.append({"feature": feat, "attribution_deg_f": weight})
         
     return {
         "status": "OK",
         "provenance": {
             "model": f"{get_runtime().dataset_fqn}.{target_model}",
+            "model_family": "atlanta",
+            "model_etag": provenance["model_etag"],
             "preprocessing_contract": "data-lane/831a7f7/eight-feature",
             "temperature_units": "degF",
             "limitations": [
@@ -232,6 +237,7 @@ def predict_heat_offset_and_explain(
     }
 
 
+@tool_boundary
 def compare_locations_and_explain(
     lat1: float, 
     lon1: float, 
@@ -263,10 +269,10 @@ def compare_locations_and_explain(
             return invalid
     site1 = predict_heat_offset_and_explain(lat1, lon1, model_name=model_name)
     if "error" in site1:
-        return {**_error("COMPARISON_FAILED", "First location could not be predicted."), "details": site1}
+        return {**site1, "failed_site": "site_1"}
     site2 = predict_heat_offset_and_explain(lat2, lon2, model_name=model_name)
     if "error" in site2:
-        return {**_error("COMPARISON_FAILED", "Second location could not be predicted."), "details": site2}
+        return {**site2, "failed_site": "site_2"}
     
     diff_f = round(site1["predicted_heat_offset_f"] - site2["predicted_heat_offset_f"], 2)
     canopy1 = site1.get("demographics", {}).get("tree_canopy_pct")
@@ -286,6 +292,7 @@ def compare_locations_and_explain(
     }
 
 
+@tool_boundary
 def rank_cooling_center_sites(
     top_n: int = 3, 
     focus_criteria: str = "vulnerability_and_heat",
@@ -310,6 +317,7 @@ def rank_cooling_center_sites(
     if not _valid_model_name(model_name):
         return _error("INVALID_MODEL", "model_name must be a simple BigQuery model identifier.")
     target_model = model_name or get_runtime().config.bqml_model_name
+    provenance = get_runtime().validate_model("atlanta", target_model)
     order_column = "offset_f" if focus_criteria == "pure_heat" else "composite_vulnerability_score"
     sql = f"""
     WITH cleaned_tracts AS (
@@ -377,14 +385,19 @@ def rank_cooling_center_sites(
         bigquery.ScalarQueryParameter("reference_time", "TIMESTAMP", datetime.now(timezone.utc)),
     ])
     rows = get_runtime().query_rows(sql, job_config)
+    if not rows:
+        raise ToolFailure("NO_SITES", "No cooling-center candidates are available.")
     sites = []
     for i, r in enumerate(rows, 1):
+        for key in ("tract_lat", "tract_lon", "total_pop", "poverty_pct",
+                    "no_vehicle_pct", "median_age", "composite_vulnerability_score"):
+            required_number(r, key)
         sites.append({
             "rank": i,
             "tract_id": r.geo_id,
             "latitude": r.tract_lat,
             "longitude": r.tract_lon,
-            "predicted_heat_offset_f": r.offset_f,
+            "predicted_heat_offset_f": required_number(r, "offset_f"),
             "population": int(r.total_pop) if r.total_pop else None,
             "poverty_rate_pct": r.poverty_pct,
             "no_vehicle_rate_pct": r.no_vehicle_pct,
@@ -393,12 +406,13 @@ def rank_cooling_center_sites(
             "tree_canopy_pct": r.tree_canopy_pct,
             "top_feature_attributions": [
                 {"feature": a["feature"], "attribution_deg_f": round(a["attribution"], 2)}
-                for a in r.top_feature_attributions
+                for a in explained_features(r.top_feature_attributions, "atlanta")
             ],
         })
-    return {"ranked_sites": sites, "count": len(sites)}
+    return {"ranked_sites": sites, "count": len(sites), "provenance": provenance}
 
 
+@tool_boundary
 def query_heat_history(
     min_temp_f: float = 90.0, 
     start_year: int = 2018
@@ -435,6 +449,8 @@ def query_heat_history(
         bigquery.ScalarQueryParameter("start_year", "INT64", start_year),
     ])
     rows = get_runtime().query_rows(sql, job_config)
+    if not rows:
+        raise ToolFailure("STATION_HISTORY_EMPTY", "No station observations are available for this period.")
     history = []
     for r in rows:
         history.append({
@@ -451,6 +467,7 @@ def query_heat_history(
     }
 
 
+@tool_boundary
 def get_tract_demographics(
     latitude: Optional[float] = None, 
     longitude: Optional[float] = None,
@@ -551,6 +568,7 @@ def get_tract_demographics(
     }
 
 
+@tool_boundary
 def compare_census_tracts(
     tract_id_1: str, 
     tract_id_2: str,
@@ -573,11 +591,12 @@ def compare_census_tracts(
     site1 = predict_heat_offset_and_explain(tract_id=tract_id_1, model_name=model_name)
     site2 = predict_heat_offset_and_explain(tract_id=tract_id_2, model_name=model_name)
     
-    if "error" in site1 or "error" in site2:
-        return {
-            "error": "Failed to look up one or both tracts.",
-            "details": {"tract_1": site1, "tract_2": site2}
-        }
+    if "error" in site1:
+        return {**site1, "failed_site": "tract_1"}
+    if "error" in site2:
+        return {**site2, "failed_site": "tract_2"}
+    pop1 = required_number(site1["demographics"], "total_pop")
+    pop2 = required_number(site2["demographics"], "total_pop")
         
     diff_offset = round(site1["predicted_heat_offset_f"] - site2["predicted_heat_offset_f"], 2)
     
@@ -597,7 +616,7 @@ def compare_census_tracts(
         "comparison_metrics": {
             "heat_offset_difference_f": diff_offset,
             "hotter_tract": tract_id_1 if diff_offset > 0 else tract_id_2,
-            "larger_population_tract": tract_id_1 if (site1["demographics"]["total_pop"] or 0) > (site2["demographics"]["total_pop"] or 0) else tract_id_2,
+            "larger_population_tract": tract_id_1 if pop1 > pop2 else tract_id_2,
             "higher_poverty_tract": tract_id_1 if site1["demographics"]["poverty_rate_pct"] > site2["demographics"]["poverty_rate_pct"] else tract_id_2,
             "higher_transit_dependency_tract": tract_id_1 if site1["demographics"]["no_vehicle_rate_pct"] > site2["demographics"]["no_vehicle_rate_pct"] else tract_id_2,
             "lower_tree_canopy_tract": (
@@ -611,6 +630,7 @@ def compare_census_tracts(
     }
 
 
+@tool_boundary
 def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
     """
     Audits candidate or selected cooling center locations against citywide benchmarks 
@@ -629,13 +649,17 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
     selected_tract_ids = list(dict.fromkeys(selected_tract_ids))
         
     sql = f"""
-    WITH city_baseline AS (
+    WITH valid_demographics AS (
+      SELECT * FROM `{get_runtime().dataset_fqn}.tract_demographics`
+      WHERE poverty_rate BETWEEN 0 AND 1
+        AND no_vehicle_rate BETWEEN 0 AND 1 AND total_pop >= 0
+    ), city_baseline AS (
       SELECT
         AVG(poverty_rate) AS city_avg_poverty,
         AVG(no_vehicle_rate) AS city_avg_no_vehicle,
         APPROX_QUANTILES(poverty_rate, 100)[OFFSET(75)] AS p75_poverty,
         APPROX_QUANTILES(no_vehicle_rate, 100)[OFFSET(75)] AS p75_no_vehicle
-      FROM `{get_runtime().dataset_fqn}.tract_demographics`
+      FROM valid_demographics
       WHERE total_pop > 100
     ),
     selected AS (
@@ -644,7 +668,7 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
         poverty_rate,
         no_vehicle_rate,
         total_pop
-      FROM `{get_runtime().dataset_fqn}.tract_demographics`
+      FROM valid_demographics
       WHERE geo_id IN UNNEST(@tract_ids)
     )
     SELECT
@@ -676,6 +700,10 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
     r = results[0]
     if r.matched_tract_count != len(selected_tract_ids):
         return _error("TRACTS_NOT_FOUND", "One or more requested tracts were not found; audit is incomplete.")
+    for key in ("city_avg_poverty_pct", "selected_avg_poverty_pct", "city_p75_poverty_pct",
+                "city_avg_no_vehicle_pct", "selected_avg_no_vehicle_pct",
+                "city_p75_no_vehicle_pct", "total_served_pop"):
+        required_number(r, key)
     return {
         "selected_tract_count": len(selected_tract_ids),
         "total_population_served": int(r.total_served_pop) if r.total_served_pop else None,
@@ -693,6 +721,7 @@ def audit_equity(selected_tract_ids: List[str]) -> Dict[str, Any]:
     }
 
 
+@tool_boundary
 def recommend_canopy_interventions(
     top_n: int = 5, min_pop_density: float = 1000.0
 ) -> Dict[str, Any]:
@@ -725,6 +754,8 @@ def recommend_canopy_interventions(
     ])
     recommendations = []
     for row in get_runtime().query_rows(sql, config):
+        required_number(row, "tree_canopy_pct")
+        required_number(row, "integrated_risk_score")
         actions = [
             "Right-of-way street tree planting along pedestrian and transit corridors",
             "Cool pavement and reflective surface treatments for unshaded asphalt",
@@ -745,6 +776,8 @@ def recommend_canopy_interventions(
             "poverty_pct": row.poverty_pct, "no_vehicle_pct": row.no_vehicle_pct,
             "priority_interventions": actions,
         })
+    if not recommendations:
+        raise ToolFailure("NO_CANOPY_DATA", "No canopy candidates match the requested criteria.")
     return {
         "city_target_canopy_pct": 50.0,
         "recommended_priority_tracts": recommendations,
@@ -753,6 +786,7 @@ def recommend_canopy_interventions(
     }
 
 
+@tool_boundary
 def generate_council_proposal(
     top_n: int = 3,
     baseline_forecast_f: float = 102.0,

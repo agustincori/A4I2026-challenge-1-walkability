@@ -8,6 +8,7 @@ substitutions:
   _BQ_LOCATION: US
   _VERTEX_LOCATION: us-central1
   _GEMINI_MODEL: gemini-2.5-flash
+  _MODEL_FAMILY: atlanta
   _MIN_INSTANCES: "0"
   _MAX_INSTANCES: "5"
   _MEMORY: 1Gi
@@ -65,6 +66,7 @@ steps:
       - BQ_LOCATION=${_BQ_LOCATION}
       - VERTEX_LOCATION=${_VERTEX_LOCATION}
       - GEMINI_MODEL=${_GEMINI_MODEL}
+      - MODEL_FAMILY=${_MODEL_FAMILY}
       - MIN_INSTANCES=${_MIN_INSTANCES}
       - MAX_INSTANCES=${_MAX_INSTANCES}
       - MEMORY=${_MEMORY}
@@ -109,7 +111,7 @@ steps:
           --execution-environment=gen2 \
           --no-traffic \
           --tag="$$revision_tag" \
-          --set-env-vars="GOOGLE_CLOUD_PROJECT=$$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$$VERTEX_LOCATION,BQ_DATASET=$$BQ_DATASET,BQ_LOCATION=$$BQ_LOCATION,GEMINI_MODEL=$$GEMINI_MODEL,AUTO_BOOTSTRAP_BQML=false" \
+          --set-env-vars="GOOGLE_CLOUD_PROJECT=$$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$$VERTEX_LOCATION,BQ_DATASET=$$BQ_DATASET,BQ_LOCATION=$$BQ_LOCATION,GEMINI_MODEL=$$GEMINI_MODEL,MODEL_FAMILY=$$MODEL_FAMILY,AUTO_BOOTSTRAP_BQML=false" \
           "$$access_flag"
 
         revision="$$(gcloud run services describe "$$SERVICE_NAME" \

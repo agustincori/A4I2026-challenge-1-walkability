@@ -20,7 +20,8 @@ The **Atlanta Heat Resilience Advisor** assists municipal decision-makers (city 
 
 ## 2. Tools & Capabilities
 
-The agent exposes 9 Atlanta tools and 4 extended planning tools:
+The agent exposes one tool family per instance: 9 Atlanta tools by default, or
+4 extended planning tools when explicitly configured.
 
 1. `predict_heat_offset_and_explain(latitude, longitude, tract_id, baseline_forecast_f)`
    - Predicts localized microclimate heat offset (°F) and computes localized temperatures against any forecast.
@@ -71,8 +72,13 @@ The agent exposes 9 Atlanta tools and 4 extended planning tools:
 
 The original Atlanta implementations remain in [`tools.py`](./tools.py).
 The extended implementations live in [`planning_tools.py`](./planning_tools.py)
-and are also re-exported by `tools.py`. Both sets are registered on the same
-`atlanta_heat_resilience_advisor` agent.
+and are also re-exported by `tools.py`. Set `MODEL_FAMILY=atlanta` or
+`MODEL_FAMILY=planning` to choose which set the `atlanta_heat_resilience_advisor`
+exposes. The two sets are never registered together. A missing or incompatible
+model fails explicitly; it does not select the other family.
+Each registered tool is bound to its owning runtime via a scoped context, so
+building another agent does not change nested calls' dataset/model configuration.
+The direct Python `get_runtime`/`set_runtime` compatibility hooks remain available.
 
 ### Configuration and Model Compatibility
 
@@ -84,11 +90,12 @@ Both toolsets share a lazily created BigQuery client configured by
 | `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT` | `qwiklabs-gcp-03-1578f96a5a7a` | BigQuery project |
 | `BQ_DATASET` | `a4i_climate` | Input tables and models |
 | `BQ_LOCATION` | `US` | BigQuery job location |
+| `MODEL_FAMILY` | `atlanta` | Register only `atlanta` or `planning` tools |
 | `BQML_MODEL` | `heat_offset_model` | Existing Atlanta model; label `offset_f` |
 | `BQ_MODEL_NAME` | unset | Data-lane compatibility alias, used only when `BQML_MODEL` is unset |
 | `PLANNING_BQML_MODEL` | `heat_planning_model` | Extended planning model; label `heat_offset_f` |
 | `GEMINI_MODEL` | `gemini-2.5-flash` | ADK reasoning model |
-| `AUTO_BOOTSTRAP_BQML` | `true` | Train the planning model on first use if absent |
+| `AUTO_BOOTSTRAP_BQML` | `false` | Explicit development-only opt-in for planning-model bootstrap |
 | `BBOX_PAD_DEGREES` | `0.03` | Planning prediction bounds padding |
 | `EXPLAIN_TOP_K` | `4` | Planning attribution count |
 | `MCP_TOOLBOX_URL` | unset | Optional MCP Toolbox endpoint |
@@ -112,8 +119,8 @@ boundary is BigQuery, not Python imports from the training pipeline:
 
 - The data plane owns training, spatial evaluation, candidate approval, promotion,
   and rollback. Atlanta tools read the configured active `BQML_MODEL`; they never
-  train, discover, or promote a candidate. For production, also set
-  `AUTO_BOOTSTRAP_BQML=false` to prevent the separate planning tools from training.
+  train, discover, or promote a candidate. Keep `AUTO_BOOTSTRAP_BQML=false` in
+  production; the live validation command always disables bootstrap.
 - [`sql/clean_tracts.sql`](./sql/clean_tracts.sql) mirrors that branch's
   `data_plane/sql/clean_tracts.sql`. Prediction and Atlanta ranking reuse the same
   sentinel handling, fixed imputations, valid-coordinate filtering, and
@@ -125,7 +132,9 @@ boundary is BigQuery, not Python imports from the training pipeline:
   The nine Atlanta tools require `atlanta_canopy_heat_svi_modeling` for that context.
   Atlanta rankings use `ML.EXPLAIN_PREDICT` so proposal drivers come from actual
   model attributions. Optional `model_name` overrides on prediction, ranking, and
-  comparison tools accept only simple model names in the configured dataset.
+  comparison Python functions accept only simple model names in the configured
+  dataset. Agent-facing adapters remove that parameter from the actual ADK
+  schemas and reject attempts to override the configured model.
 - [`HeatResilienceRuntime.query_rows`](./planning_tools.py) is the execution boundary
   for both toolsets, including metadata and optional planning bootstrap queries.
   It applies cost and deadline limits, logs job ID/billed bytes/row count, and
@@ -135,10 +144,28 @@ boundary is BigQuery, not Python imports from the training pipeline:
   failures into their error responses. No application-level retry loop is added.
 - Values use typed query parameters. Configured resource identifiers are validated
   separately, since SQL identifiers cannot be query parameters.
-- Invalid Atlanta requests return `status`, `error_code`, and the existing `error`
-  field. Successful prediction responses add model/contract provenance and scientific
-  limitations without removing existing fields. The model name identifies the active
-  resource, not an immutable model version.
+- Every public tool returns `status: OK` or `status: ERROR`. Success retains the
+  existing payload fields. Errors include `error_code`, `category`, `error`,
+  `message`, and `retryable`; categories distinguish `INVALID_INPUT`,
+  `OUT_OF_BOUNDS`, `NO_DATA`, `PERMISSION`, `TIMEOUT`, `QUERY`, `CONTRACT`,
+  `UNAVAILABLE`, and `INTERNAL`. Internal/cloud exception details remain in server
+  logs, not the public message. Composite tools preserve the upstream error category.
+- Both prediction families validate fresh BigQuery model metadata before inference:
+  the exact feature set, a numeric family-specific label, numeric feature types,
+  and linear-regression model kind. BigQuery `StandardSqlField` metadata is used,
+  not table `SchemaField` objects. Label spellings are explicitly allowlisted:
+  `offset_f`/`predicted_offset_f` for Atlanta and
+  `heat_offset_f`/`predicted_heat_offset_f` for planning. Arbitrary `predicted_*`
+  output columns are never accepted.
+- Prediction/ranking responses include model family and observed metadata etag.
+  The etag is checked before querying, not an immutable snapshot or a guarantee
+  against a concurrent model promotion.
+- Empty rankings/history, missing explanations, nonfinite predictions, incomplete
+  selected-tract audits, and null audit metrics cannot produce successful evidence.
+  Documented training imputations remain intentional; absent audit evidence is
+  not imputed. Regional trends require at least two adequately observed years;
+  one year returns an explicit `INSUFFICIENT_HISTORY` direction and null trend
+  values. No adequately observed years returns an error.
 
 Intentional validation changes: Atlanta coordinates must be finite and inside the
 documented metro rectangle (latitude 33.55-34.02, longitude -84.60 to -84.15).
@@ -147,6 +174,7 @@ support at every point. Rankings accept integer limits 1-20; unknown criteria/mo
 are rejected rather than ignored. Planning mode aliases remain accepted. Equity
 audits accept at most 100 IDs; Atlanta audits deduplicate IDs and reject incomplete
 matches instead of reporting a complete audit for a partial selection.
+Planning audits also reject partial matches and missing baseline/selection metrics.
 
 Atlanta `pure_heat` rankings now order by heat offset; the default keeps the
 existing composite score. Station history includes observed years with zero
@@ -155,6 +183,43 @@ not just hot days. Years with no observations are not synthesized.
 The legacy `predicted_surface_temp_f` field is retained for compatibility, but is
 only baseline-plus-offset arithmetic, not a surface-temperature measurement.
 The default 102 F baseline is a scenario assumption, not a fetched forecast.
+
+### Live model readiness check
+
+From the repository root, using the same ADC identity as the runtime:
+
+```bash
+# Metadata only; no prediction queries.
+python -m agent.validate_models --family all
+
+# Read-only prediction/explanation and ranking smoke tests, with shared query limits.
+python -m agent.validate_models --family all --execute
+
+# Explicit diagnostic alternative: use the already authenticated gcloud CLI identity.
+# This does not change ADC and is never an automatic runtime fallback.
+python -m agent.validate_models --family all --execute --credential-source gcloud
+```
+
+The command emits JSON and exits nonzero if any requested family fails. It never
+trains/promotes a model. `--family atlanta` checks just the default serving family.
+The CLI identity option requires `gcloud`; production continues to use ADC.
+
+Live verification on 2026-10-27 found:
+
+- ADC: `bigquery.models.getMetadata` denied for both configured resources.
+- Explicit gcloud identity: Atlanta's eight FLOAT64 features, numeric
+  `predicted_offset_f` label, prediction/explanation, and top-one ranking passed.
+- That identity received `404 NotFound` for `heat_planning_model`; planning
+  inference remains unverified and is not enabled by default.
+- Additional CLI-identity checks passed for Atlanta demographics, quartile
+  equity, station history, location/tract comparisons, canopy recommendations,
+  council proposal generation, and regional station frequency. The detailed
+  planning equity audit correctly returned `INCOMPLETE_EQUITY_DATA` because
+  the selection or citywide baseline has missing metrics; no verdict was invented.
+
+Do not treat a successful CLI-identity smoke test as proof that the deployed
+service account has access. Verify `roles/bigquery.dataViewer` on the dataset and
+`roles/bigquery.jobUser` on the execution project for the actual runtime identity.
 
 ---
 

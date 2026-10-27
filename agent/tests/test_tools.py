@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from agent.config import AgentConfig
+from agent.tests.model_fixtures import model_metadata
 from agent.tools import (
     HeatResilienceRuntime,
     audit_recommendations_equity,
@@ -42,6 +43,7 @@ class TestUrbanHeatTools(unittest.TestCase):
     def setUp(self) -> None:
         self.addCleanup(set_runtime, get_runtime())
         self.mock_client = MagicMock()
+        self.mock_client.get_model.side_effect = model_metadata
         self.mock_client.project = "test-a4i-project"
         self.config = AgentConfig(
             project_id="test-a4i-project",
@@ -93,7 +95,8 @@ class TestUrbanHeatTools(unittest.TestCase):
         # Phoenix, AZ coordinates -> well outside Dallas bounding box
         result = predict_and_explain_location(latitude=33.4484, longitude=-112.0740)
 
-        self.assertEqual(result["status"], "OUT_OF_BOUNDS")
+        self.assertEqual(result["status"], "ERROR")
+        self.assertEqual(result["category"], "OUT_OF_BOUNDS")
         self.assertEqual(result["error_code"], "LOCATION_OUTSIDE_CAMPAIGN_BOUNDS")
         self.assertEqual(result["loaded_city"], "Dallas")
         self.assertIn("REFUSE PREDICTION", result["refusal_instruction"])
@@ -103,7 +106,7 @@ class TestUrbanHeatTools(unittest.TestCase):
     def test_predict_and_explain_location_returns_bqml_explanation_in_bounds(self) -> None:
         explain_row = {
             "predicted_heat_offset_f": 6.45,
-            "baseline_value": 0.12,
+            "baseline_prediction_value": 0.12,
             "top_feature_attributions": [
                 {"feature": "structure_age_years", "attribution": 3.80},
                 {"feature": "no_vehicle_rate", "attribution": 1.90},
@@ -194,6 +197,8 @@ class TestUrbanHeatTools(unittest.TestCase):
     def test_audit_recommendations_equity_computes_deltas_and_verdict(self) -> None:
         audit_row = {
             "rec_tract_count": 2,
+            "incomplete_recommended_count": 0,
+            "incomplete_baseline_count": 0,
             "matched_tract_ids": ["06037206020", "06037206031"],
             "rec_total_pop": 9510.0,
             "rec_avg_poverty_rate": 0.296,

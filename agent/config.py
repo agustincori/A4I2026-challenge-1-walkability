@@ -162,7 +162,7 @@ class AgentConfig:
         default_factory=lambda: int(os.environ.get("EXPLAIN_TOP_K", "4"))
     )
     auto_bootstrap_bqml: bool = field(
-        default_factory=lambda: os.environ.get("AUTO_BOOTSTRAP_BQML", "true").lower()
+        default_factory=lambda: os.environ.get("AUTO_BOOTSTRAP_BQML", "false").lower()
         in {"1", "true", "yes"}
     )
     mcp_toolbox_url: str | None = field(
@@ -174,8 +174,13 @@ class AgentConfig:
     maximum_bytes_billed: int = field(
         default_factory=lambda: int(os.environ.get("BQ_MAXIMUM_BYTES_BILLED", "1000000000"))
     )
+    model_family: str = field(default_factory=lambda: os.environ.get("MODEL_FAMILY", "atlanta"))
 
     def __post_init__(self) -> None:
+        if self.model_family not in {"atlanta", "planning"}:
+            raise ValueError("MODEL_FAMILY must be atlanta or planning.")
+        if self.bqml_model_name == self.planning_bqml_model_name:
+            raise ValueError("PLANNING_BQML_MODEL must differ from BQML_MODEL.")
         identifiers = {
             "BQ_DATASET": self.dataset_id,
             "BQML_MODEL": self.bqml_model_name,
