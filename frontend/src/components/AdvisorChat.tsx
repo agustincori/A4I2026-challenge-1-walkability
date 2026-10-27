@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { agentApi } from '../services/agentApi';
+import { rankingEvidence } from '../services/agentEvidence';
+import { RecommendationCards } from './RecommendationCards';
 import { ChatMessage } from '../types';
 import { Send, Bot, User, Sparkles, Terminal, ChevronDown, ChevronRight, Clock } from 'lucide-react';
 
@@ -21,7 +23,7 @@ export const AdvisorChat: React.FC<AdvisorChatProps> = ({
       content: `Hello! I am the **Atlanta Heat Resilience Advisor**, powered by Google Agent Development Kit (ADK), Gemini 2.5 Flash, and BigQuery ML.
 
 I am calibrated for municipal decision-makers in the City of Atlanta to:
-- Predict microclimate heat offsets and explain physical drivers (\`ML.EXPLAIN_PREDICT\`)
+- Predict campaign-relative heat offsets and explain model associations (\`ML.EXPLAIN_PREDICT\`)
 - Optimize candidate cooling center locations
 - Audit climate equity against Atlanta 75th percentile thresholds
 - Analyze GHCN daily extreme heat trends.
@@ -117,15 +119,17 @@ Select one of the preset planner questions below or enter a custom prompt.`,
         toolCalls: res.toolCalls,
         model: res.model || 'gemini-2.5-flash',
         latencyMs: res.latencyMs,
+        source: res.source,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
 
       setMessages((prev) => [...prev, assistantMsg]);
-    } catch (err: any) {
+    } catch (err: unknown) {
       const errorMsg: ChatMessage = {
         id: 'msg-' + Date.now() + '-err',
         role: 'assistant',
-        content: `Error connecting to Cloud Run agent: ${err.message}. Please verify network connectivity or toggle to Mock Data mode.`,
+        content: `Request not completed: ${err instanceof Error ? err.message : 'Unexpected service failure.'} No recommendations were substituted. Retry the request; if the issue persists, check the service configuration and logs.`,
+        isError: true,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       };
       setMessages((prev) => [...prev, errorMsg]);
@@ -190,6 +194,7 @@ Select one of the preset planner questions below or enter a custom prompt.`,
       <div className="flex-1 p-4 sm:p-6 overflow-y-auto space-y-4">
         {messages.map((msg) => {
           const isUser = msg.role === 'user';
+          const evidence = !isUser && !msg.isError ? rankingEvidence(msg.toolCalls ?? []) : [];
 
           return (
             <div key={msg.id} className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}>
@@ -211,7 +216,21 @@ Select one of the preset planner questions below or enter a custom prompt.`,
                       : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-tl-none shadow-lg'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap">{msg.content}</div>
+                  {evidence.map((ranking, index) => (
+                    <RecommendationCards
+                      key={index} evidence={ranking} isMock={msg.source === 'mock'}
+                      disabled={isLoading || (msg.source === 'mock') !== useMockMode}
+                      onAudit={handleSendMessage}
+                    />
+                  ))}
+                  {evidence.length > 0 ? (
+                    <details className="text-slate-300">
+                      <summary className="cursor-pointer text-xs">Advisor interpretation (model-generated)</summary>
+                      <div className="mt-2 whitespace-pre-wrap">{msg.content}</div>
+                    </details>
+                  ) : (
+                    <div role={msg.isError ? 'alert' : undefined} className="whitespace-pre-wrap">{msg.content}</div>
+                  )}
 
                   {/* Tool Calls Inspector Accordion */}
                   {msg.toolCalls && msg.toolCalls.length > 0 && (
@@ -233,7 +252,7 @@ Select one of the preset planner questions below or enter a custom prompt.`,
                               className="w-full px-3 py-1.5 flex items-center justify-between text-left text-slate-300 hover:text-white bg-slate-950/80 font-mono text-[11px]"
                             >
                               <div className="flex items-center space-x-2">
-                                <span className="text-emerald-400">⚡ {tc.name}</span>
+                                <span className="text-slate-300">⚡ {tc.name}</span>
                               </div>
                               {isOpen ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                             </button>
@@ -262,6 +281,7 @@ Select one of the preset planner questions below or enter a custom prompt.`,
                 {/* Metadata timestamp & latency */}
                 <div className="flex items-center space-x-2 mt-1 px-1 text-[10px] text-slate-500">
                   <span>{msg.timestamp}</span>
+                  {msg.source && <span>{msg.source === 'mock' ? 'Simulated · not live evidence' : 'Live agent response'}</span>}
                   {msg.latencyMs && (
                     <>
                       <span>•</span>
@@ -308,6 +328,7 @@ Select one of the preset planner questions below or enter a custom prompt.`,
         >
           <input
             type="text"
+            aria-label="Message to Atlanta Climate Advisor"
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
             placeholder="Ask the Resilience Advisor about siting, heat disparities, or demographics..."
@@ -316,6 +337,7 @@ Select one of the preset planner questions below or enter a custom prompt.`,
           />
           <button
             type="submit"
+            aria-label="Send message"
             disabled={isLoading || !inputPrompt.trim()}
             className="p-2.5 rounded-xl bg-rose-600 hover:bg-rose-500 disabled:opacity-50 text-white transition-all shadow-md flex items-center justify-center"
           >

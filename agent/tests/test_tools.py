@@ -70,7 +70,7 @@ class TestUrbanHeatTools(unittest.TestCase):
             "max_lon": -96.6100,
         }
 
-    def test_format_feature_attributions_orders_and_labels_drivers(self) -> None:
+    def test_format_feature_attributions_orders_and_labels_associations(self) -> None:
         raw_attrs = [
             {"feature": "median_income", "attribution": -0.64},
             {"feature": "structure_age_years", "attribution": 3.82},
@@ -81,12 +81,20 @@ class TestUrbanHeatTools(unittest.TestCase):
         self.assertEqual(len(structured), 3)
         self.assertEqual(structured[0]["feature"], "structure_age_years")
         self.assertEqual(structured[0]["attribution_f"], 3.82)
-        self.assertEqual(structured[0]["direction"], "warming_driver")
+        self.assertEqual(structured[0]["direction"], "increases_prediction")
         self.assertEqual(structured[2]["feature"], "median_income")
-        self.assertEqual(structured[2]["direction"], "cooling_mitigator")
-        self.assertIn("+3.82\u00b0F from older building stock & urban form", narrative)
-        self.assertIn("+1.91\u00b0F from household transit/walking dependency", narrative)
-        self.assertIn("\u22120.64\u00b0F from neighborhood investment & canopy proxy", narrative)
+        self.assertEqual(structured[2]["direction"], "decreases_prediction")
+        self.assertIn("+3.82\u00b0F model contribution associated with older building stock & urban form", narrative)
+        self.assertIn("+1.91\u00b0F model contribution associated with household transit/walking dependency", narrative)
+        self.assertIn("\u22120.64\u00b0F model contribution associated with median household income", narrative)
+        self.assertIn("not causal heat effects", narrative)
+
+    def test_zero_attribution_is_neutral_not_a_warming_cause(self) -> None:
+        structured, narrative = format_feature_attributions([
+            {"feature": "no_vehicle_rate", "attribution": 0.0},
+        ])
+        self.assertEqual(structured[0]["direction"], "neutral")
+        self.assertIn("not causal heat effects", narrative)
 
     def test_predict_and_explain_location_refuses_out_of_bounds(self) -> None:
         # First query returns Dallas bounding box
@@ -135,7 +143,7 @@ class TestUrbanHeatTools(unittest.TestCase):
         self.assertEqual(result["city"], "Dallas")
         self.assertAlmostEqual(result["predicted_heat_offset_f"], 6.45)
         self.assertIn("+6.45\u00b0F", result["formatted_offset"])
-        self.assertIn("+3.80\u00b0F from older building stock", result["explanation_summary"])
+        self.assertIn("+3.80\u00b0F model contribution associated with older building stock", result["explanation_summary"])
         self.assertEqual(result["nearest_tract_context"]["tract_geo_id"], "48113004900")
         self.assertEqual(result["nearest_tract_context"]["no_vehicle_rate_pct"], 19.2)
         self.assertFalse(result["nearby_observed_readings"]["was_directly_measured_within_500m"])

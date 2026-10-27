@@ -37,9 +37,33 @@ The dashboard communicates directly with the deployed ADK service at:
 - `POST /run` – Multi-turn conversation and tool invocation dispatch.
 
 ### Dual Engine Capability: Live Agent API + TypeScript Mock Data
-To ensure zero downtime and robust demonstration resilience:
-- **Live Agent API Mode (Default):** Directly dispatches prompts to the Cloud Run agent and renders streaming Gemini 2.5 Flash responses and tool execution traces.
+The two modes are explicit, not automatic failover:
+- **Live Agent API Mode (Default):** Dispatches prompts to the Cloud Run agent and renders the completed `/run` event response. Session, HTTP and model errors surface to the user; they never become simulated recommendations.
 - **Mock Data Layer Mode:** Provides a complete TypeScript simulation matching the BigQuery schemas (`heat_offset_model`, `tract_demographics`, `station_daily_temps`), allowing offline evaluation while backend SQL databases are provisioned.
+
+### Grounded recommendation cards
+
+The advisor renders cards only from successful (`status: OK`) ranking tool
+payloads, never from numbers extracted from model prose. The Atlanta and planning
+schemas are validated separately; failed, legacy status-less or malformed
+rankings do not create cards. Unknown demographics are shown as unavailable,
+not zero. Repeated/parallel tool responses are paired by their ADK call ID.
+
+Cards show campaign-relative offsets, tract population and vulnerability,
+model provenance when returned, and a coordinate link to OpenStreetMap in a new
+tab. These links do not route through the dashboard's mock tract map or claim
+verified facilities/walking routes. The audit action sends the exact displayed
+tract IDs back to the live agent; it does not display a mock audit or change the
+ranking. Actions from messages generated in a different data mode are disabled.
+
+Model-generated interpretation remains available under a disclosure, separate
+from tool evidence. Both model families are supported for display compatibility,
+but their scores and offsets are not merged. No generated HTML, dynamic code
+execution, or sandbox is needed. The map, siting and equity dashboard tabs still
+use their existing demonstration datasets; these cards do not make those tabs live.
+
+Run `npm test` for event/evidence parsing and live-error regression tests, then
+`npm run build` for strict TypeScript checking and production bundling.
 
 ---
 

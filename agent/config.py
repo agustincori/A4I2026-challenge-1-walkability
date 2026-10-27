@@ -84,7 +84,7 @@ KNOWN_INTERSECTIONS: dict[str, dict[str, float | str]] = {
 # ML.EXPLAIN_PREDICT. Translates raw table column names into domain language
 # suitable for city council proposals and urban planning explanations.
 FEATURE_EXPLANATION_LABELS: dict[str, str] = {
-    "median_year_structure_built": "building stock age & thermal mass (median_year_structure_built)",
+    "median_year_structure_built": "median structure construction year (median_year_structure_built)",
     "structure_age_years": "older building stock & urban form (structure_age_years)",
     "housing_units": "built-environment housing density (housing_units)",
     "housing_density_proxy": "residential structure density (housing_density_proxy)",
@@ -92,7 +92,7 @@ FEATURE_EXPLANATION_LABELS: dict[str, str] = {
     "no_vehicle_rate": "household transit/walking dependency (no_vehicle_rate)",
     "no_cars": "households without vehicle access (no_cars)",
     "poverty_rate": "socioeconomic heat-exposure vulnerability proxy (poverty_rate)",
-    "median_income": "neighborhood investment & canopy proxy (median_income)",
+    "median_income": "median household income (median_income)",
     "median_age": "resident age profile (median_age)",
     "households": "household density (households)",
     "humidity_pct": "local relative humidity (humidity_pct)",

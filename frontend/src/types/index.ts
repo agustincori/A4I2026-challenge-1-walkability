@@ -67,9 +67,27 @@ export interface EquityAuditSummary {
 }
 
 export interface ToolCallTrace {
+  id?: string;
   name: string;
   arguments: Record<string, any>;
   output?: Record<string, any> | string;
+}
+
+export interface RankedSiteEvidence {
+  rank: number;
+  tractId: string;
+  latitude: number;
+  longitude: number;
+  offsetF: number;
+  population?: number;
+  povertyPct?: number;
+  noVehiclePct?: number;
+}
+
+export interface RankingEvidence {
+  family: 'atlanta' | 'planning';
+  model?: string;
+  sites: RankedSiteEvidence[];
 }
 
 export interface ChatMessage {
@@ -80,6 +98,8 @@ export interface ChatMessage {
   toolCalls?: ToolCallTrace[];
   model?: string;
   latencyMs?: number;
+  source?: 'live' | 'mock';
+  isError?: boolean;
 }
 
 export type AssetType = 'hydration' | 'wellness' | 'bus';
@@ -121,4 +141,3 @@ export interface HeatAlert {
   description: string;
   recommendation: string;
 }
-

@@ -472,8 +472,11 @@ def format_feature_attributions(
         )
         sign = "+" if attribution >= 0 else "\u2212"
         abs_val = abs(attribution)
-        direction = "warming_driver" if attribution >= 0 else "cooling_mitigator"
-        formatted_item = f"{sign}{abs_val:.2f}\u00b0F from {human_label}"
+        direction = (
+            "increases_prediction" if attribution > 0
+            else "decreases_prediction" if attribution < 0 else "neutral"
+        )
+        formatted_item = f"{sign}{abs_val:.2f}\u00b0F model contribution associated with {human_label}"
 
         cleaned.append(
             {
@@ -490,7 +493,7 @@ def format_feature_attributions(
     if not summary_parts:
         summary_parts = [item["formatted"] for item in cleaned[:3]]
 
-    narrative = "; ".join(summary_parts)
+    narrative = "; ".join(summary_parts) + ". These are predictive associations, not causal heat effects."
     return cleaned, narrative
 
 
@@ -505,14 +508,13 @@ def _select_intervention(
     no_vehicle_rate: float,
     poverty_rate: float,
 ) -> str:
-    """Choose a specific, defensible intervention based on track mode and dominant warming driver."""
+    """Choose planning guidance from the track and strongest positive model contribution."""
     mode_map = FEATURE_INTERVENTION_GUIDANCE.get(mode, FEATURE_INTERVENTION_GUIDANCE["budget_cycle"])
 
-    # Pick the strongest positive (warming) attribution first
-    warming_drivers = [a for a in attributions if a["attribution_f"] > 0]
+    positive_contributions = [a for a in attributions if a["attribution_f"] > 0]
     dominant_feature = (
-        warming_drivers[0]["feature"]
-        if warming_drivers
+        positive_contributions[0]["feature"]
+        if positive_contributions
         else (attributions[0]["feature"] if attributions else "default")
     )
 
