@@ -154,6 +154,36 @@ measured improvement, not evidence that the model is ready for production. The n
 step is independently sourced physical-environment features (for example licensed canopy or
 impervious-surface data) and new/buffered spatial validation, not repeated tuning on this holdout.
 
+## Residual audit and a physical separation stress test
+
+```bash
+python3 scripts/audit_candidate.py --parent-run 20261027_164544_b1e872144cc1
+python3 scripts/audit_candidate.py --parent-run 20261027_164544_b1e872144cc1 --execute
+```
+
+This snapshots the tuned experiment's features, retains the same holdout, and removes fitting
+observations within **500 meters** of any holdout observation. It verifies there are no violating
+pairs, recomputes the target anchor from retained fitting rows, and refits exactly the previously
+selected regularization without another search. The buffered result is a stress test, not a
+replacement score or a new independent test: fitting rows and baseline anchor have changed.
+
+Both original and buffered candidates get persisted holdout residual tables. Aggregate reports
+record row/tract counts, MAE, MSE, signed bias (prediction minus actual offset), approximate 90th
+percentile absolute error, and zero-offset baseline MAE. Reports cover geographic cells, income
+imputation, poverty/vehicle-rate bands, and tract-centroid matching distance; groups under 30
+readings are omitted. These are aggregate error slices, not a fairness certification. Poverty and
+vehicle slices use cleaned values, so missing values are assigned to their imputed bands.
+The error quantile describes this holdout; it is **not** a calibrated prediction interval.
+The result is recorded as `BUFFER_AUDIT_COMPLETED`; source data, active model, and agent remain
+unchanged. No risk-score, SVI, or measured-temperature aggregate is introduced as a feature.
+
+The first buffer experiment (`20261027_165503_b3dad3b996e2`) retained 18,018 of 20,168 fitting
+readings, preserved all 3,218 evaluation readings, and found zero fitting/evaluation pairs within
+500 m. Its MAE was 1.4496 F (baseline 1.5819 F), MSE 3.1382 (baseline 3.3064), and R2 0.0458.
+This beats that stress test's baseline on both errors, but explains little of the holdout
+variance. Some parent-model spatial cells had MAE near 3 F despite the aggregate improvement.
+Use persisted residuals to identify those failures rather than hiding them behind average scores.
+
 ## Loading the seed data
 
 Headless alternatives to the notebook, for when a Colab Enterprise runtime is slow or
