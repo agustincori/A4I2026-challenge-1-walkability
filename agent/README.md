@@ -95,7 +95,9 @@ caches. Importing the agent does not query BigQuery.
 
 | Environment variable | Default | Purpose |
 |---|---|---|
+| `GOOGLE_GENAI_USE_VERTEXAI` | `TRUE` for Cloud Run | Route ADK Gemini requests through Vertex AI and Cloud Run Application Default Credentials instead of requiring a Gemini Developer API key |
 | `GOOGLE_CLOUD_PROJECT` / `GCP_PROJECT` | `qwiklabs-gcp-03-1578f96a5a7a` | BigQuery project |
+| `GOOGLE_CLOUD_LOCATION` | deployment region | Vertex AI location for Gemini |
 | `BQ_DATASET` | `a4i_climate` | Input tables and models |
 | `BQ_LOCATION` | `US` | BigQuery job location |
 | `MODEL_FAMILY` | `atlanta` | Register only `atlanta` or `planning` tools |
@@ -299,6 +301,8 @@ python -m unittest discover -s agent/tests -p 'test_*.py'
 
 For Vertex AI, set `GOOGLE_GENAI_USE_VERTEXAI=TRUE`, `GOOGLE_CLOUD_PROJECT`,
 and `GOOGLE_CLOUD_LOCATION`, and configure Application Default Credentials.
+Cloud Run deployment sets Vertex AI mode explicitly and uses the runtime service
+account's credentials; do not add a Gemini Developer API key to the service.
 For local container testing:
 
 ```bash

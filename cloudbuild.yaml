@@ -111,7 +111,7 @@ steps:
           --execution-environment=gen2 \
           --no-traffic \
           --tag="$$revision_tag" \
-          --set-env-vars="GOOGLE_CLOUD_PROJECT=$$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$$VERTEX_LOCATION,BQ_DATASET=$$BQ_DATASET,BQ_LOCATION=$$BQ_LOCATION,GEMINI_MODEL=$$GEMINI_MODEL,MODEL_FAMILY=$$MODEL_FAMILY,AUTO_BOOTSTRAP_BQML=false" \
+          --set-env-vars="GOOGLE_GENAI_USE_VERTEXAI=TRUE,GOOGLE_CLOUD_PROJECT=$$PROJECT_ID,GOOGLE_CLOUD_LOCATION=$$VERTEX_LOCATION,BQ_DATASET=$$BQ_DATASET,BQ_LOCATION=$$BQ_LOCATION,GEMINI_MODEL=$$GEMINI_MODEL,MODEL_FAMILY=$$MODEL_FAMILY,AUTO_BOOTSTRAP_BQML=false" \
           "$$access_flag"
 
         revision="$$(gcloud run services describe "$$SERVICE_NAME" \
