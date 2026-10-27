@@ -79,9 +79,9 @@ export const HeatMap: React.FC<HeatMapProps> = ({
 
       L.control.zoom({ position: 'topright' }).addTo(map);
 
-      // Dark theme tiles suitable for urban heat resilience
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; OpenStreetMap',
+      // Standard OpenStreetMap tiles (free, open-source, no API key required)
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         maxZoom: 19,
       }).addTo(map);
 
