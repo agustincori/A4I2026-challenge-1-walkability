@@ -161,6 +161,15 @@ for table in "${TABLES[@]}"; do
 
   info "  done"
 done
+
+# Snapshot parquet can omit the campaign label. The selected snapshot is city-specific,
+# so fill only missing labels and preserve any source-provided values.
+info "normalizing missing campaign city labels..."
+bq --project_id="${PROJECT_ID}" --location="${LOCATION}" query \
+   --use_legacy_sql=false \
+   "UPDATE \`${PROJECT_ID}.${DATASET}.heat_observations\`
+    SET city = INITCAP(REPLACE('${CITY}', '-', ' '))
+    WHERE city IS NULL OR TRIM(city) = ''" >/dev/null
 echo
 
 # --------------------------------------------------------------------------
@@ -181,6 +190,17 @@ for table in "${TABLES[@]}"; do
     printf '  %-22s %s rows\n' "${table}" "${rows}"
   fi
 done
+
+null_city_rows="$(bq --project_id="${PROJECT_ID}" --location="${LOCATION}" \
+                  query --use_legacy_sql=false --format=csv \
+                  "SELECT COUNTIF(city IS NULL OR TRIM(city) = '')
+                   FROM \`${PROJECT_ID}.${DATASET}.heat_observations\`" \
+                | tail -n 1)"
+
+if [[ "${null_city_rows}" != "0" ]]; then
+  fail "heat_observations still has ${null_city_rows} rows without a city label."
+fi
+
 echo
 
 # Sanity check the one number that matters: intra-city temperature spread.
