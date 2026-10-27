@@ -1,3 +1,4 @@
+import shutil
 import os
 from pptx import Presentation
 from pptx.util import Inches, Pt
@@ -357,11 +358,11 @@ def create_deck():
     p_sc1_t.space_after = Pt(8)
 
     bullets_sc1 = [
-        ("Vertex AI & Gemini 2.5 Flash: ", "Reasoning agent configured with Google ADK runtime and 7 custom Python domain tools (<600ms latency)."),
-        ("BigQuery ML at the Core: ", "heat_offset_model trained on NOAA Heat Watch traverses + CDC SVI. ML.EXPLAIN_PREDICT outputs exact feature attributions."),
-        ("Serverless Cloud Run Backend: ", "Live containerized FastAPI service hosting /run and returning structured tool execution traces."),
-        ("Executive GIS Dashboard: ", "React 19 + TypeScript + Leaflet with real-time temperature slider (85°–105°F) & 800m isochrone overlays."),
-        ("Zero Client Keys: ", "Secure enterprise design—all API keys and Vertex credentials reside safely in Cloud Secret Manager.")
+        ("Vertex AI & Gemini 2.5 Flash: ", "Google ADK runtime with isolated sessions, bounded spatial guards, and correlated telemetry spans."),
+        ("BigQuery ML at the Core: ", "heat_offset_model on NOAA Heat Watch + CDC SVI. ML.EXPLAIN_PREDICT outputs exact feature attributions."),
+        ("Serverless Cloud Run & Vertex ADC: ", "Gen2 service with GOOGLE_GENAI_USE_VERTEXAI=TRUE, native readiness polling, and zero API keys."),
+        ("Executive GIS Dashboard: ", "React 19 + TS + Leaflet with 85°–105°F microclimate slider, 800m isochrones, and zero-key OSM tiles."),
+        ("Vite Reverse Proxy & CORS-Free: ", "Reverse-proxied /api/agent eliminating CORS errors; pre-configured for port 8080 Cloud Shell Preview.")
     ]
     for b_title, b_desc in bullets_sc1:
         p = tf_sc1.add_paragraph()
@@ -474,10 +475,24 @@ def create_deck():
         "=== TOTAL VIDEO RUNTIME: EXACTLY 3 MINUTES (0:20 + 2:20 + 0:20) ==="
     )
 
-    out_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(os.path.dirname(out_dir), "docs", "Atlanta_Heat_Resilience_2_Slide_Deck.pptx")
-    prs.save(output_path)
-    print(f"Successfully updated PowerPoint presentation at: {output_path}")
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    target_paths = [
+        os.path.join(repo_root, "docs", "Atlanta_Heat_Resilience_2_Slide_Deck.pptx"),
+        os.path.join(repo_root, "docs", "Atlanta_Heat_Resilience_2_Slide_Deck.ppt"),
+        os.path.join(repo_root, "frontend", "public", "Atlanta_Heat_Resilience_2_Slide_Deck.pptx"),
+        os.path.join(repo_root, "frontend", "public", "Atlanta_Heat_Resilience_2_Slide_Deck.ppt"),
+        os.path.join(r"C:\Users\tshug\.gemini\antigravity\brain\18c7ad46-c91f-408a-a59a-912c804c2ced", "Atlanta_Heat_Resilience_2_Slide_Deck.pptx"),
+        os.path.join(r"C:\Users\tshug\.gemini\antigravity\brain\18c7ad46-c91f-408a-a59a-912c804c2ced", "Atlanta_Heat_Resilience_2_Slide_Deck.ppt"),
+    ]
+    primary_path = target_paths[0]
+    prs.save(primary_path)
+    for p in target_paths[1:]:
+        try:
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            shutil.copyfile(primary_path, p)
+        except Exception as e:
+            print(f"Error copying to {p}: {e}")
+    print(f"Successfully saved presentation to all target locations: {primary_path}")
 
 if __name__ == "__main__":
     create_deck()
