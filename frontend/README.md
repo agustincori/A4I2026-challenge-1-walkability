@@ -3,7 +3,8 @@
 **Challenge:** Challenge 1 - Urban Climate Resilience & Walkability  
 **Target City:** Atlanta, GA  
 **Track:** Frontend Lane  
-**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app))
+**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app))  
+**Live Deployed Dashboard:** [https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app)  
 **Tech Stack:** React 18, TypeScript, Vite, Tailwind CSS, Leaflet
 
 ---

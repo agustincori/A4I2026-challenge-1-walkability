@@ -12,7 +12,7 @@ The **Atlanta Heat Resilience Advisor** assists municipal decision-makers (city 
 
 ### Core Architecture
 - **Reasoning Engine:** Gemini 2.5 Flash via Google ADK (`google-adk`) configured on Vertex AI.
-- **Predictive Engine:** The planning tools use BigQuery ML model `qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.heat_planning_model`, trained from the Atlanta Heat Watch campaign and Census tract features. Station tables provide temporal context separately; they are not training examples for the spatial offset model.
+- **Predictive Engine:** The production serving agent (MODEL_FAMILY=atlanta) uses BigQuery ML model qwiklabs-gcp-03-1578f96a5a7a.a4i_climate.heat_offset_model, trained from the Atlanta Heat Watch campaign and Census tract features. Station tables provide temporal context separately; they are not training examples for the spatial offset model. (An optional extended planning family MODEL_FAMILY=planning is supported for experimental heat_planning_model evaluation).
 - **Explainability:** Employs `ML.EXPLAIN_PREDICT` to extract feature attributions (structure age, latitude, transit dependency, poverty rates) rather than black-box estimates.
 - **Scope & Safety:** Calibrated strictly for Atlanta; refuses inquiries outside municipal bounds.
 
@@ -351,7 +351,8 @@ adk web --port 8080 .
 ## 4. Live Cloud Run Deployment & Front-End Integration
 
 ### Live Endpoints
-- **Web UI:** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)
+- **Frontend Dashboard (Cloud Run):** [https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app)
+- **Agent API / ADK Web:** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)
 - **Health Check:** `GET /health` -> `{"status":"ok"}`
 - **List Agents:** `GET /list-apps` -> `["agent"]`
 - **Agent Run API:** `POST /run` (JSON body with user query)

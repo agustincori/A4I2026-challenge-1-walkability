@@ -65,7 +65,7 @@
 > At the top is **Gemini 2.5 Flash on Vertex AI**, orchestrated with the **Google Agent Development Kit (ADK)** using 7 custom Python domain tools.  
 > In the data layer, **BigQuery ML** powers `heat_offset_model` and `ML.EXPLAIN_PREDICT` directly inside Google Cloud.  
 > The backend is deployed on **serverless Google Cloud Run**, serving our `/run` endpoint with sub-600ms latency.  
-> And the frontend is built with **React 19, TypeScript, and Leaflet GIS**, providing an executive interface designed specifically for municipal planners."*
+> And the frontend is built with **React 18, TypeScript, and Leaflet GIS**, providing an executive interface designed specifically for municipal planners."*
 
 *(At 2:40, switch back to Slide 2 of the presentation)*
 
