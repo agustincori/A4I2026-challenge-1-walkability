@@ -340,6 +340,8 @@
       <a href="#tuning-audit">Tuning and audit</a>
       <a href="#output">Agent output</a>
       <a href="#status">Status and next steps</a>
+      <a href="#ranking-evidence">Ranking evidence</a>
+      <a href="#tree-planting">Ten-year planting scenarios</a>
     </nav>
 
     <section id="overview">
@@ -639,11 +641,11 @@ python3 -m data_plane.pipelines.audit_candidate --parent-run &lt;tuning_run_id&g
         </div>
         <div class="status-line">
           <div class="status-key">Promotion & Rollback</div>
-          <div class="status-value"><span class="ok">✓</span> <code>data_plane.pipelines.promote_candidate</code> provides safe candidate verification, automatic active-model backup, atomic promotion, and rollback with audit logging.</div>
+          <div class="status-value"><code>data_plane.pipelines.promote_candidate</code> provides explicit model copy, backup, smoke testing and manual rollback with audit logging. This is not a transactional release or an approved quality gate; a failed post-copy smoke test does not automatically restore the backup.</div>
         </div>
         <div class="status-line">
           <div class="status-key">Coverage</div>
-          <div class="status-value"><span class="ok">✓</span> Spatial boundary validation (Atlanta bounds: lat [33.55, 34.02], lon [-84.60, -84.15]) rejects out-of-boundary queries before inference.</div>
+          <div class="status-value">The Atlanta request bounds (lat [33.55, 34.02], lon [-84.60, -84.15]) are input limits, not proof of validated model coverage within the box. Unsupported geography still requires review.</div>
         </div>
       </div>
       <div class="grid-2" style="margin-top:16px">
@@ -670,12 +672,101 @@ python3 -m data_plane.pipelines.audit_candidate --parent-run &lt;tuning_run_id&g
         </article>
       </div>
     </section>
+    <section id="ranking-evidence">
+      <div class="eyebrow">07 · Development evidence · 2026-10-27</div>
+      <h2>Does the model rank hot zones reliably?</h2>
+      <p>The selected use is a human-supervised heat-ranking pilot. The
+        <a href="MODEL_ACCEPTANCE.md">acceptance contract</a> is a draft pending approval,
+        not a production authorization. Heat ranking and vulnerability-weighted policy
+        priority are distinct outputs.</p>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Paired holdout results</h3>
+          <ul>
+            <li>3,218 identical held-out readings across 13 spatial cells.</li>
+            <li>21 tracts meet the draft minimum of 30 readings; seven are excluded.</li>
+            <li>Both candidates recover three of the five hottest measured tracts.</li>
+            <li>Spearman: 0.568 tuned; 0.581 buffered. NDCG@5: 0.687 for both.</li>
+            <li>Tract-mean absolute error: 1.031 F tuned; 1.020 F buffered.</li>
+          </ul>
+          <p>Model fitting anchors are aligned to the same evaluation labels.
+            See the <a href="ranking_audit_20261027.json">retained ranking report</a>.</p>
+        </article>
+        <article class="card">
+          <h3>Limits and false positives</h3>
+          <p>Both models rank tract <code>13121007900</code> first despite its measured
+            mean offset of -1.260 F. Predicted offsets are +1.663 F and +1.364 F.</p>
+          <p>Omitting one evaluation cell at a time gives Spearman ranges of
+            0.425&ndash;0.665 and 0.442&ndash;0.650. Eligible tracts vary from 16 to 21.
+            These are sampling-sensitivity results, not confidence intervals or
+            refitted spatial cross-validation.</p>
+          <p>The holdout has already been inspected. Observed-point tract means do
+            not validate serving-centroid rankings or future campaigns.</p>
+        </article>
+      </div>
+      <pre><code>python3 -m data_plane.pipelines.audit_ranking \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --source-run 20261027_163945_a1f7fcb70be3 \
+  --candidate-run 20261027_164544_b1e872144cc1 \
+  --candidate-run 20261027_165503_b3dad3b996e2 \
+  --execute --output ranking_audit.json</code></pre>
+    </section>
+
+    <section id="tree-planting">
+      <div class="eyebrow">08 · Scenario design · Benefits not yet estimable</div>
+      <h2>Where does planting buy the most relief per dollar?</h2>
+      <p>Selected horizon: ten years from planting. Proposed objective:
+        cumulative human ambient-heat exposure avoided per incremental lifecycle dollar.
+        This is a measurement proposal, not a validated cooling effect.</p>
+      <div class="grid-2">
+        <article class="card">
+          <h3>New data: useful, but not verified</h3>
+          <p><code>atlanta_tree_planting_optimization</code> adds declared plantable area,
+            marginal planting cost, land-surface temperature and access distances.</p>
+          <ul>
+            <li>109 unique, well-formed GEOIDs.</li>
+            <li>No missing or non-finite values in the six profiled numeric fields.</li>
+            <li>56 matches among 264 agent-eligible tracts: 21.2% coverage.</li>
+            <li>Declared costs: 300&ndash;1,500; area: 593.34&ndash;25,000.</li>
+          </ul>
+          <p>Units, source, vintage and whether fields are measured, estimated or
+            synthetic remain unverified. No table description or labels document them.
+            See <a href="planting_audit_20261027.json">planting audit evidence</a> and
+            <a href="canopy_audit_20261027.json">canopy audit evidence</a>.</p>
+        </article>
+        <article class="card">
+          <h3>What a defensible estimate requires</h3>
+          <p>Proposed exposure unit: person-degree-Celsius-hours above an agreed heat
+            threshold, comparing planting against no planting under identical conditions.</p>
+          <ul>
+            <li>Annual growth, survival, replacements and maintenance.</li>
+            <li>A defensible causal cooling response and hourly people present.</li>
+            <li>Verified cost units, currency, price year and discount conventions.</li>
+            <li>Feasible sites, uncertainty, overlapping benefits and equity constraints.</li>
+          </ul>
+          <p>Surface temperature is not ambient exposure. Canopy attribution is not
+            the cooling effect of planting. Dividing a heat score by cost does not
+            measure avoided exposure per dollar.</p>
+        </article>
+      </div>
+      <p>The audit deliberately returns a null relief-per-dollar value and no
+        recommended sites until required evidence is available. See the
+        <a href="TREE_PLANTING_SCENARIO.md">full scenario contract</a> and
+        <a href="BIGQUERY_SCHEMA.md">updated table schemas</a>. Agent integration,
+        training and promotion are unchanged.</p>
+      <pre><code>python3 -m data_plane.pipelines.audit_tree_planting \
+  --project qwiklabs-gcp-03-1578f96a5a7a \
+  --execute --output planting_audit.json</code></pre>
+      <p>Both audit commands are read-only BigQuery jobs, subject to query billing.
+        Omit <code>--execute</code> for a credential-free plan. Output paths must be new.</p>
+    </section>
   </main>
 
   <footer>
     <div class="wrap">
-      Guide to the repository's current workflow. Example numbers do not represent actual run
-      results. Check the BigQuery event log for concrete metrics and statuses.
+      Guide to the repository workflow. The dated ranking and planting sections link
+      retained real audit results; other illustrative numbers are examples. Audit completion
+      is not production approval. Check versioned evidence and the BigQuery event log.
     </div>
   </footer>
 </body>
