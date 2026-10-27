@@ -140,7 +140,7 @@
       <!-- Live Connection & Quick Controls -->
       <div class="flex items-center gap-3">
         <!-- Live ADK Agent Connection Badge -->
-        <div id="connection-status" class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg text-xs" title="Direct connection to deployed Cloud Run ADK Agent: atlanta-heat-advisor-hxywpvumaq-uc.a.run.app">
+        <div id="connection-status" class="flex items-center gap-2 bg-slate-800/80 border border-slate-700 px-3 py-1.5 rounded-lg text-xs" title="Direct connection to deployed Cloud Run ADK Agent: atlanta-heat-advisor-1004921377034.us-central1.run.app">
           <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
           <span class="text-slate-300 font-mono text-[11px] hidden sm:inline">ADK Agent:</span>
           <span id="agent-status-label" class="text-emerald-400 font-semibold text-[11px]">Connected</span>
@@ -1183,7 +1183,7 @@
     /* =====================================================================
        1. DATA LAYER: MOCK BIGQUERY ML SCHEMA & GHCN OBSERVATIONS
        ===================================================================== */
-    const ADK_ENDPOINT = "https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app";
+    const ADK_ENDPOINT = "https://atlanta-heat-advisor-1004921377034.us-central1.run.app";
     let isConnectedToCloudRun = false;
     let sessionId = "planner_session_" + Math.floor(Math.random() * 100000);
 

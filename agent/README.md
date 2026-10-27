@@ -337,11 +337,16 @@ adk web --port 8080 .
 ## 4. Live Cloud Run Deployment & Front-End Integration
 
 ### Live Endpoints
-- **Web UI:** [https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app)
+- **Web UI:** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)
 - **Health Check:** `GET /health` -> `{"status":"ok"}`
 - **List Agents:** `GET /list-apps` -> `["agent"]`
 - **Agent Run API:** `POST /run` (JSON body with user query)
 - **Streaming API:** `POST /run_sse` (Server-sent events for streaming UI)
+
+The ADK server explicitly allows requests from the deployed frontend origins and
+the documented local development origins in [`Dockerfile`](./Dockerfile). If the
+frontend hostname or development port changes, update that origin allowlist and
+redeploy the agent.
 
 ### Local Dev Alternative
 ```bash
