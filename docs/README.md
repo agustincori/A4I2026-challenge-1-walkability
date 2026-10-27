@@ -64,7 +64,8 @@ All competition submission deliverables, presentation decks, video walkthrough s
 
 | Resource | URL / Path | Description |
 |---|---|---|
-| **Live Deployed Agent** | `https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app` | Production Cloud Run agent endpoint with Vertex AI mode |
+| **Live Deployed Agent API** | [Cloud Run Service](https://atlanta-heat-advisor-1004921377034.us-central1.run.app) | Production Cloud Run agent endpoint with Vertex AI mode |
 | **Agent Core & Tools** | [`../agent/`](../agent/) | ADK runtime, cognitive tools, telemetry spans, and contracts |
 | **Data Plane & BQML** | [`../data_plane/`](../data_plane/) | BigQuery datasets, feature validation, and model training pipelines |
-| **GIS Frontend** | [`../frontend/`](../frontend/) | React 19 + TypeScript + Leaflet dashboard with Vite reverse proxy |
+| **GIS Frontend** | [`../frontend/`](../frontend/) | React 18 + TypeScript + Leaflet dashboard with Vite reverse proxy |
+| **Live Deployed Frontend Dashboard** | [Frontend Dashboard](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app) | Interactive React 18 Leaflet GIS interface |

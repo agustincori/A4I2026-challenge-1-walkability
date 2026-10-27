@@ -6,7 +6,8 @@
 > **Target Municipality:** City of Atlanta, Georgia  
 > **Track:** 🏛️ **This Budget Cycle** (Cooling Center Siting & Capital Planning) with multi-clock extensibility for ⚡ **Today** (Emergency Ops) & 🌳 **This Decade** (Urban Forestry)  
 > **GitHub Repository:** [https://github.com/agustincori/A4I2026-challenge-1-walkability](https://github.com/agustincori/A4I2026-challenge-1-walkability)  
-> **Live Production Agent (Cloud Run):** [https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app)  
+> **Live Production Agent (Cloud Run):** [https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app)  
+> **Live Deployed Frontend Dashboard:** [https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app)  
 > **Qwiklabs / Google Skills Project:** `qwiklabs-gcp-03-1578f96a5a7a` (Region: `us-central1`)  
 
 ---
@@ -31,12 +32,13 @@ The **Atlanta Urban Climate Resilience & Walkability Advisor** bridges the gap b
 |---|---|---|
 | **1. GitHub Repository** | [`agustincori/A4I2026-challenge-1-walkability`](https://github.com/agustincori/A4I2026-challenge-1-walkability) | Full codebase: data plane, agent runtime, React GIS dashboard, test suites, and CI/CD pipelines. |
 | **2. Google Skills Project** | `qwiklabs-gcp-03-1578f96a5a7a` | BigQuery datasets (`a4i_climate`), BigQuery ML models (`heat_offset_model`), and Vertex AI workspace. |
-| **3. Live Agent Endpoint** | [Cloud Run Service](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app) | Production-deployed serverless agent with isolated runtimes, Vertex AI ADC credentials, and telemetry. |
-| **4. Pitch Deck (PPTX)** | [`docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx`](../docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx) | Standard 2-slide executive presentation covering scenario, capabilities, output artifact, architecture, and defended choices. |
-| **5. Pitch Deck (Web / PDF)** | [`docs/pitch_deck_2_slides.html`](../docs/pitch_deck_2_slides.html) | Interactive web slide deck with built-in printable PDF stylesheet and export utility. |
-| **6. Pitch Deck Download Portal**| [`docs/download_ppt.html`](../docs/download_ppt.html) | Single-click download portal for pitch assets. |
-| **7. 3-Minute Video Script** | [`docs/DEMO_SCRIPT.md`](../docs/DEMO_SCRIPT.md) | Second-by-second choreographed script (20s intro, 2m 20s demo, 20s outro) mapped to live screen actions. |
-| **8. Output Artifact (Memo)** | [`docs/SUBMISSION_OVERVIEW.md`](../docs/SUBMISSION_OVERVIEW.md) | Formal City Council Resolution memo and Placement Recommendation matrix. |
+| **3. Live Agent Endpoint** | [Cloud Run Service](https://atlanta-heat-advisor-1004921377034.us-central1.run.app) | Production-deployed serverless agent with isolated runtimes, Vertex AI ADC credentials, and telemetry. |
+| **4. Live GIS Dashboard** | [Frontend Dashboard](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app) | Interactive React 18 Leaflet GIS interface with temperature sliders, 800m isochrones, and memo generator. |
+| **5. Pitch Deck (PPTX)** | [`docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx`](../docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx) | Standard 2-slide executive presentation covering scenario, capabilities, output artifact, architecture, and defended choices. |
+| **6. Pitch Deck (Web / PDF)** | [`docs/pitch_deck_2_slides.html`](../docs/pitch_deck_2_slides.html) | Interactive web slide deck with built-in printable PDF stylesheet and export utility. |
+| **7. Pitch Deck Download Portal**| [`docs/download_ppt.html`](../docs/download_ppt.html) | Single-click download portal for pitch assets. |
+| **8. 3-Minute Video Script** | [`docs/DEMO_SCRIPT.md`](../docs/DEMO_SCRIPT.md) | Second-by-second choreographed script (20s intro, 2m 20s demo, 20s outro) mapped to live screen actions. |
+| **9. Technical Architecture & Memo** | [docs/App_Architecture.md](../docs/App_Architecture.md) | Formal City Council Resolution memo, Placement Recommendation matrix, and multi-agent system architecture. |
 
 ---
 
@@ -110,7 +112,7 @@ The platform operates across four modular, decoupled layers:
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
 │                                   PRESENTATION PLANE                                   │
-│            React 19 + TypeScript + Vite + Tailwind CSS + Leaflet GIS Dashboard         │
+│            React 18 + TypeScript + Vite + Tailwind CSS + Leaflet GIS Dashboard         │
 │  • Microclimate Heat Sliders (85°F–105°F)          • 800m (10-min) Pedestrian Isochrones│
 │  • Street Landmark Geocoding ("Sweet Auburn")      • Dynamic Side-by-Side Comparison   │
 │  • Automated 1-Click Council Memo Exporter         • BQML Feature Attribution Panel    │
@@ -163,7 +165,7 @@ To transition the prototype into an enterprise-grade municipal platform, our rec
 - **Candidate Validation CI/CD:** Updated `cloudbuild.yaml` with shortened candidate revision tags, native `gcloud` readiness polling, and zero-traffic validation gates.
 
 ### 4. GIS Frontend Unification, CORS Proxy & Resilience (`commit 8093dc6`, `bef60ae`, `bbab0d2`)
-- **Unified React 19 GIS Engine:** Consolidated the interactive Leaflet map, pedestrian isochrone visualizer, real-time heat alert system, and council memo exporter into a single cohesive interface.
+- **Unified React 18 GIS Engine:** Consolidated the interactive Leaflet map, pedestrian isochrone visualizer, real-time heat alert system, and council memo exporter into a single cohesive interface.
 - **CORS Elimination via Vite Proxy:** Configured a Vite reverse proxy (`/api/agent`) routing requests directly to the Cloud Run backend, eliminating cross-origin CORS barriers across local, Cloud Shell, and production environments.
 - **Zero-Key Map Tiles:** Replaced third-party CARTO map tiles with standard, key-free OpenStreetMap tiles, preventing map rendering failures during public evaluations.
 - **Cloud Shell Web Preview Ready:** Configured the Vite development server to run on port 8080 by default, allowing evaluators to preview the UI in Google Cloud Shell with a single click.
@@ -269,7 +271,7 @@ Open `http://localhost:8080` in your browser or launch Cloud Shell Web Preview o
 
 ### 3. Verify Live Cloud Run Agent
 ```bash
-curl -X POST https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app/run \
+curl -X POST https://atlanta-heat-advisor-1004921377034.us-central1.run.app/run \
   -H "Content-Type: application/json" \
   -d '{"message": "What is the heat offset in Sweet Auburn and how walkable is it?"}'
 ```

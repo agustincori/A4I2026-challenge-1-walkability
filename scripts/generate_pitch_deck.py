@@ -278,16 +278,55 @@ def create_deck():
     f1 = slide1.shapes.add_textbox(Inches(0.6), Inches(6.9), Inches(12.133), Inches(0.35))
     tf_f1 = f1.text_frame
     p_f1 = tf_f1.paragraphs[0]
-    p_f1.text = "AngelHack / Google A4I Challenge 1  •  GitHub: agustincori/A4I2026-challenge-1-walkability  •  Cloud Run: atlanta-heat-advisor-1004921377034.us-central1.run.app"
+    p_f1.text = "AngelHack / Google A4I Challenge 1  •  GitHub: agustincori/A4I2026-challenge-1-walkability  •  Cloud Run: atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app"
     p_f1.font.size = Pt(9)
     p_f1.font.color.rgb = COLOR_MUTED
 
-    # Slide 1 Notes: Section 2a (20s Intro)
+    # Slide 1 Notes: Full Presentation & Video Talk Track
     notes1 = slide1.notes_slide.notes_text_frame
     notes1.text = (
-        "=== SECTION 2a: 20-SECOND INTRO (SLIDE 1 ON SCREEN) ===\n\n"
-        "\"Good afternoon, judges. When a heat advisory hits Atlanta, news reports quote KATL Airport: 95°F. But in dense neighborhoods like Sweet Auburn and Peoplestown, microclimates run up to 4.8 degrees hotter. Over 47% of households there have no car, and tree canopy drops below 33%. For Challenge 1's budget track, Dana in the City Manager's office must site 3 permanent cooling centers before tomorrow's 9 AM City Council session. We built the Atlanta Urban Climate Resilience Advisor to solve this with BigQuery ML, pedestrian walk buffers, and an equity audit. Let's look at the live tool in action.\"\n\n"
-        "[-> AT 0:20, SWITCH SCREEN-SHARE TO LIVE DEMO FOR 2m20s]"
+        "=== SLIDE 1 PRESENTATION TALK TRACK & 3-MINUTE VIDEO SCRIPT ===\n\n"
+        "--- PART 1: SLIDE 1 WALKTHROUGH (FOR LIVE PITCH / PRESENTATION) ---\n"
+        "• Context & Hook: When heat advisories hit Atlanta, regional news reports quote KATL Airport (95°F). But microclimates in dense asphalt neighborhoods run up to +4.77°F hotter.\n"
+        "• The Inequity: In tracts like Sweet Auburn, Peoplestown, and Mechanicsville, over 47% of households have no vehicle and canopy coverage is below 33%. Residents cannot drive or walk miles to distant regional shelters.\n"
+        "• The Municipal Scenario: Dana in the City Manager's Office must site 3 permanent cooling centers ahead of an imminent 102°F heatwave for City Council approval tomorrow morning.\n"
+        "• The Technical Solution: We built the Atlanta Heat Resilience Advisor using Vertex AI (Gemini 2.5 Flash), Google ADK runtime, and BigQuery ML (heat_offset_model + ML.EXPLAIN_PREDICT). We combine spatial microclimates with CDC SVI hardship indicators and 800m pedestrian walk isochrones.\n"
+        "• The Siting Recommendations: Top 3 sites identified: Sweet Auburn (Tract 27, score 0.864), South Pryor / Peoplestown (Tract 55.02, score 0.838), and Mechanicsville (Tract 56, score 0.811), sheltering 19,850 high-risk residents.\n\n"
+        "--- PART 2: VIDEO WALKTHROUGH TALK TRACK (EXACT TIMING: 0:00 - 2:40) ---\n\n"
+        "[0:00 - 0:20] SECTION 2a: INTRO OF CHALLENGE & IMPORTANCE (SLIDE 1 ON SCREEN)\n"
+        "\"Good afternoon, judges. When a heat advisory hits Atlanta, news reports quote KATL Airport: 95°F. But in dense neighborhoods like Sweet Auburn and Peoplestown, microclimates run up to 4.8 degrees hotter.\n"
+        "Over 47% of households there have no car, and tree canopy drops below 33%. For Challenge 1's budget track, Dana in the City Manager's office must site 3 permanent cooling centers before tomorrow's 9 AM City Council session.\n"
+        "We built the Atlanta Urban Climate Resilience Advisor to solve this with BigQuery ML, pedestrian walk buffers, and an equity audit. Let's see the live tool in action.\"\n\n"
+        "[AT 0:20 -> SWITCH SCREEN-SHARE TO LIVE WORKING GIS DASHBOARD]\n\n"
+        "[0:20 - 1:05] SECTION 2b - PART A: TOP 5 CAPABILITIES (45 SECONDS)\n"
+        "(Action: Navigate map, search 'Sweet Auburn', toggle walk buffer, click tract details, open Council Memo)\n"
+        "\"Here is our live deployed advisor. It delivers five critical capabilities:\n"
+        "1. Microclimate Offset Modeling: Rather than blunt airport temperatures, our BigQuery ML model predicts localized thermal offsets—revealing Sweet Auburn is +4.61°F hotter than city baseline.\n"
+        "2. 10-Minute Pedestrian Isochrones: Notice these 800-meter blue walking rings. A carless resident cannot walk 3 miles in extreme heat. We test physical street access, not straight lines.\n"
+        "3. Talks in Street Names: Planners don't memorize Census GEOIDs. Dana simply types 'Sweet Auburn' or 'Peoplestown' and the system instantly resolves the neighborhood.\n"
+        "4. Multi-Objective Siting Optimization: Our algorithm balances heat exposure, poverty, and carlessness, automatically ranking Sweet Auburn, South Pryor, and Mechanicsville as the top 3 sites—sheltering nearly 20,000 residents.\n"
+        "5. One-Click Council Resolution Memo: A planner can export this pre-populated legislative memo with statutory justifications and model citations ready for an immediate council vote.\"\n\n"
+        "[1:05 - 1:40] SECTION 2b - PART B: TOP 4 DEFENDED DECISIONS (35 SECONDS)\n"
+        "(Action: Switch to Equity Audit tab and highlight the 100% equity clearance card)\n"
+        "\"We defended four core engineering decisions along the way:\n"
+        "1. Ethical Bias Handling: We strictly excluded race and ethnicity variables from model training to prevent self-fulfilling redlining proxies. Fairness is audited on the output instead.\n"
+        "2. Offset vs. Raw Temperature: Modeling thermal offsets isolates fixed physical urban built form from seasonal weather noise.\n"
+        "3. Hardship Threshold Benchmarking: We audit candidate sites against Atlanta's 75th-percentile hardship cutoffs—24.5% poverty and 14.8% carlessness. 100% of our sites clear this standard, guaranteeing zero equity drift.\n"
+        "4. Pedestrian Isochrones over Radii: An 800m street walk network respects interstate and rail barriers that trap transit-dependent pedestrians.\"\n\n"
+        "[1:40 - 2:10] SECTION 2b - PART C: CONSTRAINTS & LIMITATIONS (30 SECONDS)\n"
+        "(Action: Open Explainability panel with ML.EXPLAIN_PREDICT feature bars)\n"
+        "\"As an honest engineering team, we explicitly acknowledge our constraints:\n"
+        "First, our baseline relies on NOAA Heat Watch traverses, which capture a single representative hot day. Longitudinal seasonal data is required for multi-year wind patterns.\n"
+        "Second, long-term weather stations in Atlanta are clustered near airports, requiring spatial interpolation across urban core tracts.\n"
+        "And third, while ML.EXPLAIN_PREDICT diagnoses root causes—telling us canopy deficit adds +2.4°F and impervious asphalt adds +1.8°F—it cannot simulate post-planting counterfactual cooling without multi-year canopy growth data. We diagnose the cause; we don't falsely claim to simulate the tree's future.\"\n\n"
+        "[2:10 - 2:40] SECTION 2b - PART D: ARCHITECTURE TOUR OF DEPLOYED PIECES (30 SECONDS)\n"
+        "(Action: Open AI Advisor tab, trigger a query, show sub-600ms latency and Cloud Run deployment)\n"
+        "\"Here is the deployed architecture serving this experience:\n"
+        "At the top is Gemini 2.5 Flash on Vertex AI, orchestrated with Google ADK using 7 custom Python domain tools.\n"
+        "In the data layer, BigQuery ML powers heat_offset_model and ML.EXPLAIN_PREDICT directly inside Google Cloud.\n"
+        "The backend is deployed on serverless Google Cloud Run, serving our /run endpoint with sub-600ms latency.\n"
+        "And the frontend is built with React 18, TypeScript, and Leaflet GIS, providing an executive interface designed specifically for municipal planners.\"\n\n"
+        "[AT 2:40 -> SWITCH SCREEN-SHARE BACK TO SLIDE 2 FOR FINAL 20-SECOND OUTRO]"
     )
 
     # -------------------------------------------------------------
@@ -466,13 +505,47 @@ def create_deck():
     p_f2.font.size = Pt(9)
     p_f2.font.color.rgb = COLOR_MUTED
 
-    # Slide 2 Notes: Section 2c (20s Outro)
+    # Slide 2 Notes: Full Presentation & Video Outro Talk Track
     notes2 = slide2.notes_slide.notes_text_frame
     notes2.text = (
-        "=== SECTION 2c: 20-SECOND OUTRO (SLIDE 2 ON SCREEN) ===\n\n"
-        "[AT 2:40, SWITCH BACK FROM LIVE DEMO TO SLIDE 2 FOR FINAL 20 SECONDS]\n\n"
-        "\"To wrap up: our advisor gives Atlanta leaders an actionable, defensible path across all three clocks. Tomorrow, we dispatch hydration vans to Sweet Auburn. This budget cycle, we fund 42 MARTA transit shade structures. And this decade, we target urban canopy planting at the bottom 20% tracts. By connecting BigQuery ML with street-level walkability and an uncompromising equity audit, we ensure no neighborhood is left behind. Thank you.\"\n\n"
-        "=== TOTAL VIDEO RUNTIME: EXACTLY 3 MINUTES (0:20 + 2:20 + 0:20) ==="
+        "=== SLIDE 2 PRESENTATION TALK TRACK & VIDEO OUTRO ===\n\n"
+        "--- PART 1: SLIDE 2 WALKTHROUGH (FOR LIVE PITCH / TECHNICAL DEFENSE) ---\n"
+        "• Column 1: System Architecture Tour\n"
+        "  - Vertex AI & Gemini 2.5 Flash: ADK runtime with isolated sessions, bounded spatial guards ([-84.55, 33.64] to [-84.28, 33.89]), and correlated telemetry spans.\n"
+        "  - BigQuery ML at the Core: heat_offset_model trained on NOAA Heat Watch + Census ACS. ML.EXPLAIN_PREDICT unpacks canopy deficits (+2.4°F) and impervious asphalt (+1.8°F).\n"
+        "  - Serverless Cloud Run & Vertex ADC: Gen2 Cloud Run with GOOGLE_GENAI_USE_VERTEXAI=TRUE, native readiness polling, and zero client API keys.\n"
+        "  - Executive GIS Dashboard: React 18 + TypeScript + Leaflet with real-time 85°–105°F slider, 800m walk isochrones, and zero-key OSM tiles.\n"
+        "  - Vite Reverse Proxy: CORS-free /api/agent routing configured for Cloud Shell port 8080 evaluation.\n\n"
+        "• Column 2: Defended Engineering Decisions\n"
+        "  1. Race/ethnicity excluded from model training to prevent self-fulfilling redlining proxies; equity enforced on post-hoc outcomes.\n"
+        "  2. Microclimate offsets modeled rather than raw ambient temperatures to isolate permanent built infrastructure from seasonal weather swings.\n"
+        "  3. Siting clearance benchmarked against Atlanta 75th-percentile hardship cutoffs (poverty >= 24.5%, carless >= 14.8%).\n"
+        "  4. 800m pedestrian walk networks replace circular Euclidean radii to respect highway and rail barriers.\n\n"
+        "• Column 3: Honest Constraints & Multi-Clock Roadmap\n"
+        "  - Constraint: Single-day NOAA traverse baseline; longitudinal multi-year calibration needed.\n"
+        "  - Constraint: Airport station clustering requires spatial interpolation across core tracts.\n"
+        "  - Constraint: Explanations isolate root causes but cannot simulate multi-year post-planting canopy growth.\n"
+        "  - Multi-Clock Action Plan: Today (hydration vans), This Budget Cycle (42 MARTA shade-sails), This Decade (urban forestry canopy in bottom 20% tracts).\n\n"
+        "--- PART 2: VIDEO OUTRO TALK TRACK (EXACT TIMING: 2:40 - 3:00) ---\n\n"
+        "[2:40 - 3:00] SECTION 2c: OUTRO & MULTI-CLOCK ROADMAP (SLIDE 2 ON SCREEN - 20 SECONDS)\n"
+        "\"To wrap up: our advisor gives Atlanta leaders an actionable, defensible path across all three clocks.\n"
+        "Tomorrow, emergency management can dispatch mobile hydration vans to Sweet Auburn.\n"
+        "This budget cycle, the city can fund 42 transit shade structures at unshaded MARTA stops inside our walk buffers.\n"
+        "And this decade, urban forestry can target canopy planting where it delivers the highest thermal relief per dollar.\n"
+        "By connecting BigQuery ML with street-level walkability and an uncompromising equity audit, we ensure no neighborhood is left behind. Thank you.\"\n\n"
+        "--- PART 3: PRESENTER 3-MINUTE VIDEO TIMING CHEATSHEET ---\n"
+        "• 0:00 - 0:20 (20s): Intro & Scenario Hook (Slide 1 Fullscreen)\n"
+        "• 0:20 - 1:05 (45s): Top 5 Capabilities (Live GIS Map Screen-Share)\n"
+        "• 1:05 - 1:40 (35s): Top 4 Defended Decisions (Live Equity Tab Screen-Share)\n"
+        "• 1:40 - 2:10 (30s): Constraints & Honest Limitations (Explainability Panel)\n"
+        "• 2:10 - 2:40 (30s): Architecture Tour of Deployed Stack (AI Advisor Query & Cloud Run)\n"
+        "• 2:40 - 3:00 (20s): Multi-Clock Roadmap & Outro (Slide 2 Fullscreen)\n"
+        "TOTAL DURATION: EXACTLY 180 SECONDS (3 MINUTES)\n\n"
+        "--- PART 4: JUDGING CRITERIA CROSSWALK ---\n"
+        "• Impact (30%): Siting shelters 19,850 high-risk residents; 10-minute walk buffers prioritize transit-dependent families.\n"
+        "• Execution (30%): Live Cloud Run service, Vertex AI ADK agent, React 18 frontend, sub-600ms latency, zero CORS.\n"
+        "• Rigor & Judgment (25%): Race excluded from features, 75th percentile equity benchmarking, explicit constraint honesty.\n"
+        "• Craft (15%): Production UI, clean presentation deck, responsive map, 1-click City Council legislative memo."
     )
 
     repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
