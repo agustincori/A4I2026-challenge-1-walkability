@@ -278,7 +278,7 @@ def create_deck():
     f1 = slide1.shapes.add_textbox(Inches(0.6), Inches(6.9), Inches(12.133), Inches(0.35))
     tf_f1 = f1.text_frame
     p_f1 = tf_f1.paragraphs[0]
-    p_f1.text = "AngelHack / Google A4I Challenge 1  •  GitHub: agustincori/A4I2026-challenge-1-walkability  •  Cloud Run: atlanta-heat-advisor.a.run.app"
+    p_f1.text = "AngelHack / Google A4I Challenge 1  •  GitHub: agustincori/A4I2026-challenge-1-walkability  •  Cloud Run: atlanta-heat-advisor-1004921377034.us-central1.run.app"
     p_f1.font.size = Pt(9)
     p_f1.font.color.rgb = COLOR_MUTED
 
@@ -361,7 +361,7 @@ def create_deck():
         ("Vertex AI & Gemini 2.5 Flash: ", "Google ADK runtime with isolated sessions, bounded spatial guards, and correlated telemetry spans."),
         ("BigQuery ML at the Core: ", "heat_offset_model on NOAA Heat Watch + CDC SVI. ML.EXPLAIN_PREDICT outputs exact feature attributions."),
         ("Serverless Cloud Run & Vertex ADC: ", "Gen2 service with GOOGLE_GENAI_USE_VERTEXAI=TRUE, native readiness polling, and zero API keys."),
-        ("Executive GIS Dashboard: ", "React 19 + TS + Leaflet with 85°–105°F microclimate slider, 800m isochrones, and zero-key OSM tiles."),
+        ("Executive GIS Dashboard: ", "React 18 + TS + Leaflet with 85°–105°F microclimate slider, 800m isochrones, and zero-key OSM tiles."),
         ("Vite Reverse Proxy & CORS-Free: ", "Reverse-proxied /api/agent eliminating CORS errors; pre-configured for port 8080 Cloud Shell Preview.")
     ]
     for b_title, b_desc in bullets_sc1:
