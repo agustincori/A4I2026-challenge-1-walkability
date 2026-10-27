@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # A4I 2026 - Challenge 1: Community Climate Resilience: Urban Heat
-# Headless fallback for notebooks/c1_01_load_explore.ipynb
+# Headless fallback for data_plane/notebooks/c1_01_load_explore.ipynb
 #
 # Rebuilds the same three BigQuery tables the notebook produces, from a
 # pre-staged snapshot in Cloud Storage. Use this when a Colab Enterprise

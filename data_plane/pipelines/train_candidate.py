@@ -13,15 +13,18 @@ from typing import Any
 import uuid
 
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
+DATA_PLANE = ROOT / "data_plane"
 FEATURES = (
     "latitude", "longitude", "median_income", "poverty_rate", "no_vehicle_rate",
     "median_age", "housing_units", "median_year_structure_built",
 )
 FILES = (
-    "scripts/train_candidate.py", "scripts/tune_candidate.py", "scripts/audit_candidate.py",
-    "sql/clean_tracts.sql", "sql/prepare_features.sql",
-    "sql/train_model.sql", "sql/evaluate_model.sql", "sql/explain_prediction.sql",
+    "data_plane/pipelines/train_candidate.py", "data_plane/pipelines/tune_candidate.py",
+    "data_plane/pipelines/audit_candidate.py", "data_plane/pipelines/promote_candidate.py",
+    "data_plane/sql/clean_tracts.sql", "data_plane/sql/prepare_features.sql",
+    "data_plane/sql/train_model.sql", "data_plane/sql/evaluate_model.sql",
+    "data_plane/sql/explain_prediction.sql",
 )
 
 
@@ -128,6 +131,22 @@ class BigQuery:
             raise RuntimeError(f"Cannot read model {name}:\n{result.stderr}\n{result.stdout}")
         return json.loads(result.stdout)
 
+    def copy_model(self, source: str, destination: str, force: bool = False) -> None:
+        src_proj, src_res = source.split(".", 1)
+        dst_proj, dst_res = destination.split(".", 1)
+        command = [
+            "bq", f"--project_id={self.project}", f"--location={self.location}",
+            "cp",
+        ]
+        if force:
+            command.append("-f")
+        command.extend([f"{src_proj}:{src_res}", f"{dst_proj}:{dst_res}"])
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode:
+            raise RuntimeError(
+                f"Cannot copy model {source} to {destination}:\n{result.stderr}\n{result.stdout}"
+            )
+
     def job_statistics(self, identifier: str) -> dict[str, Any]:
         result = subprocess.run(
             ["bq", f"--project_id={self.project}", f"--location={self.location}",
@@ -205,9 +224,9 @@ class TrainingRun:
     def template(self, filename: str) -> str:
         values = dict(self.context)
         values["clean_tracts_sql"] = render(
-            (ROOT / "sql/clean_tracts.sql").read_text(), values,
+            (DATA_PLANE / "sql/clean_tracts.sql").read_text(), values,
         )
-        return render((ROOT / "sql" / filename).read_text(), values)
+        return render((DATA_PLANE / "sql" / filename).read_text(), values)
 
     def run(self) -> dict[str, Any]:
         manifest = code_manifest()

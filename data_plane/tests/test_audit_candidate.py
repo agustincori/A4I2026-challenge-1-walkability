@@ -4,8 +4,9 @@ import unittest
 from unittest.mock import patch
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from audit_candidate import BigQuery, TrainingRun, audit, buffered_features_sql, diagnostics_sql, residuals_sql
+from data_plane.pipelines.audit_candidate import (
+    BigQuery, TrainingRun, audit, buffered_features_sql, diagnostics_sql, residuals_sql,
+)
 
 
 class AuditCandidateTests(unittest.TestCase):

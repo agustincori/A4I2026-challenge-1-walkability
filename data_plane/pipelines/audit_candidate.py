@@ -7,7 +7,7 @@ import os
 import re
 from typing import Any
 
-from train_candidate import (
+from .train_candidate import (
     BigQuery, FEATURES, TrainingRun, code_manifest, quality_warnings, run_id, validate_namespace,
 )
 

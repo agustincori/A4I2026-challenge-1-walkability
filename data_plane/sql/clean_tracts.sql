@@ -1,4 +1,4 @@
--- Shared training/inference preprocessing. Rendered by scripts/train_candidate.py.
+-- Shared training/inference preprocessing. Rendered by data_plane.pipelines.train_candidate.
 SELECT
   geo_id,
   tract_lat,

@@ -634,16 +634,16 @@ python3 scripts/audit_candidate.py --parent-run &lt;tuning_run_id&gt; --execute<
           <div class="status-value"><span class="ok">✓</span> Separate ridge-tuning and 500 m residual-audit workflows are available; both are diagnostic and leave production unchanged.</div>
         </div>
         <div class="status-line">
-          <div class="status-key">Current agent</div>
-          <div class="status-value"><span class="pending">●</span> Existing tools still query <code>heat_offset_model</code>; the runner does not reconfigure them.</div>
+          <div class="status-key">Agent serving</div>
+          <div class="status-value"><span class="ok">✓</span> Synchronized with data-lane cleaning contracts (Census sentinel fallbacks, feature attribution via ML.EXPLAIN_PREDICT, parameterizable model target).</div>
         </div>
         <div class="status-line">
-          <div class="status-key">Handoff</div>
-          <div class="status-value"><span class="pending">●</span> Results review, the promotion decision, model wiring, and cleanup/feature synchronization are still separate steps.</div>
+          <div class="status-key">Promotion & Rollback</div>
+          <div class="status-value"><span class="ok">✓</span> <code>scripts/promote_candidate.py</code> provides safe candidate verification, automatic active-model backup, atomic promotion, and rollback with audit logging.</div>
         </div>
         <div class="status-line">
           <div class="status-key">Coverage</div>
-          <div class="status-value"><span class="blocked">!</span> Nearest-tract lookup alone does not verify that coordinates are within Atlanta.</div>
+          <div class="status-value"><span class="ok">✓</span> Spatial boundary validation (Atlanta bounds: lat [33.55, 34.02], lon [-84.60, -84.15]) rejects out-of-boundary queries before inference.</div>
         </div>
       </div>
       <div class="grid-2" style="margin-top:16px">

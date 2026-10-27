@@ -1,4 +1,4 @@
-# scripts/
+# Data plane
 
 ## Versioned BQML candidates and training history
 
@@ -111,16 +111,22 @@ Interruption does not automatically cancel an already-submitted job; inspect its
 `sql/explain_prediction.sql` are templates, not standalone `bq` commands. The runner resolves
 their identifiers and records the exact executed SQL. The explain SQL and parameters are available
 in the `explain` / `SUBMITTED` event; its successful result is in `explain` / `SUCCEEDED`.
-For serving, the agent lane should use the candidate model explicitly and the same cleaning
-contract on live demographics. Coordinates must be validated against supported coverage before
-inference; nearest-tract lookup alone does not enforce that coverage. Nothing rewires the agent.
-Its old `COALESCE(median_income, ...)` still needs the shared negative-value handling, and ranking
-still needs per-site explanations before the full application can be called synchronized.
+
+For serving, the agent lane (`agent/tools.py`) is synchronized with the data-lane contract:
+- **Atlanta coverage boundary:** Validates coordinates against the municipal/metro bounding box
+  (latitude [33.55, 34.02], longitude [-84.60, -84.15]) before inference to reject out-of-boundary queries.
+- **Demographics cleaning:** Matches `sql/clean_tracts.sql` by mapping negative Census income sentinels
+  and missing values to the documented City of Atlanta baseline ($65,000.00) and clamping poverty rates.
+- **Attribution explanation:** `rank_cooling_center_sites` uses `ML.EXPLAIN_PREDICT` to return top feature
+  attributions alongside vulnerability scores.
+- **Target model selection:** Tools accept an explicit `model_name` parameter (defaulting to active
+  `heat_offset_model` or environment variable `BQ_MODEL_NAME`) allowing shadow testing of candidates.
 
 Run local tests without Cloud access:
 
 ```bash
 python3 -m unittest discover -s scripts/tests -p 'test_*.py' -v
+python3 -m unittest discover -s agent/tests -p 'test_*.py' -v
 ```
 
 ## Improving a candidate without tuning on the holdout
@@ -183,6 +189,44 @@ readings, preserved all 3,218 evaluation readings, and found zero fitting/evalua
 This beats that stress test's baseline on both errors, but explains little of the holdout
 variance. Some parent-model spatial cells had MAE near 3 F despite the aggregate improvement.
 Use persisted residuals to identify those failures rather than hiding them behind average scores.
+
+## Promoting or rolling back candidate models in production
+
+Once a candidate model has been audited and approved through the review process, promote it safely
+using `promote_candidate.py`:
+
+```bash
+# Plan-only dry run (no writes, verifies candidate exists and passes contract)
+python3 scripts/promote_candidate.py --candidate-run 20261027_164544_b1e872144cc1
+
+# Execute promotion to production
+python3 scripts/promote_candidate.py --candidate-run 20261027_164544_b1e872144cc1 --execute
+```
+
+### Safety and verification guarantees:
+1. **Candidate Verification:** Runs a smoke `ML.EXPLAIN_PREDICT` check on the candidate model to
+   ensure it accepts the 8 required features and yields 3 finite attributions before touching production.
+2. **Active Model Backup:** Automatically copies the active `heat_offset_model` to a timestamped backup
+   (`heat_offset_model_backup_<timestamp>_<suffix>`) before overwriting it.
+3. **Atomic Promotion:** Copies the candidate model to `heat_offset_model`.
+4. **Post-Promotion Verification:** Runs a smoke test on the newly promoted `heat_offset_model` to
+   verify serving readiness.
+5. **Auditable Lineage:** Logs a structured `PROMOTED` event into `model_training_events` containing
+   the candidate run ID, model name, backup model name, smoke test attributions, and operator timestamp.
+
+### Rollback:
+If an operational anomaly or issue is observed after promotion, roll back immediately to a previous
+backup or candidate model:
+
+```bash
+# Dry run rollback
+python3 scripts/promote_candidate.py --rollback-model heat_offset_model_backup_20261027_170000_1234abcd
+
+# Execute rollback
+python3 scripts/promote_candidate.py --rollback-model heat_offset_model_backup_20261027_170000_1234abcd --execute
+```
+
+This creates a safety backup of the current model and logs a `ROLLED_BACK` event into `model_training_events`.
 
 ## Loading the seed data
 

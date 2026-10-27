@@ -1,4 +1,4 @@
--- Rendered only by scripts/train_candidate.py. Never replaces the active model.
+-- Rendered only by data_plane.pipelines.train_candidate. Never replaces the active model.
 CREATE MODEL `{{candidate_model}}`
 OPTIONS (
   MODEL_TYPE = 'LINEAR_REG',

@@ -1,4 +1,4 @@
-# data/
+# Reference data
 
 Seed and reference data that ships with this challenge.
 

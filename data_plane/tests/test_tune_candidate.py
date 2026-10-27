@@ -4,8 +4,7 @@ import unittest
 from unittest.mock import patch
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from tune_candidate import (
+from data_plane.pipelines.tune_candidate import (
     BigQuery, FOLDS, REGULARIZATION, TrainingRun, fit_sql, select_configuration, tune, validation_sql,
 )
 

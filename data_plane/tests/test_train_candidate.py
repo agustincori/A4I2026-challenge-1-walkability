@@ -6,8 +6,7 @@ from unittest.mock import patch
 import subprocess
 
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from train_candidate import (  # noqa: E402
+from data_plane.pipelines.train_candidate import (
     BigQuery, FEATURES, TrainingRun, check_metrics, quality_warnings, render, run_id,
     validate_namespace,
 )

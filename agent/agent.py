@@ -3,7 +3,11 @@ City of Atlanta Heat Resilience Planning Assistant
 Built with Google Agent Development Kit (ADK), Gemini, and BigQuery ML.
 """
 
-from google.adk.agents.llm_agent import Agent
+try:
+    from google.adk.agents.llm_agent import Agent
+except ImportError:
+    Agent = None
+
 from .tools import (
     predict_heat_offset_and_explain,
     compare_locations_and_explain,
@@ -71,4 +75,4 @@ root_agent = Agent(
         get_tract_demographics,
         audit_equity,
     ],
-)
+) if Agent is not None else None
