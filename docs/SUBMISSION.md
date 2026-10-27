@@ -34,11 +34,11 @@ The **Atlanta Urban Climate Resilience & Walkability Advisor** bridges the gap b
 | **2. Google Skills Project** | `qwiklabs-gcp-03-1578f96a5a7a` | BigQuery datasets (`a4i_climate`), BigQuery ML models (`heat_offset_model`), and Vertex AI workspace. |
 | **3. Live Agent Endpoint** | [Cloud Run Service](https://atlanta-heat-advisor-1004921377034.us-central1.run.app) | Production-deployed serverless agent with isolated runtimes, Vertex AI ADC credentials, and telemetry. |
 | **4. Live GIS Dashboard** | [Frontend Dashboard](https://atlanta-heat-advisor-frontend-1004921377034.us-central1.run.app) | Interactive React 18 Leaflet GIS interface with temperature sliders, 800m isochrones, and memo generator. |
-| **5. Pitch Deck (PPTX)** | [`docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx`](../docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx) | Standard 2-slide executive presentation covering scenario, capabilities, output artifact, architecture, and defended choices. |
-| **6. Pitch Deck (Web / PDF)** | [`docs/pitch_deck_2_slides.html`](../docs/pitch_deck_2_slides.html) | Interactive web slide deck with built-in printable PDF stylesheet and export utility. |
-| **7. Pitch Deck Download Portal**| [`docs/download_ppt.html`](../docs/download_ppt.html) | Single-click download portal for pitch assets. |
-| **8. 3-Minute Video Script** | [`docs/DEMO_SCRIPT.md`](../docs/DEMO_SCRIPT.md) | Second-by-second choreographed script (20s intro, 2m 20s demo, 20s outro) mapped to live screen actions. |
-| **9. Technical Architecture & Memo** | [docs/SUBMISSION_OVERVIEW.md](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/SUBMISSION_OVERVIEW.md) | Formal City Council Resolution memo, Placement Recommendation matrix, and multi-agent system architecture. |
+| **5. Pitch Deck (PPTX)** | [Atlanta_Heat_Resilience_2_Slide_Deck.pptx](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/Atlanta_Heat_Resilience_2_Slide_Deck.pptx) | Standard 2-slide executive presentation covering scenario, capabilities, output artifact, architecture, and defended choices. |
+| **6. Pitch Deck (Web / PDF)** | [pitch_deck_2_slides.html](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/pitch_deck_2_slides.html) | Interactive web slide deck with built-in printable PDF stylesheet and export utility. |
+| **7. Pitch Deck Download Portal**| [download_ppt.html](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/download_ppt.html) | Single-click download portal for pitch assets. |
+| **8. 3-Minute Video Script** | [DEMO_SCRIPT.md](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/DEMO_SCRIPT.md) | Second-by-second choreographed script (20s intro, 2m 20s demo, 20s outro) mapped to live screen actions. |
+| **9. Technical Architecture & Memo** | [App_Architecture.md](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/App_Architecture.md) | Formal City Council Resolution memo, Placement Recommendation matrix, and multi-agent system architecture. |
 
 ---
 

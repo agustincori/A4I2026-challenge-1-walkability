@@ -12,7 +12,7 @@ All competition submission deliverables, presentation decks, video walkthrough s
 * **[Official Submission Document (SUBMISSION.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/SUBMISSION.md)**  
   The complete, publication-ready submission writeup for the [AngelHack Submission Portal](https://portal.angelhack.com/a4i-console). Covers executive summary, target municipal persona (Dana, City Manager's Office), top 5 capabilities, placement recommendation artifact with 100% equity compliance, all recent engineering hardening (runtime isolation, telemetry spans, model contracts, Vertex AI Cloud Run deployment, Vite CORS reverse proxy), defended decisions under the 25% Rigor rubric, honest limitations, and the multi-clock roadmap.
 
-* **[Technical Architecture & Multi-Agent Orchestration (SUBMISSION_OVERVIEW.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/SUBMISSION_OVERVIEW.md)**  
+* **[Technical Architecture & Multi-Agent Orchestration (App_Architecture.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/App_Architecture.md)**  
   Detailed system architecture diagrams, multi-layer decoupling (presentation, cognitive agent runtime, toolset, BQML data plane), cognitive planner mechanics, and component breakdowns.
 
 ---
@@ -51,7 +51,7 @@ All competition submission deliverables, presentation decks, video walkthrough s
 * **[Data Sources & Analytical Framework (DATA_SOURCES.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/DATA_SOURCES.md)**  
   Comprehensive data dictionary, lineage, mathematical derivations (tree canopy, plantable ROW, marginal costs), multi-departmental cost-sharing matrix, MILP optimization formulation, and cohort equity drawdown analysis.
 
-* **[Atlanta Heat Vulnerability Synopsis (atlanta_heat_vulnerability_synopsis (2).md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/atlanta_heat_vulnerability_synopsis%20(2).md)**  
+* **[Atlanta Heat Vulnerability Synopsis (atlanta_heat_vulnerability_synopsis.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/atlanta_heat_vulnerability_synopsis.md)**  
   Comprehensive research synopsis documenting the empirical drivers of Atlanta's urban heat island effect, historical tree canopy deficits, and demographic transportation vulnerabilities across Fulton County census tracts.
 
 * **[Original Pitch Deck Draft (PITCH_DECK.md)](https://github.com/agustincori/A4I2026-challenge-1-walkability/blob/main/docs/PITCH_DECK.md)**  
