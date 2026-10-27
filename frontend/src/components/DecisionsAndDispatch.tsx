@@ -11,6 +11,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { PlannerDecision, DispatchedAsset, AssetType, CensusTract } from '../types';
+import { useUI } from '../context/UIContext';
 
 interface DecisionsAndDispatchProps {
   decisions: PlannerDecision[];
@@ -33,6 +34,7 @@ export const DecisionsAndDispatch: React.FC<DecisionsAndDispatchProps> = ({
   onDraftCouncilProposal,
   allTracts,
 }) => {
+  const { openCouncilMemo } = useUI();
   const [activeSubTab, setActiveSubTab] = useState<'decisions' | 'resources'>('decisions');
 
   // Custom dispatch modal/form
@@ -182,8 +184,16 @@ export const DecisionsAndDispatch: React.FC<DecisionsAndDispatchProps> = ({
           </div>
           <div className="mt-2 flex items-center gap-2">
             <button
-              onClick={onDraftCouncilProposal}
-              className="flex-1 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow"
+              onClick={() => {
+                openCouncilMemo({
+                  dispatchedAssets,
+                  sites: allTracts.filter((t) => t.hasCoolingCenter),
+                });
+                if (onDraftCouncilProposal) {
+                  onDraftCouncilProposal();
+                }
+              }}
+              className="flex-1 bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition flex items-center justify-center gap-1.5 shadow cursor-pointer"
             >
               <span>Draft Council Memo</span>
               <ArrowRight className="w-3.5 h-3.5" />

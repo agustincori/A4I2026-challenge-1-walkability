@@ -36,7 +36,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "integratedRiskScore": 63.5,
     "hasCoolingCenter": true,
     "coolingCenterName": "Sweet Auburn Resilience Hub",
-    "coolingCenterType": "Community Center"
+    "coolingCenterType": "Community Center",
+    "seniorsLivingAlonePct": 19.0,
+    "disabilityRatePct": 24.2,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121006500",
@@ -58,7 +61,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "integratedRiskScore": 63.17,
     "hasCoolingCenter": true,
     "coolingCenterName": "South Pryor Community Center",
-    "coolingCenterType": "Community Center"
+    "coolingCenterType": "Community Center",
+    "seniorsLivingAlonePct": 25.6,
+    "disabilityRatePct": 23.2,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121006601",
@@ -80,7 +86,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "integratedRiskScore": 61.46,
     "hasCoolingCenter": true,
     "coolingCenterName": "Mechanicsville Recreation Center",
-    "coolingCenterType": "Recreation Center"
+    "coolingCenterType": "Recreation Center",
+    "seniorsLivingAlonePct": 25.2,
+    "disabilityRatePct": 21.5,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121005700",
@@ -100,7 +109,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 78,
     "sviScore": 0.734,
     "integratedRiskScore": 60.7,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.0,
+    "disabilityRatePct": 20.9,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121005800",
@@ -120,7 +132,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.802,
     "integratedRiskScore": 60.25,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 26.1,
+    "disabilityRatePct": 19.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121006000",
@@ -140,7 +155,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 74,
     "sviScore": 0.785,
     "integratedRiskScore": 57.37,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.2,
+    "disabilityRatePct": 19.5,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121004200",
@@ -162,7 +180,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "integratedRiskScore": 56.87,
     "hasCoolingCenter": true,
     "coolingCenterName": "Pittsburgh Community Siting Hub",
-    "coolingCenterType": "Community Center"
+    "coolingCenterType": "Community Center",
+    "seniorsLivingAlonePct": 28.5,
+    "disabilityRatePct": 23.9,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121010006",
@@ -182,7 +203,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 69,
     "sviScore": 0.694,
     "integratedRiskScore": 56.47,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.9,
+    "disabilityRatePct": 15.7,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121008302",
@@ -202,7 +226,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 81,
     "sviScore": 1.0,
     "integratedRiskScore": 56.37,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 30.5,
+    "disabilityRatePct": 23.9,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121006300",
@@ -222,7 +249,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 87,
     "sviScore": 0.742,
     "integratedRiskScore": 56.02,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.8,
+    "disabilityRatePct": 21.3,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121008104",
@@ -242,7 +272,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.867,
     "integratedRiskScore": 54.36,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.1,
+    "disabilityRatePct": 23.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121006100",
@@ -262,7 +295,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 72,
     "sviScore": 0.792,
     "integratedRiskScore": 53.75,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.8,
+    "disabilityRatePct": 22.0,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121008000",
@@ -282,7 +318,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 74,
     "sviScore": 0.872,
     "integratedRiskScore": 52.81,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.8,
+    "disabilityRatePct": 20.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121002500",
@@ -302,7 +341,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 96,
     "sviScore": 0.99,
     "integratedRiskScore": 52.68,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.7,
+    "disabilityRatePct": 24.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008301",
@@ -322,7 +364,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 86,
     "sviScore": 0.998,
     "integratedRiskScore": 52.44,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.7,
+    "disabilityRatePct": 23.9,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121002802",
@@ -342,7 +387,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 89,
     "sviScore": 0.739,
     "integratedRiskScore": 51.68,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.8,
+    "disabilityRatePct": 24.2,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121012000",
@@ -362,7 +410,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 81,
     "sviScore": 0.942,
     "integratedRiskScore": 50.91,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.0,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008601",
@@ -382,7 +433,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 93,
     "sviScore": 0.992,
     "integratedRiskScore": 50.08,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.1,
+    "disabilityRatePct": 24.6,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121006801",
@@ -402,7 +456,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 66,
     "sviScore": 0.5,
     "integratedRiskScore": 50.0,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.3,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121004100",
@@ -422,7 +479,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 65,
     "sviScore": 0.746,
     "integratedRiskScore": 49.89,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.6,
+    "disabilityRatePct": 17.0,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121002300",
@@ -442,7 +502,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 92,
     "sviScore": 0.856,
     "integratedRiskScore": 49.78,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.3,
+    "disabilityRatePct": 22.1,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121001901",
@@ -462,7 +525,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.527,
     "integratedRiskScore": 49.72,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.9,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003800",
@@ -482,7 +548,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 89,
     "sviScore": 0.843,
     "integratedRiskScore": 49.29,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.6,
+    "disabilityRatePct": 21.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008903",
@@ -502,7 +571,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.834,
     "integratedRiskScore": 49.23,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.8,
+    "disabilityRatePct": 20.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121002400",
@@ -522,7 +594,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 80,
     "sviScore": 0.963,
     "integratedRiskScore": 49.12,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.8,
+    "disabilityRatePct": 23.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008701",
@@ -542,7 +617,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 85,
     "sviScore": 0.882,
     "integratedRiskScore": 48.6,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.0,
+    "disabilityRatePct": 24.6,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121004300",
@@ -562,7 +640,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 79,
     "sviScore": 0.778,
     "integratedRiskScore": 48.6,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.8,
+    "disabilityRatePct": 19.8,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121008202",
@@ -582,7 +663,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 85,
     "sviScore": 0.974,
     "integratedRiskScore": 48.57,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.4,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13089023802",
@@ -602,7 +686,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 70,
     "sviScore": 0.861,
     "integratedRiskScore": 47.75,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.7,
+    "disabilityRatePct": 19.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121007100",
@@ -622,7 +709,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 74,
     "sviScore": 0.987,
     "integratedRiskScore": 47.24,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.9,
+    "disabilityRatePct": 23.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003900",
@@ -642,7 +732,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 78,
     "sviScore": 0.954,
     "integratedRiskScore": 47.1,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.4,
+    "disabilityRatePct": 23.8,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121004800",
@@ -662,7 +755,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 88,
     "sviScore": 0.792,
     "integratedRiskScore": 46.71,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 27.4,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121009503",
@@ -682,7 +778,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 82,
     "sviScore": 0.38,
     "integratedRiskScore": 46.48,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.5,
+    "disabilityRatePct": 14.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121011802",
@@ -702,7 +801,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 77,
     "sviScore": 0.916,
     "integratedRiskScore": 46.09,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.1,
+    "disabilityRatePct": 24.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008500",
@@ -722,7 +824,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 76,
     "sviScore": 0.784,
     "integratedRiskScore": 45.99,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 28.1,
+    "disabilityRatePct": 23.1,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121001801",
@@ -742,7 +847,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 98,
     "sviScore": 0.712,
     "integratedRiskScore": 45.68,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.0,
+    "disabilityRatePct": 23.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008602",
@@ -762,7 +870,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 81,
     "sviScore": 0.822,
     "integratedRiskScore": 45.28,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.0,
+    "disabilityRatePct": 22.5,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121011901",
@@ -782,7 +893,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 83,
     "sviScore": 0.799,
     "integratedRiskScore": 44.79,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.3,
+    "disabilityRatePct": 24.2,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121009001",
@@ -802,7 +916,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 65,
     "sviScore": 0.225,
     "integratedRiskScore": 43.93,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.3,
+    "disabilityRatePct": 13.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003500",
@@ -822,7 +939,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 81,
     "sviScore": 0.74,
     "integratedRiskScore": 43.75,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.2,
+    "disabilityRatePct": 21.1,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121004000",
@@ -842,7 +962,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 76,
     "sviScore": 0.862,
     "integratedRiskScore": 43.41,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 23.0,
+    "disabilityRatePct": 20.7,
+    "wellnessPriority": true
   },
   {
     "geoId": "13121009104",
@@ -862,7 +985,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 67,
     "sviScore": 0.12,
     "integratedRiskScore": 43.11,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.6,
+    "disabilityRatePct": 12.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001302",
@@ -882,7 +1008,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 62,
     "sviScore": 0.381,
     "integratedRiskScore": 42.54,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.2,
+    "disabilityRatePct": 16.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008204",
@@ -902,7 +1031,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 74,
     "sviScore": 0.702,
     "integratedRiskScore": 41.43,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.0,
+    "disabilityRatePct": 18.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001206",
@@ -922,7 +1054,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 70,
     "sviScore": 0.059,
     "integratedRiskScore": 40.91,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.8,
+    "disabilityRatePct": 12.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000602",
@@ -942,7 +1077,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.519,
     "integratedRiskScore": 40.69,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.9,
+    "disabilityRatePct": 21.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008203",
@@ -962,7 +1100,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 93,
     "sviScore": 0.776,
     "integratedRiskScore": 40.65,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.4,
+    "disabilityRatePct": 22.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008400",
@@ -982,7 +1123,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 78,
     "sviScore": 0.761,
     "integratedRiskScore": 40.21,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 31.7,
+    "disabilityRatePct": 24.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000700",
@@ -1002,7 +1146,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 68,
     "sviScore": 0.678,
     "integratedRiskScore": 39.57,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.4,
+    "disabilityRatePct": 16.3,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003600",
@@ -1022,7 +1169,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 84,
     "sviScore": 0.556,
     "integratedRiskScore": 39.43,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.0,
+    "disabilityRatePct": 16.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121002100",
@@ -1042,7 +1192,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 68,
     "sviScore": 0.641,
     "integratedRiskScore": 38.85,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 28.9,
+    "disabilityRatePct": 20.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003200",
@@ -1062,7 +1215,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 62,
     "sviScore": 0.101,
     "integratedRiskScore": 38.71,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.2,
+    "disabilityRatePct": 9.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121003000",
@@ -1082,7 +1238,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 60,
     "sviScore": 0.009,
     "integratedRiskScore": 38.33,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.9,
+    "disabilityRatePct": 11.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121006802",
@@ -1102,7 +1261,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 98,
     "sviScore": 0.882,
     "integratedRiskScore": 37.83,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.3,
+    "disabilityRatePct": 25.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001400",
@@ -1122,7 +1284,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 61,
     "sviScore": 0.021,
     "integratedRiskScore": 37.18,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 14.9,
+    "disabilityRatePct": 10.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001600",
@@ -1142,7 +1307,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.047,
     "integratedRiskScore": 37.1,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.1,
+    "disabilityRatePct": 10.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001205",
@@ -1162,7 +1330,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 68,
     "sviScore": 0.132,
     "integratedRiskScore": 36.83,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 12.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000601",
@@ -1182,7 +1353,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.556,
     "integratedRiskScore": 36.71,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.9,
+    "disabilityRatePct": 19.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008702",
@@ -1202,7 +1376,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.675,
     "integratedRiskScore": 36.4,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.7,
+    "disabilityRatePct": 15.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121004900",
@@ -1222,7 +1399,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 69,
     "sviScore": 0.578,
     "integratedRiskScore": 35.56,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.2,
+    "disabilityRatePct": 18.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001902",
@@ -1242,7 +1422,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 72,
     "sviScore": 0.535,
     "integratedRiskScore": 35.27,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 22.3,
+    "disabilityRatePct": 16.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001002",
@@ -1262,7 +1445,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 72,
     "sviScore": 0.549,
     "integratedRiskScore": 34.38,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.0,
+    "disabilityRatePct": 20.3,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001301",
@@ -1282,7 +1468,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 75,
     "sviScore": 0.467,
     "integratedRiskScore": 33.43,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.5,
+    "disabilityRatePct": 13.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009803",
@@ -1302,7 +1491,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 65,
     "sviScore": 0.197,
     "integratedRiskScore": 32.64,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.1,
+    "disabilityRatePct": 14.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009405",
@@ -1322,7 +1514,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 75,
     "sviScore": 0.222,
     "integratedRiskScore": 32.63,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.7,
+    "disabilityRatePct": 13.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009607",
@@ -1342,7 +1537,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 69,
     "sviScore": 0.444,
     "integratedRiskScore": 32.23,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.6,
+    "disabilityRatePct": 14.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121006900",
@@ -1362,7 +1560,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 68,
     "sviScore": 0.622,
     "integratedRiskScore": 32.03,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.1,
+    "disabilityRatePct": 15.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009406",
@@ -1382,7 +1583,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.15,
     "integratedRiskScore": 29.94,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.4,
+    "disabilityRatePct": 14.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13089022404",
@@ -1402,7 +1606,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 76,
     "sviScore": 0.497,
     "integratedRiskScore": 29.2,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.8,
+    "disabilityRatePct": 20.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009501",
@@ -1422,7 +1629,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 60,
     "sviScore": 0.019,
     "integratedRiskScore": 29.14,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 27.8,
+    "disabilityRatePct": 9.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001203",
@@ -1442,7 +1652,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 72,
     "sviScore": 0.07,
     "integratedRiskScore": 28.35,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.9,
+    "disabilityRatePct": 12.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121002900",
@@ -1462,7 +1675,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 69,
     "sviScore": 0.287,
     "integratedRiskScore": 27.86,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.6,
+    "disabilityRatePct": 14.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13089023444",
@@ -1482,7 +1698,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.5,
     "integratedRiskScore": 26.63,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 21.4,
+    "disabilityRatePct": 15.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009002",
@@ -1502,7 +1721,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.001,
     "integratedRiskScore": 26.52,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 9.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008801",
@@ -1522,7 +1744,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 60,
     "sviScore": 0.19,
     "integratedRiskScore": 26.43,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.1,
+    "disabilityRatePct": 10.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121007900",
@@ -1542,7 +1767,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.392,
     "integratedRiskScore": 25.37,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 28.0,
+    "disabilityRatePct": 12.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121005000",
@@ -1562,7 +1790,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 66,
     "sviScore": 0.237,
     "integratedRiskScore": 25.11,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.0,
+    "disabilityRatePct": 11.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001802",
@@ -1582,7 +1813,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 71,
     "sviScore": 0.232,
     "integratedRiskScore": 24.58,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.7,
+    "disabilityRatePct": 14.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001001",
@@ -1602,7 +1836,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 67,
     "sviScore": 0.255,
     "integratedRiskScore": 23.97,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 15.5,
+    "disabilityRatePct": 14.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009900",
@@ -1622,7 +1859,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.019,
     "integratedRiskScore": 23.74,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.9,
+    "disabilityRatePct": 9.8,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121010211",
@@ -1642,7 +1882,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.08,
     "integratedRiskScore": 21.85,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.3,
+    "disabilityRatePct": 9.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121010003",
@@ -1662,7 +1905,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 62,
     "sviScore": 0.192,
     "integratedRiskScore": 21.82,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.2,
+    "disabilityRatePct": 11.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009802",
@@ -1682,7 +1928,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 62,
     "sviScore": 0.224,
     "integratedRiskScore": 21.55,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.4,
+    "disabilityRatePct": 11.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009504",
@@ -1702,7 +1951,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 62,
     "sviScore": 0.23,
     "integratedRiskScore": 21.52,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.7,
+    "disabilityRatePct": 12.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121005200",
@@ -1722,7 +1974,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.238,
     "integratedRiskScore": 21.32,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 12.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009804",
@@ -1742,7 +1997,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.0,
     "integratedRiskScore": 20.92,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 9.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000501",
@@ -1762,7 +2020,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 63,
     "sviScore": 0.139,
     "integratedRiskScore": 20.4,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.4,
+    "disabilityRatePct": 11.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008908",
@@ -1782,7 +2043,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.25,
     "integratedRiskScore": 19.63,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.9,
+    "disabilityRatePct": 14.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009103",
@@ -1802,7 +2066,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 63,
     "sviScore": 0.079,
     "integratedRiskScore": 18.79,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.2,
+    "disabilityRatePct": 12.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008907",
@@ -1822,7 +2089,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.169,
     "integratedRiskScore": 18.79,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.0,
+    "disabilityRatePct": 10.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121001204",
@@ -1842,7 +2112,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 72,
     "sviScore": 0.033,
     "integratedRiskScore": 18.77,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.9,
+    "disabilityRatePct": 11.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008802",
@@ -1862,7 +2135,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 64,
     "sviScore": 0.135,
     "integratedRiskScore": 18.67,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 12.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009601",
@@ -1882,7 +2158,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 59,
     "sviScore": 0.024,
     "integratedRiskScore": 18.18,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 14.7,
+    "disabilityRatePct": 10.3,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009410",
@@ -1902,7 +2181,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 60,
     "sviScore": 0.164,
     "integratedRiskScore": 17.72,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.9,
+    "disabilityRatePct": 10.9,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000502",
@@ -1922,7 +2204,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 61,
     "sviScore": 0.119,
     "integratedRiskScore": 17.12,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.6,
+    "disabilityRatePct": 12.1,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121000400",
@@ -1942,7 +2227,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 66,
     "sviScore": 0.382,
     "integratedRiskScore": 16.61,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 25.9,
+    "disabilityRatePct": 11.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008905",
@@ -1962,7 +2250,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.07,
     "integratedRiskScore": 16.1,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.8,
+    "disabilityRatePct": 12.2,
+    "wellnessPriority": false
   },
   {
     "geoId": "13089022405",
@@ -1982,7 +2273,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 61,
     "sviScore": 0.368,
     "integratedRiskScore": 15.82,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.1,
+    "disabilityRatePct": 17.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009301",
@@ -2002,7 +2296,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 61,
     "sviScore": 0.177,
     "integratedRiskScore": 14.63,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.9,
+    "disabilityRatePct": 13.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009606",
@@ -2022,7 +2319,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.002,
     "integratedRiskScore": 13.92,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 18.0,
+    "disabilityRatePct": 10.5,
+    "wellnessPriority": false
   },
   {
     "geoId": "13089022403",
@@ -2042,7 +2342,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 59,
     "sviScore": 0.007,
     "integratedRiskScore": 13.57,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 20.8,
+    "disabilityRatePct": 8.6,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009302",
@@ -2062,7 +2365,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 66,
     "sviScore": 0.095,
     "integratedRiskScore": 13.5,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.4,
+    "disabilityRatePct": 12.0,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009604",
@@ -2082,7 +2388,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.055,
     "integratedRiskScore": 13.32,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.7,
+    "disabilityRatePct": 12.6,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008906",
@@ -2102,7 +2411,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 65,
     "sviScore": 0.08,
     "integratedRiskScore": 12.46,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 19.2,
+    "disabilityRatePct": 11.3,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121010004",
@@ -2122,7 +2434,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 58,
     "sviScore": 0.069,
     "integratedRiskScore": 12.0,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.6,
+    "disabilityRatePct": 10.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121009700",
@@ -2142,7 +2457,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 59,
     "sviScore": 0.143,
     "integratedRiskScore": 11.9,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 24.0,
+    "disabilityRatePct": 9.7,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121010007",
@@ -2162,7 +2480,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 59,
     "sviScore": 0.089,
     "integratedRiskScore": 9.09,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 17.7,
+    "disabilityRatePct": 9.4,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121008909",
@@ -2182,7 +2503,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 59,
     "sviScore": 0.004,
     "integratedRiskScore": 7.68,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.4,
+    "disabilityRatePct": 9.3,
+    "wellnessPriority": false
   },
   {
     "geoId": "13121010005",
@@ -2202,7 +2526,10 @@ export const MOCK_CENSUS_TRACTS: CensusTract[] = [
     "walkScore": 60,
     "sviScore": 0.016,
     "integratedRiskScore": 1.55,
-    "hasCoolingCenter": false
+    "hasCoolingCenter": false,
+    "seniorsLivingAlonePct": 16.5,
+    "disabilityRatePct": 9.4,
+    "wellnessPriority": false
   }
 ];
 

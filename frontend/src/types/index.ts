@@ -19,6 +19,9 @@ export interface CensusTract {
   hasCoolingCenter?: boolean;
   coolingCenterName?: string;
   coolingCenterType?: 'Library' | 'Recreation Center' | 'Community Center' | 'High School';
+  seniorsLivingAlonePct?: number;
+  disabilityRatePct?: number;
+  wellnessPriority?: boolean;
 }
 
 export interface CoolingCenterRanking {
@@ -141,3 +144,58 @@ export interface HeatAlert {
   description: string;
   recommendation: string;
 }
+export interface CouncilMemoData {
+  memoId: string;
+  date: string;
+  to: string;
+  from: string;
+  subject: string;
+  executiveSummary: string;
+  triggerCondition: {
+    peakTempF: number;
+    heatIndexF: number;
+    advisoryLevel: string;
+    expectedDuration: string;
+    affectedPopulation: number;
+  };
+  recommendedSites: Array<{
+    rank: number;
+    name: string;
+    neighborhood: string;
+    tractId: string;
+    predictedOffsetF: number;
+    localizedTempF?: number;
+    population: number;
+    povertyRatePct: number;
+    noVehicleRatePct: number;
+    sviScore?: number;
+    compositeScore: number;
+    walkAccessMinutes: number;
+    justification: string;
+  }>;
+  dispatchedAssets: DispatchedAsset[];
+  equityMetrics: {
+    averagePovertyPct: number;
+    averageNoVehiclePct: number;
+    tractsAbovePovertyP75: number;
+    tractsAboveTransitP75: number;
+    equityAuditPassed: boolean;
+  };
+  wellnessPrioritization: {
+    highPriorityTractCount: number;
+    seniorDisabilityFocusSummary: string;
+    targetWellnessChecks: number;
+  };
+  fiscalAndOperationalImpact: {
+    projectedDailyCost: number;
+    partnerAgencies: string[];
+    volunteerDeployments: number;
+    shelterCapacity: number;
+  };
+  actionItems: string[];
+  signedBy: string;
+}
+
+export type CouncilMemo = CouncilMemoData;
+
+export type MetricLayer = 'heat' | 'canopy' | 'svi' | 'poverty' | 'noVehicle' | 'seniors';
