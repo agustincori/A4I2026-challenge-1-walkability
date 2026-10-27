@@ -11,7 +11,7 @@ export default defineConfig(({ mode }) => {
       host: true,
       proxy: {
         '/api/cloudrun': {
-          target: env.AGENT_API_URL || env.VITE_AGENT_API_URL || 'https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app',
+          target: env.AGENT_API_URL || env.VITE_AGENT_API_URL || 'https://atlanta-heat-advisor-1004921377034.us-central1.run.app',
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/cloudrun/, ''),
         },

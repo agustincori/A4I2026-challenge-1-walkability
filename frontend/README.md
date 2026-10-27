@@ -3,7 +3,7 @@
 **Challenge:** Challenge 1 - Urban Climate Resilience & Walkability  
 **Target City:** Atlanta, GA  
 **Track:** Frontend Lane  
-**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app](https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app))  
+**Integration:** Connected directly to deployed Cloud Run ADK Agent ([https://atlanta-heat-advisor-1004921377034.us-central1.run.app](https://atlanta-heat-advisor-1004921377034.us-central1.run.app))
 **Tech Stack:** React 18, TypeScript, Vite, Tailwind CSS, Leaflet
 
 ---
@@ -28,8 +28,8 @@ This frontend connects directly to the live Cloud Run agent to deliver:
 
 ## 2. Integration with Deployed Cloud Run Agent
 
-The dashboard communicates directly with the deployed ADK service at:
-`https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app`
+The dashboard communicates with the deployed ADK service through the Vite or Nginx proxy at:
+`https://atlanta-heat-advisor-1004921377034.us-central1.run.app`
 
 ### Endpoints Used:
 - `GET /health` – Live connection indicator and real-time latency ping.
@@ -159,7 +159,7 @@ docker stop walkability-frontend-local-e2e walkability-agent-local-e2e
 ```
 
 To test the local production dashboard against the deployed agent instead, set
-`AGENT_API_URL=https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app` when starting
+`AGENT_API_URL=https://atlanta-heat-advisor-1004921377034.us-central1.run.app` when starting
 the frontend container. This is a hybrid E2E test, not a fully local backend test.
 The backend must explicitly allow the frontend origin.
 
@@ -167,4 +167,5 @@ For Vite development against a local agent, use
 `AGENT_API_URL=http://127.0.0.1:18080 npm --prefix frontend run dev` and allow
 `http://localhost:3000` (or your chosen Vite origin) on the ADK server. Both `localhost`
 and `127.0.0.1` use Vite's `/api/cloudrun` proxy. Container builds set
-`VITE_AGENT_API_URL=/api` and use the Nginx proxy instead.
+the configured `VITE_AGENT_API_URL` as the agent base URL and route `/api/cloudrun/*`
+through Nginx to the `AGENT_API_URL` runtime setting.

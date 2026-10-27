@@ -6,7 +6,8 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY . .
-ENV VITE_AGENT_API_URL=/api
+ARG VITE_AGENT_API_URL=https://atlanta-heat-advisor-1004921377034.us-central1.run.app
+ENV VITE_AGENT_API_URL=${VITE_AGENT_API_URL}
 RUN npm run build
 
 FROM nginx:1.27-alpine

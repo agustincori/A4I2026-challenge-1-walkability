@@ -4,7 +4,7 @@ const API_URL = (
   import.meta.env.VITE_AGENT_API_URL ||
   (import.meta.env.PROD
     ? "/api"
-    : "https://atlanta-heat-advisor-hxywpvumaq-uc.a.run.app")
+    : "https://atlanta-heat-advisor-1004921377034.us-central1.run.app")
 ).replace(/\/+$/, "");
 const USER_ID = "frontend-user";
 const SUGGESTIONS = [

@@ -840,6 +840,6 @@ bash frontend/deploy.sh
 ```
 
 The script uses `gcloud run deploy --source` to build and deploy the frontend. It also sets the
-`AGENT_API_URL` Cloud Run environment variable; Nginx proxies the UI's `/api` requests to that
-agent service. The Cloud Build/Run APIs must be enabled and your account must have permission to
+`AGENT_API_URL` Cloud Run environment variable; Nginx proxies the UI's `/api/cloudrun` requests
+to that agent service. The Cloud Build/Run APIs must be enabled and your account must have permission to
 build images and deploy Cloud Run services.
