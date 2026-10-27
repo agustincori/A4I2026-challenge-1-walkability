@@ -49,7 +49,7 @@ steps:
       - push
       - ${_REGION}-docker.pkg.dev/${PROJECT_ID}/${_AR_REPOSITORY}/${_SERVICE_NAME}:build-${BUILD_ID}
 
-  - id: deploy-candidate-and-promote
+  - id: deploy-candidate
     name: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
     entrypoint: bash
     waitFor:
@@ -125,22 +125,41 @@ steps:
           exit 1
         fi
 
-        if [[ "$$ALLOW_UNAUTHENTICATED" == "true" ]]; then
-          candidate_url="$$(gcloud run services describe "$$SERVICE_NAME" \
-            --project="$$PROJECT_ID" --region="$$REGION" \
-            --format="value(status.traffic[?tag=$$revision_tag].url)")"
-          if [[ -z "$$candidate_url" ]]; then
-            echo "Could not resolve the tagged candidate URL." >&2
-            exit 1
-          fi
-          python3 - "$$candidate_url/health" <<'PY'
+        service_url="$$(gcloud run services describe "$$SERVICE_NAME" \
+          --project="$$PROJECT_ID" --region="$$REGION" \
+          --format='value(status.url)')"
+        if [[ -z "$$service_url" ]]; then
+          echo "Could not resolve the Cloud Run service URL." >&2
+          exit 1
+        fi
+        candidate_url="https://$${revision_tag}---$${service_url#https://}"
+        printf '%s' "$$revision" > /workspace/candidate-revision
+        printf '%s' "$$revision_tag" > /workspace/candidate-tag
+        printf '%s' "$$candidate_url" > /workspace/candidate-url
+        echo "Candidate revision $$revision is ready at $$candidate_url."
+
+  - id: smoke-test-candidate
+    name: python:3.11-slim
+    waitFor:
+      - deploy-candidate
+    env:
+      - ALLOW_UNAUTHENTICATED=${_ALLOW_UNAUTHENTICATED}
+    entrypoint: python3
+    args:
+      - -c
+      - |
         import json
-        import sys
+        import os
         import time
+        from pathlib import Path
         from urllib.error import URLError
         from urllib.request import urlopen
 
-        url = sys.argv[1]
+        if os.environ["ALLOW_UNAUTHENTICATED"] != "true":
+            print("Private service: skipping unauthenticated HTTP smoke test.")
+            raise SystemExit(0)
+
+        url = Path("/workspace/candidate-url").read_text().strip() + "/health"
         last_error = None
         for attempt in range(10):
             try:
@@ -156,13 +175,32 @@ steps:
                     time.sleep(3)
         else:
             raise SystemExit(f"Candidate health check failed: {last_error}")
-        PY
-        fi
 
+  - id: promote
+    name: gcr.io/google.com/cloudsdktool/google-cloud-cli:stable
+    entrypoint: bash
+    waitFor:
+      - smoke-test-candidate
+    env:
+      - PROJECT_ID=${PROJECT_ID}
+      - REGION=${_REGION}
+      - SERVICE_NAME=${_SERVICE_NAME}
+    args:
+      - -ceu
+      - |
+        revision="$$(cat /workspace/candidate-revision)"
+        revision_tag="$$(cat /workspace/candidate-tag)"
+        if [[ -z "$$revision" || -z "$$revision_tag" ]]; then
+          echo "Candidate revision metadata is missing." >&2
+          exit 1
+        fi
         gcloud run services update-traffic "$$SERVICE_NAME" \
           --project="$$PROJECT_ID" --region="$$REGION" \
           --to-revisions="$$revision=100"
-        echo "Promoted ready revision $$revision using image $$image_ref."
+        gcloud run services update-traffic "$$SERVICE_NAME" \
+          --project="$$PROJECT_ID" --region="$$REGION" \
+          --remove-tags="$$revision_tag"
+        echo "Promoted ready revision $$revision."
 
 options:
   logging: CLOUD_LOGGING_ONLY
