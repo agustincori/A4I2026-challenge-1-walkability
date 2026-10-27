@@ -416,57 +416,89 @@ export const HeatMap: React.FC<HeatMapProps> = ({
   return (
     <div className="relative w-full h-[calc(100vh-8.5rem)] rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex flex-col md:flex-row">
       {/* Top Search & Filter Bar */}
-      <div className="absolute top-4 left-4 z-[400] w-72 sm:w-96 space-y-2">
-        {/* Multi-Mode Switcher (4 Modes) */}
-        <div className="bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-1 grid grid-cols-2 gap-1">
-          <button
-            type="button"
-            onClick={() => setActiveMetric('heat')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
-              activeMetric === 'heat'
-                ? 'bg-rose-600 text-white shadow-md shadow-rose-950/60'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-            }`}
-          >
-            <span>🌡️</span>
-            <span className="truncate">Heat Offset (°F)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMetric('integratedRisk')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
-              activeMetric === 'integratedRisk'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950/60'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-            }`}
-          >
-            <span>🛡️</span>
-            <span className="truncate">Integrated Risk (0-100)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMetric('canopy')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
-              activeMetric === 'canopy'
-                ? 'bg-emerald-600 text-white shadow-md shadow-emerald-950/60'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-            }`}
-          >
-            <span>🌳</span>
-            <span className="truncate">Tree Canopy Cover (%)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveMetric('canopyDeficit')}
-            className={`flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-bold text-[10.5px] transition-all cursor-pointer ${
-              activeMetric === 'canopyDeficit'
-                ? 'bg-amber-600 text-white shadow-md shadow-amber-950/60'
-                : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
-            }`}
-          >
-            <span>🎯</span>
-            <span className="truncate">Shade Deficit (% Gap)</span>
-          </button>
+      <div className="absolute top-4 left-4 z-[400] w-80 sm:w-[440px] max-w-[calc(100vw-2rem)] space-y-2">
+        {/* Metric Layer Switcher */}
+        <div className="bg-slate-900/95 backdrop-blur border border-slate-700/80 rounded-xl shadow-2xl p-2 space-y-1.5">
+          {/* Header */}
+          <div className="flex items-center justify-between px-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
+              Map Metric Choropleth
+            </span>
+            <span className="text-[9px] font-mono text-slate-500 font-normal">Active Layer</span>
+          </div>
+
+          {/* Primary Thermal & Vulnerability Switcher */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 bg-slate-950/70 p-1 rounded-lg border border-slate-800">
+            <button
+              type="button"
+              onClick={() => setActiveMetric('heat')}
+              className={`min-w-0 flex items-center justify-center gap-2 py-2 px-2.5 rounded-md font-bold transition-all cursor-pointer text-center ${
+                activeMetric === 'heat'
+                  ? 'bg-rose-600 text-white shadow-md shadow-rose-950/60 ring-1 ring-rose-400/50'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+              }`}
+              title="Predicted Heat Offset (°F) — Microclimate thermal elevation above baseline"
+            >
+              <span className="text-base shrink-0">🌡️</span>
+              <div className="min-w-0 text-left sm:text-center leading-tight">
+                <div className="text-[11px] font-bold truncate">Predicted Heat Offset</div>
+                <div className={`text-[10px] font-mono ${activeMetric === 'heat' ? 'text-rose-100' : 'text-slate-500'}`}>
+                  (°F Elevation)
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMetric('integratedRisk')}
+              className={`min-w-0 flex items-center justify-center gap-2 py-2 px-2.5 rounded-md font-bold transition-all cursor-pointer text-center ${
+                activeMetric === 'integratedRisk'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-950/60 ring-1 ring-indigo-400/50'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-800/70'
+              }`}
+              title="Multi-Criteria Integrated Risk (0-100) — Composite heat, SVI, density, and access score"
+            >
+              <span className="text-base shrink-0">🛡️</span>
+              <div className="min-w-0 text-left sm:text-center leading-tight">
+                <div className="text-[11px] font-bold truncate">Multi-Criteria Risk</div>
+                <div className={`text-[10px] font-mono ${activeMetric === 'integratedRisk' ? 'text-indigo-100' : 'text-slate-500'}`}>
+                  Integrated (0–100)
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Secondary Nature-Based Solutions & Shade Equity Layers */}
+          <div className="grid grid-cols-2 gap-1.5 pt-1 border-t border-slate-800/70">
+            <button
+              type="button"
+              onClick={() => setActiveMetric('canopy')}
+              className={`min-w-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold text-[10.5px] transition-all cursor-pointer ${
+                activeMetric === 'canopy'
+                  ? 'bg-emerald-600 text-white shadow shadow-emerald-950/50 ring-1 ring-emerald-400/40'
+                  : 'bg-slate-950/50 text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800/60'
+              }`}
+              title="LiDAR Tree Canopy Coverage (%)"
+            >
+              <span className="shrink-0 text-xs">🌳</span>
+              <span className="truncate">Canopy Cover (%)</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveMetric('canopyDeficit')}
+              className={`min-w-0 flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg font-semibold text-[10.5px] transition-all cursor-pointer ${
+                activeMetric === 'canopyDeficit'
+                  ? 'bg-amber-600 text-white shadow shadow-amber-950/50 ring-1 ring-amber-400/40'
+                  : 'bg-slate-950/50 text-slate-400 hover:text-white hover:bg-slate-800/60 border border-slate-800/60'
+              }`}
+              title="Shade Deficit (% Gap vs 50% City Target)"
+            >
+              <span className="shrink-0 text-xs">🎯</span>
+              <span className="truncate">Shade Deficit (% Gap)</span>
+            </button>
+          </div>
         </div>
 
         {/* Landmark / Neighborhood Search */}
